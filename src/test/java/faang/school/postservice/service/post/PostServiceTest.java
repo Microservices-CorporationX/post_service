@@ -1,7 +1,9 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.filter.PostFilterDto;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.post.PostAlreadyDeletedException;
 import faang.school.postservice.exception.post.PostAlreadyPublishedException;
 import faang.school.postservice.exception.post.PostWOAuthorException;
@@ -14,7 +16,11 @@ import faang.school.postservice.filter.post.filterImpl.PostFilterUserPostNonDele
 import faang.school.postservice.mapper.post.PostMapperImpl;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.KafkaPostProducer;
+import faang.school.postservice.publisher.KafkaPostViewProducer;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.RedisPostRepository;
+import faang.school.postservice.service.UserCacheService;
 import faang.school.postservice.util.container.PostContainer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,7 +37,11 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
@@ -42,6 +52,16 @@ public class PostServiceTest {
     private PostDataPreparer preparer;
     @Mock
     private PostValidator validator;
+    @Mock
+    private KafkaPostProducer kafkaPostProducer;
+    @Mock
+    private KafkaPostViewProducer kafkaPostViewProducer;
+    @Spy
+    private UserServiceClient userClient;
+    @Mock
+    private RedisPostRepository redisPostRepository;
+    @Mock
+    private UserCacheService userCacheService;
     @Spy
     private PostMapperImpl mapper;
     @Spy
@@ -65,7 +85,8 @@ public class PostServiceTest {
         List<PostFilter> postFilters = List.of(userDraftNonDeleted, userPostNonDeleted, projectDraftNonDeleted,
                 projectPostNonDeleted);
 
-        postService = new PostService(postRepository, validator, mapper, preparer, postFilters);
+        postService = new PostService(postRepository, validator, mapper, preparer, postFilters,
+                kafkaPostProducer, kafkaPostViewProducer, userClient, redisPostRepository, userCacheService);
     }
 
     @Test
@@ -96,6 +117,9 @@ public class PostServiceTest {
                 .content(container.content())
                 .resourceIds(container.resourceIds())
                 .build();
+        UserDto userDto = UserDto.builder()
+                .menteesIds(List.of(1L, 3L))
+                .build();
 
         Post postEntity = mapper.toEntity(inputDto);
 
@@ -114,6 +138,7 @@ public class PostServiceTest {
 
         when(preparer.prepareForCreate(inputDto, postEntity)).thenReturn(preparedPost);
         when(postRepository.save(preparedPost)).thenReturn(createdPost);
+        when(userClient.getUser(anyLong())).thenReturn(userDto);
 
         // when
         postService.create(inputDto);

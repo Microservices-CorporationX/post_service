@@ -9,8 +9,10 @@ import faang.school.postservice.filter.post.PostFilter;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.KafkaPostProducer;
+import faang.school.postservice.publisher.KafkaPostViewProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.redis.RedisPostRepository;
+import faang.school.postservice.service.UserCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,22 +31,22 @@ public class PostService {
     private final PostDataPreparer preparer;
     private final List<PostFilter> postFilters;
     private final KafkaPostProducer kafkaPostProducer;
+    private final KafkaPostViewProducer kafkaPostViewProducer;
     private final UserServiceClient userClient;
     private final RedisPostRepository redisPostRepository;
+    private final UserCacheService userCacheService;
 
     public PostDto create(PostDto postDto) {
         validator.validateBeforeCreate(postDto);
-
         Post postEntity = mapper.toEntity(postDto);
         postEntity = preparer.prepareForCreate(postDto, postEntity);
-
         Post createdEntity = postRepository.save(postEntity);
-        KafkaPostDto kafkaDto = mapper.toKafkaDto(createdEntity);
-        kafkaDto.setSubscribers(userClient.getUser(createdEntity.getAuthorId()).getMenteesIds());
+        userCacheService.saveRedisUser(createdEntity.getAuthorId());
+        KafkaPostDto kafkaDto = mapper.toKafkaPostDto(createdEntity);
+        kafkaDto.setSubscriberIds(userClient.getUser(createdEntity.getAuthorId()).getMenteesIds());
         redisPostRepository.save(mapper.toRedisPost(createdEntity));
         kafkaPostProducer.publish(kafkaDto);
         log.info("Created a post: {}", createdEntity);
-
         return mapper.toDto(createdEntity);
     }
 
@@ -84,18 +86,21 @@ public class PostService {
     }
 
     public PostDto getPost(Long postId) {
-        return mapper.toDto(getPostEntity(postId));
+        PostDto dto = mapper.toDto(getPostEntity(postId));
+        kafkaPostViewProducer.publish(mapper.toKafkaPostViewDto(dto));
+        return dto;
     }
 
     public List<PostDto> getFilteredPosts(PostFilterDto filters) {
         List<PostFilter> actualPostFilters = postFilters.stream()
                 .filter(f -> f.isApplicable(filters)).toList();
-
-        return StreamSupport.stream(postRepository.findAll().spliterator(), false)
+        List<PostDto> postDtoList = StreamSupport.stream(postRepository.findAll().spliterator(), false)
                 .filter(post -> actualPostFilters.stream()
                         .allMatch(filter -> filter.test(post, filters)))
                 .map(mapper::toDto)
                 .toList();
+        postDtoList.forEach(dto -> kafkaPostViewProducer.publish(mapper.toKafkaPostViewDto(dto)));
+        return postDtoList;
     }
 
     private Post getPostEntity(Long postId) {

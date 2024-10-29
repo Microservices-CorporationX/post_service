@@ -3,10 +3,12 @@ package faang.school.postservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.dto.comment.KafkaCommentDto;
 import faang.school.postservice.dto.event.CommentEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.KafkaCommentProducer;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.publisher.PublicationService;
@@ -36,6 +38,8 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserServiceClient userServiceClient;
     private final PublicationService<CommentEventPublisher, CommentEvent> publishService;
+    private final KafkaCommentProducer kafkaCommentProducer;
+    private final UserCacheService userCacheService;
 
     public CommentDto addComment(Long postId, CommentDto dto) throws JsonProcessingException {
         Post post = getPost(postId);
@@ -48,9 +52,14 @@ public class CommentService {
         Comment comment = mapper.toEntity(dto);
         comment.setPost(post);
         Comment savedComment = commentRepository.save(comment);
+        userCacheService.saveRedisUser(comment.getAuthorId());
+        KafkaCommentDto kafkaDto = mapper.toKafkaDto(savedComment);
+        CommentDto commentDto = mapper.toDto(savedComment);
+        kafkaDto.setCommentDto(commentDto);
+        kafkaCommentProducer.publish(kafkaDto);
         log.info("comment with id:{} created.", savedComment.getId());
         publishService.publishEvent(mapper.toCommentEvent(savedComment));
-        return mapper.toDto(savedComment);
+        return commentDto;
     }
 
     public CommentDto changeComment(Long postId, CommentDto dto) {

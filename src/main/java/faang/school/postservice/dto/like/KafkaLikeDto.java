@@ -1,18 +1,16 @@
-package faang.school.postservice.dto.post;
+package faang.school.postservice.dto.like;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class KafkaPostDto {
+public class KafkaLikeDto {
+    private Long id;
     private Long postId;
     private Long authorId;
-    private List<Long> subscriberIds;
 }

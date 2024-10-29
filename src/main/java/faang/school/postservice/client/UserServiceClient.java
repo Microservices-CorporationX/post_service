@@ -24,4 +24,7 @@ public interface UserServiceClient {
 
     @GetMapping("/api/users/premium")
     List<UserDto> getPremiumUsers(@RequestBody UserFilterDto userFilterDto);
+
+    @GetMapping("/api/users")
+    List<UserDto> getAllUsers();
 }

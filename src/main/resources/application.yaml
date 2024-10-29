@@ -26,7 +26,10 @@ spring:
         calculations_channel:
           name: calculations_channel
         comment: comment_channel
-
+      feed-cache:
+        batch_size: 20
+      post-cache:
+        comments-in-post: 3
 server:
   port: 8081
 
@@ -51,3 +54,4 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+

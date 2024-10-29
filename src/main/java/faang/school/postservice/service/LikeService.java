@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.like.KafkaLikeDto;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.redisEvent.LikeEvent;
 import faang.school.postservice.mapper.LikeEventMapper;
@@ -8,6 +9,7 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.KafkaLikeProducer;
 import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -28,6 +30,7 @@ public class LikeService {
     private final LikeMapper mapper;
     private final LikeEventPublisher likeEventPublisher;
     private final LikeEventMapper likeEventMapper;
+    private final KafkaLikeProducer kafkaLikeProducer;
 
     public LikeDto addPostLike(Long postId, LikeDto dto) {
         Post post = validateUserAndGetPost(postId, dto);
@@ -36,9 +39,12 @@ public class LikeService {
         }
         Like like = mapper.toEntity(dto);
         like.setPost(post);
-        LikeEvent publisherEvent = conerterLikeEvent(dto , postId);
+        LikeEvent publisherEvent = conerterLikeEvent(dto, postId);
         likeEventPublisher.publish(publisherEvent);
-        return mapper.toDto(likeRepository.save(like));
+        likeRepository.save(like);
+        KafkaLikeDto kafkaDto = mapper.toKafkaDto(like);
+        kafkaLikeProducer.publish(kafkaDto);
+        return mapper.toDto(like);
     }
 
     public LikeDto deletePostLike(Long postId, LikeDto dto) {

@@ -7,6 +7,7 @@ import faang.school.postservice.dto.event.CommentEvent;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.KafkaCommentProducer;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.publisher.PublicationService;
@@ -57,6 +58,8 @@ class CommentServiceTest {
     private CommentRepository commentRepository;
     @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private KafkaCommentProducer kafkaCommentProducer;
     @InjectMocks
     private CommentService service;
 

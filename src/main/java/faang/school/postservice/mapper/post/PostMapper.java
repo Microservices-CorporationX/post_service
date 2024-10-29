@@ -1,6 +1,7 @@
 package faang.school.postservice.mapper.post;
 
 import faang.school.postservice.dto.post.KafkaPostDto;
+import faang.school.postservice.dto.post.KafkaPostViewDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Comment;
@@ -27,9 +28,14 @@ public interface PostMapper {
     @Mapping(target = "numLikes", expression = "java(mapLikesToNumLikes(entity.getLikes()))")
     PostDto toDto(Post entity);
 
+    PostDto toDto(RedisPost redisPost);
+
     Post toEntity(PostDto dto);
 
-    KafkaPostDto toKafkaDto(Post entity);
+    KafkaPostDto toKafkaPostDto(Post entity);
+
+    @Mapping(source = "id", target = "postId")
+    KafkaPostViewDto toKafkaPostViewDto(PostDto dto);
 
     @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapLikes")
     @Mapping(source = "comments", target = "commentIds", qualifiedByName = "mapComments")
