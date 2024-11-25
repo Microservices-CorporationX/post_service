@@ -25,6 +25,7 @@ public class KafkaLikeConsumer {
     private final ObjectMapper objectMapper;
     private final PostRedisRepository redisPostRepository;
     private final AtomicBoolean running = new AtomicBoolean(false);
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @KafkaListener(topics = TOPIC, groupId = GROUP_ID)
     public void onMessage(ConsumerRecord<String, String> record, Acknowledgment ack) {
@@ -32,6 +33,9 @@ public class KafkaLikeConsumer {
             KafkaLikeEvent event = objectMapper.readValue(record.value(), KafkaLikeEvent.class);
             log.info("Event: {}", event);
             if (running.compareAndSet(false, true) ) {
+                redisTemplate.watch(event.getPostId().toString());
+                redisTemplate.multi();
+
                 PostRedis postRedis = redisPostRepository.findById(event.getPostId().toString()).orElseThrow(NullPointerException::new);
                 postRedis.setCountLikes(postRedis.getCountLikes() + 1);
                 redisPostRepository.save(postRedis);

@@ -16,7 +16,6 @@ import java.util.List;
 public class KafkaPostEvent {
     private UserDto author;
     private Long postId;
-    private List<Long> followersIds;
     private Long countLikes;
     private Long countComments;
     private Long countViews;

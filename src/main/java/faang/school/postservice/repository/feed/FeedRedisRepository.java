@@ -36,7 +36,7 @@ public class FeedRedisRepository {
 
     private void checkZSetSize(String feedKey) {
         Long size = zSetOperations.size(feedKey);
-        if (size != null && size >= 500) {
+        if (size >= 500) {
             zSetOperations.removeRange(feedKey, 0, 0);
         }
     }
