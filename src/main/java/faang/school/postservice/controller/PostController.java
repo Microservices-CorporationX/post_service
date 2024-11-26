@@ -19,9 +19,11 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -32,7 +34,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -45,11 +49,21 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @CreatePostDoc
-    public ResponseEntity<ResponsePostDto> create(@Valid @RequestBody CreatePostDto createPostDto) {
+    public ResponseEntity<ResponsePostDto> create(
+            @RequestPart("createPostDto") @Valid CreatePostDto createPostDto,
+            @RequestPart(value = "file", required = false) @Size(max = 10) List<MultipartFile> files
+    ) {
+        files.forEach(file -> log.info("Image File uploaded: {}", file.getOriginalFilename()));
         log.info("Request for new post from user: {}", createPostDto.getAuthorId());
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.create(createPostDto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(postService.create(createPostDto, files));
+    }
+
+    @PostMapping(value = "/upload-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadFiles(@RequestPart(value = "file", required = false) MultipartFile file) {
+        log.info("File uploaded: {}", file.getOriginalFilename());
+        return ResponseEntity.ok("File uploaded successfully: " + file.getOriginalFilename());
     }
 
     @PutMapping("{postId}/publish")

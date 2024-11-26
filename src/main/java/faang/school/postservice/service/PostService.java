@@ -6,13 +6,16 @@ import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -24,6 +27,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
@@ -31,9 +35,12 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
+    private final MinioS3Service minioS3Service;
+    private final ResourceService resourceService;
+
 
     @Transactional
-    public ResponsePostDto create(CreatePostDto createPostDto) {
+    public ResponsePostDto create(CreatePostDto createPostDto, List<MultipartFile> files) {
         postValidator.validateContent(createPostDto.getContent());
         postValidator.validateAuthorIdAndProjectId(createPostDto.getAuthorId(), createPostDto.getProjectId());
         postValidator.validateAuthorId(createPostDto.getAuthorId());
@@ -46,6 +53,14 @@ public class PostService {
         }
 
         Post entity = postMapper.toEntity(createPostDto);
+
+        for (MultipartFile file : files) {
+            String folder = "ByAuthorize" + createPostDto.getAuthorId();
+            Resource resource = minioS3Service.uploadFile(file, folder);
+            resource.setPost(entity);
+            resourceService.saveResource(resource);
+            log.info("Image File uploaded: {}", file.getOriginalFilename());
+        }
 
         entity.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC+3")));
         entity.setPublished(false);
