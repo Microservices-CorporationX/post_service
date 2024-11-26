@@ -38,7 +38,6 @@ public class PostService {
     private final MinioS3Service minioS3Service;
     private final ResourceService resourceService;
 
-
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto, List<MultipartFile> files) {
         postValidator.validateContent(createPostDto.getContent());
@@ -54,14 +53,6 @@ public class PostService {
 
         Post entity = postMapper.toEntity(createPostDto);
 
-        for (MultipartFile file : files) {
-            String folder = "ByAuthorize" + createPostDto.getAuthorId();
-            Resource resource = minioS3Service.uploadFile(file, folder);
-            resource.setPost(entity);
-            resourceService.saveResource(resource);
-            log.info("Image File uploaded: {}", file.getOriginalFilename());
-        }
-
         entity.setCreatedAt(LocalDateTime.now(ZoneId.of("UTC+3")));
         entity.setPublished(false);
         entity.setDeleted(false);
@@ -71,6 +62,14 @@ public class PostService {
         }
 
         postRepository.save(entity);
+
+        for (MultipartFile file : files) {
+            String folder = "ByAuthorize" + createPostDto.getAuthorId();
+            Resource resource = minioS3Service.uploadFile(file, folder);
+            resource.setPost(entity);
+            log.info("Image File uploaded: {}", file.getOriginalFilename());
+            resourceService.saveResource(resource);
+        }
 
         return postMapper.toDto(entity);
     }
@@ -99,7 +98,6 @@ public class PostService {
         validateHashtags(updatePostDto.getHashtags());
 
         Post post = postRepository.findById(postId).get();
-
 
         if (hasHashtags(updatePostDto.getHashtags())) {
             post.setHashtags(getAndCreateHashtags(updatePostDto.getHashtags()));
