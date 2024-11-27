@@ -21,11 +21,14 @@ public class MinioConfig {
     @Value("${services.s3.endpoint}")
     private String endpoint;
 
+    @Value("${services.s3.region}")
+    private String region;
+
     @Bean
     public AmazonS3 amazonS3() {
         BasicAWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
         return AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, "us-east-1")) // MinIO uses a fictitious region
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region)) // MinIO uses a fictitious region
                 .withPathStyleAccessEnabled(true)
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();
