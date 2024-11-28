@@ -100,14 +100,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public List<PostUpdateDto> getPublishedPostsByAuthorId(long id) {
-        List<Post> allPosts = postRepository.findByAuthorId(id);
+        List<Post> allPosts = postRepository.findByAuthorIdWithLikes(id);
 
         return filerAndSortPublishedPosts(allPosts);
     }
 
     @Override
     public List<PostUpdateDto> getPublishedPostsByProjectId(long id) {
-        List<Post> allPosts = postRepository.findByProjectId(id);
+        List<Post> allPosts = postRepository.findByProjectIdWithLikes(id);
 
         return filerAndSortPublishedPosts(allPosts);
     }
