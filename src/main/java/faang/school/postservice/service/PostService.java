@@ -8,6 +8,7 @@ import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.util.ImageResolutionConversionUtil;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -37,6 +38,7 @@ public class PostService {
     private final HashtagValidator hashtagValidator;
     private final MinioS3Service minioS3Service;
     private final ResourceService resourceService;
+    private final ImageResolutionConversionUtil imageResolutionConversionUtil;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto, List<MultipartFile> files) {
@@ -62,6 +64,10 @@ public class PostService {
         }
 
         postRepository.save(entity);
+
+        files = imageResolutionConversionUtil.imagesListCompression(files);
+        // сделать валидацию, на надобности преобразования картинки
+        // добавить сюда преобразование картинок с большим разрешением
 
         for (MultipartFile file : files) {
             String folder = "ByAuthorize" + createPostDto.getAuthorId();

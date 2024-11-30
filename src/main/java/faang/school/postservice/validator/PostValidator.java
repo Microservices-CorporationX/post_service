@@ -4,13 +4,22 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityWasRemovedException;
+import faang.school.postservice.exception.FileException;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class PostValidator {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
