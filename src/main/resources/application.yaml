@@ -28,14 +28,32 @@ spring:
         comment: comment_channel
       feed-cache:
         batch_size: 20
+        max_feed_size: 500
       post-cache:
         comments-in-post: 3
+
+  kafka:
+    bootstrap-servers: localhost:29092
+    consumer:
+      deserializer-trusted-packages: "java.util,java.lang,faang.school.postservice.dto.event"
+      groupId: consumer-group-one
+    topic:
+      posts: posts
+      likes: likes
+      comments: comments
+      post_views: post-views
+      feed_heater: feed-heater
+
 server:
   port: 8081
 
 logging:
   level:
     root: info
+
+news-feed:
+  heater:
+    threads: 4
 
 post:
   publisher:

@@ -1,6 +1,6 @@
 package faang.school.postservice.consumer;
 
-import faang.school.postservice.dto.comment.KafkaCommentDto;
+import faang.school.postservice.dto.event.KafkaCommentDto;
 import faang.school.postservice.service.post.PostCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

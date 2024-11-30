@@ -20,6 +20,8 @@ public class KafkaTopicConfig {
     private String COMMENTS_TOPIC;
     @Value(value = "${spring.kafka.topic.post_views:post-views}")
     private String POST_VIEWS_TOPIC;
+    @Value(value = "${spring.kafka.topic.feed_heater:feed-heater}")
+    private String FEED_HEATER_TOPIC;
     @Value(value = "${spring.kafka.bootstrap-servers:localhost:29092}")
     private String bootstrapAddress;
 
@@ -48,5 +50,10 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic topicPostViews() {
         return new NewTopic(POST_VIEWS_TOPIC, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic topicFeedHeater() {
+        return new NewTopic(FEED_HEATER_TOPIC, 1, (short) 1);
     }
 }

@@ -1,7 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.like.KafkaLikeDto;
+import faang.school.postservice.dto.event.KafkaLikeDto;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.redisEvent.LikeEvent;
 import faang.school.postservice.mapper.LikeEventMapper;

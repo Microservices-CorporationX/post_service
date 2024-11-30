@@ -18,7 +18,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @AllArgsConstructor
 @NoArgsConstructor
 @RedisHash(value = "posts", timeToLive = 86400L)
-public class RedisPost {
+public class CachePost {
     @Id
     private Long id;
     private String content;

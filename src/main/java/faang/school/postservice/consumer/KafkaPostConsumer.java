@@ -1,6 +1,6 @@
 package faang.school.postservice.consumer;
 
-import faang.school.postservice.dto.post.KafkaPostDto;
+import faang.school.postservice.dto.event.KafkaPostDto;
 import faang.school.postservice.service.FeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,10 +17,10 @@ public class KafkaPostConsumer {
     @KafkaListener(topics = "${spring.kafka.topic.posts:posts}")
     public void listener(KafkaPostDto event, Acknowledgment acknowledgment) {
         try {
-            feedService.addPostIdToAuthorSubscribers(event.getPostId(), event.getSubscriberIds());
+            feedService.addPostIdToAuthorSubscribers(event.getId(), event.getSubscriberIds());
             acknowledgment.acknowledge();
         } catch (Exception e) {
-            log.error("Post with id:{} is not added to subscribers feeds.", event.getPostId());
+            log.error("Post with id:{} is not added to subscribers feeds.", event.getId());
             throw e;
         }
     }

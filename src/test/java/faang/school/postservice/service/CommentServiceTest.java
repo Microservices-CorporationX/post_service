@@ -59,6 +59,8 @@ class CommentServiceTest {
     @Mock
     private UserServiceClient userServiceClient;
     @Mock
+    private UserCacheService userCacheService;
+    @Mock
     private KafkaCommentProducer kafkaCommentProducer;
     @InjectMocks
     private CommentService service;

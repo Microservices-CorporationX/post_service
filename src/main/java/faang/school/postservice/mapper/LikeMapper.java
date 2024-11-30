@@ -1,6 +1,6 @@
 package faang.school.postservice.mapper;
 
-import faang.school.postservice.dto.like.KafkaLikeDto;
+import faang.school.postservice.dto.event.KafkaLikeDto;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.model.Like;
 import org.mapstruct.Mapper;

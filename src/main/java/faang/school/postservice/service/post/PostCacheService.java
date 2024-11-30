@@ -1,12 +1,15 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.model.redis.RedisPost;
-import faang.school.postservice.repository.redis.RedisPostRepository;
+import faang.school.postservice.mapper.post.PostMapper;
+import faang.school.postservice.model.redis.CachePost;
+import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.CachePostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -15,29 +18,46 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class PostCacheService {
     @Value(value = "${spring.data.redis.post-cache.comments-in-post:3}")
     private int maxCommentsInPostCache;
-    private final RedisPostRepository redisPostRepository;
+    private final CachePostRepository cachePostRepository;
+    private final PostRepository postRepository;
+    private final PostMapper mapper;
 
-    public List<RedisPost> getPostCacheByIds(List<Long> postIds) {
-        return redisPostRepository.findAllById(postIds);
+    public List<CachePost> getPostCacheByIds(List<Long> postIds) {
+        List<CachePost> listOfCachePost = new ArrayList<>();
+        for (Long postId : postIds) {
+            CachePost cachePost = getCachePost(postId);
+            listOfCachePost.add(cachePost);
+        }
+        return listOfCachePost;
     }
 
-    public void incrementPostLikes(Long postId) {
-        RedisPost redisPost = getRedisPost(postId);
-        redisPost.incrementNumLikes();
-        redisPostRepository.save(redisPost);
+    public void incrementPostLikes(Long postId, Long likeId) {
+        CachePost cachePost = getCachePost(postId);
+        cachePost.getLikeIds().add(likeId);
+        cachePost.incrementNumLikes();
+        cachePostRepository.save(cachePost);
     }
 
     public void addPostView(Long postId) {
-        RedisPost redisPost = getRedisPost(postId);
-        redisPost.incrementNumViews();
-        redisPostRepository.save(redisPost);
+        CachePost cachePost = getCachePost(postId);
+        cachePost.incrementNumViews();
+        cachePostRepository.save(cachePost);
     }
 
     public void addCommentToPostCache(Long postId, CommentDto commentDto) {
-        RedisPost redisPost = getRedisPost(postId);
-        CopyOnWriteArraySet<CommentDto> comments = redisPost.getComments();
+        CachePost cachePost = getCachePost(postId);
+        CopyOnWriteArraySet<CommentDto> comments = cachePost.getComments();
+        if (comments == null) {
+            comments = new CopyOnWriteArraySet<>();
+        }
         checkCapacity(comments);
+        addCommentAndSave(commentDto, comments, cachePost);
+    }
+
+    private void addCommentAndSave(CommentDto commentDto, CopyOnWriteArraySet<CommentDto> comments, CachePost cachePost) {
         comments.add(commentDto);
+        cachePost.setComments(comments);
+        cachePostRepository.save(cachePost);
     }
 
     private void checkCapacity(CopyOnWriteArraySet<CommentDto> comments) {
@@ -46,8 +66,10 @@ public class PostCacheService {
         }
     }
 
-    private RedisPost getRedisPost(Long postId) {
-        return redisPostRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("No post in Redis"));
+    private CachePost getCachePost(Long postId) {
+        return cachePostRepository.save(cachePostRepository.findById(postId)
+                .orElse(mapper.toCachePost(postRepository.findById(postId)
+                        .orElseThrow(() -> new RuntimeException("There is no such post")))));
+
     }
 }

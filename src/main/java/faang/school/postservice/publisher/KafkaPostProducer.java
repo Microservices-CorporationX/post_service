@@ -1,8 +1,6 @@
 package faang.school.postservice.publisher;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.dto.post.KafkaPostDto;
+import faang.school.postservice.dto.event.KafkaPostDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,18 +9,11 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class KafkaPostProducer implements EventPublisher<KafkaPostDto> {
-
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final NewTopic topicPosts;
-    private final ObjectMapper objectMapper;
 
     @Override
     public void publish(KafkaPostDto event) {
-        try {
-            String message = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(topicPosts.name(), message);
-        } catch (JsonProcessingException exception) {
-            throw new RuntimeException(exception);
-        }
+        kafkaTemplate.send(topicPosts.name(), event);
     }
 }

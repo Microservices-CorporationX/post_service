@@ -1,8 +1,8 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.event.KafkaPostDto;
 import faang.school.postservice.dto.filter.PostFilterDto;
-import faang.school.postservice.dto.post.KafkaPostDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.filter.post.PostFilter;
@@ -11,10 +11,11 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.KafkaPostProducer;
 import faang.school.postservice.publisher.KafkaPostViewProducer;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.repository.redis.RedisPostRepository;
+import faang.school.postservice.repository.redis.CachePostRepository;
 import faang.school.postservice.service.UserCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,7 @@ public class PostService {
     private final KafkaPostProducer kafkaPostProducer;
     private final KafkaPostViewProducer kafkaPostViewProducer;
     private final UserServiceClient userClient;
-    private final RedisPostRepository redisPostRepository;
+    private final CachePostRepository cachePostRepository;
     private final UserCacheService userCacheService;
 
     public PostDto create(PostDto postDto) {
@@ -41,12 +42,9 @@ public class PostService {
         Post postEntity = mapper.toEntity(postDto);
         postEntity = preparer.prepareForCreate(postDto, postEntity);
         Post createdEntity = postRepository.save(postEntity);
-        userCacheService.saveRedisUser(createdEntity.getAuthorId());
-        KafkaPostDto kafkaDto = mapper.toKafkaPostDto(createdEntity);
-        kafkaDto.setSubscriberIds(userClient.getUser(createdEntity.getAuthorId()).getMenteesIds());
-        redisPostRepository.save(mapper.toRedisPost(createdEntity));
-        kafkaPostProducer.publish(kafkaDto);
-        log.info("Created a post: {}", createdEntity);
+        userCacheService.saveCacheUser(createdEntity.getAuthorId());
+        cachePostRepository.save(mapper.toCachePost(createdEntity));
+        sendKafkaEvent(createdEntity);
         return mapper.toDto(createdEntity);
     }
 
@@ -103,7 +101,22 @@ public class PostService {
         return postDtoList;
     }
 
+    private void sendKafkaEvent(Post createdEntity) {
+        KafkaPostDto kafkaDto = mapper.toKafkaPostDto(createdEntity);
+        kafkaDto.setSubscriberIds(userClient.getUser(createdEntity.getAuthorId()).getFollowersIds());
+        kafkaPostProducer.publish(kafkaDto);
+    }
+
     private Post getPostEntity(Long postId) {
-        return postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Такого сообщения не существует."));
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("There is no such message"));
+    }
+
+    public List<PostDto> getPostsByAuthorIds(List<Long> menteesIds, Long startPostId, int batchSize) {
+        List<Post> posts = postRepository
+                .findPostsByAuthorIds(menteesIds, startPostId, PageRequest.of(0, batchSize));
+        return posts.stream()
+                .map(mapper::toDto)
+                .toList();
     }
 }

@@ -1,4 +1,4 @@
-package faang.school.postservice.dto.post;
+package faang.school.postservice.dto.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class KafkaPostViewDto {
+public class KafkaLikeDto {
+    private Long id;
     private Long postId;
+    private Long authorId;
 }

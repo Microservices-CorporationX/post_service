@@ -6,14 +6,16 @@ import faang.school.postservice.service.publisher.messagePublisherImpl.CommentEv
 import faang.school.postservice.service.publisher.PublicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@org.springframework.context.annotation.Configuration
+@Configuration
 @RequiredArgsConstructor
 public class ConfPublicationService {
 
     @Bean
-    public PublicationService<CommentEventPublisher, CommentEvent> publicationService(CommentEventPublisher commentEventPublisher,
-                                                                                      ObjectMapper objectMapper) {
+    public PublicationService<CommentEventPublisher, CommentEvent> publicationService(
+            CommentEventPublisher commentEventPublisher,
+            ObjectMapper objectMapper) {
         return new PublicationService<>(commentEventPublisher, objectMapper);
     }
 }

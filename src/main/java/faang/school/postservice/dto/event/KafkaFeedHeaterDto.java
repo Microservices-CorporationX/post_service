@@ -1,16 +1,16 @@
-package faang.school.postservice.dto.comment;
+package faang.school.postservice.dto.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class KafkaCommentDto {
-    private CommentDto commentDto;
-    private Long postId;
-    private Long authorId;
+public class KafkaFeedHeaterDto {
+    private List<Long> userIds;
 }

@@ -2,7 +2,6 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
-import faang.school.postservice.service.FeedHeatService;
 import faang.school.postservice.service.FeedService;
 import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +18,6 @@ import java.util.List;
 public class FeedController {
     private final FeedService feedService;
     private final UserContext userContext;
-    private final FeedHeatService feedHeatService;
 
     @GetMapping("/feed")
     public List<PostDto> getUserFeed(@Nullable @RequestParam("postId") Long postId) {
@@ -29,6 +27,6 @@ public class FeedController {
 
     @GetMapping("/heat")
     public void sendHeatEventsAsync() {
-        feedHeatService.sendHeatEvents();
+        feedService.sendHeatEvents();
     }
 }

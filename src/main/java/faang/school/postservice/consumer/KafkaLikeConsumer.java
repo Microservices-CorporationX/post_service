@@ -1,6 +1,6 @@
 package faang.school.postservice.consumer;
 
-import faang.school.postservice.dto.like.KafkaLikeDto;
+import faang.school.postservice.dto.event.KafkaLikeDto;
 import faang.school.postservice.service.post.PostCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ public class KafkaLikeConsumer {
     @KafkaListener(topics = "${spring.kafka.topic.likes:likes}")
     public void listener(KafkaLikeDto event, Acknowledgment acknowledgment) {
         try {
-            postCacheService.incrementPostLikes(event.getPostId());
+            postCacheService.incrementPostLikes(event.getPostId(), event.getId());
             acknowledgment.acknowledge();
         } catch (Exception e) {
             log.error("Like is not added to post with id: " + event.getPostId());

@@ -19,7 +19,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.KafkaPostProducer;
 import faang.school.postservice.publisher.KafkaPostViewProducer;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.repository.redis.RedisPostRepository;
+import faang.school.postservice.repository.redis.CachePostRepository;
 import faang.school.postservice.service.UserCacheService;
 import faang.school.postservice.util.container.PostContainer;
 import org.junit.jupiter.api.Assertions;
@@ -59,7 +59,7 @@ public class PostServiceTest {
     @Spy
     private UserServiceClient userClient;
     @Mock
-    private RedisPostRepository redisPostRepository;
+    private CachePostRepository redisPostRepository;
     @Mock
     private UserCacheService userCacheService;
     @Spy

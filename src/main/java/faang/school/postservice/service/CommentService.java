@@ -3,8 +3,8 @@ package faang.school.postservice.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.dto.comment.KafkaCommentDto;
 import faang.school.postservice.dto.event.CommentEvent;
+import faang.school.postservice.dto.event.KafkaCommentDto;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -52,11 +52,8 @@ public class CommentService {
         Comment comment = mapper.toEntity(dto);
         comment.setPost(post);
         Comment savedComment = commentRepository.save(comment);
-        userCacheService.saveRedisUser(comment.getAuthorId());
-        KafkaCommentDto kafkaDto = mapper.toKafkaDto(savedComment);
-        CommentDto commentDto = mapper.toDto(savedComment);
-        kafkaDto.setCommentDto(commentDto);
-        kafkaCommentProducer.publish(kafkaDto);
+        userCacheService.saveCacheUser(comment.getAuthorId());
+        CommentDto commentDto = getCommentDtoAndSendEvent(savedComment);
         log.info("comment with id:{} created.", savedComment.getId());
         publishService.publishEvent(mapper.toCommentEvent(savedComment));
         return commentDto;
@@ -80,6 +77,14 @@ public class CommentService {
         Comment commentForDelete = getCommentForDelete(commentId, post.getComments());
         commentRepository.delete(commentForDelete);
         return mapper.toDto(commentForDelete);
+    }
+
+    private CommentDto getCommentDtoAndSendEvent(Comment savedComment) {
+        KafkaCommentDto kafkaDto = mapper.toKafkaDto(savedComment);
+        CommentDto commentDto = mapper.toDto(savedComment);
+        kafkaDto.setCommentDto(commentDto);
+        kafkaCommentProducer.publish(kafkaDto);
+        return commentDto;
     }
 
     private List<CommentDto> getListCommentDto(List<Comment> comments) {

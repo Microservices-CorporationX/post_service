@@ -1,14 +1,14 @@
 package faang.school.postservice.mapper.post;
 
-import faang.school.postservice.dto.post.KafkaPostDto;
-import faang.school.postservice.dto.post.KafkaPostViewDto;
+import faang.school.postservice.dto.event.KafkaPostDto;
+import faang.school.postservice.dto.event.KafkaPostViewDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.model.redis.RedisPost;
+import faang.school.postservice.model.redis.CachePost;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -28,7 +28,7 @@ public interface PostMapper {
     @Mapping(target = "numLikes", expression = "java(mapLikesToNumLikes(entity.getLikes()))")
     PostDto toDto(Post entity);
 
-    PostDto toDto(RedisPost redisPost);
+    PostDto toDto(CachePost cachePost);
 
     Post toEntity(PostDto dto);
 
@@ -43,7 +43,7 @@ public interface PostMapper {
     @Mapping(source = "ad.id", target = "adId")
     @Mapping(source = "resources", target = "resourceIds", qualifiedByName = "mapResources")
     @Mapping(target = "numLikes", expression = "java(mapLikesToNumLikes(entity.getLikes()))")
-    RedisPost toRedisPost(Post entity);
+    CachePost toCachePost(Post entity);
 
     @Named("mapLikes")
     default List<Long> mapLikesToLikeIds(List<Like> likes) {

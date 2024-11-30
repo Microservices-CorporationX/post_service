@@ -6,15 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.support.collections.RedisZSet;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@RedisHash(value = "users", timeToLive = 86400L)
-public class RedisUser {
+@RedisHash("feed")
+public class CacheFeed {
     @Id
-    private Long id;
-    private String username;
-    private String email;
+    private Long followerId;
+    private RedisZSet<Long> postIds;
 }
