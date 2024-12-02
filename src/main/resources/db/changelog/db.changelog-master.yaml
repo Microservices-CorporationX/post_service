@@ -5,3 +5,7 @@ databaseChangeLog:
       file: db/changelog/changeset/post_V002__ad.sql
   - include:
       file: db/changelog/changeset/post_V003_resource.sql
+  - include:
+      file: db/changelog/changeset/post_V004_post_add_verify_cols.sql
+  - include:
+      file: db/changelog/changeset/post_V005_post_alter_verified_column_default_val.sql

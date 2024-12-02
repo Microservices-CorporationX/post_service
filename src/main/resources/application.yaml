@@ -63,6 +63,26 @@ resilience4j:
   retry:
     instances:
       sightengine-api-retry:
-        max-attempts: 10
+        max-attempts: 5
         wait-duration: 200ms
         exponential-backoff-multiplier: 2.0
+
+thread-pool:
+  verification-content-pool:
+    num-of-thread: 5
+    num-of-chunk: 10
+
+schedule:
+  verify-posts:
+    cron: "0 0 3 * * ?"
+
+moderation:
+  dictionary:
+    path: src/main/resources/dictionary.json
+    text-split-regex: "[^\\p{L}\\p{N}]+"
+  targets:
+    sexual: 0.7
+    discriminatory: 0.7
+    insulting: 0.7
+    violent: 0.7
+    toxic: 0.7

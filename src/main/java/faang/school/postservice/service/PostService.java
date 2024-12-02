@@ -2,20 +2,28 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.verification.content.VerificationContentConfig;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
+import faang.school.postservice.dto.sightengine.textAnalysis.ModerationClasses;
+import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.moderation.ModerationDictionary;
+import faang.school.postservice.service.moderation.sightengine.ModerationVerifier;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import faang.school.postservice.validator.PostValidator;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.servlet.View;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -30,6 +38,9 @@ public class PostService {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final PostValidator validator;
+    private final SightEngineReactiveClient sightEngineReactiveClient;
+    private final ModerationDictionary moderationDictionary;
+    private final View error;
 
     @Transactional
     public PostDto createPost(PostDto postDto) {
@@ -162,5 +173,55 @@ public class PostService {
     public boolean isPostNotExist(long postId) {
         log.debug("start searching for existence post with id {}", postId);
         return !postRepository.existsById(postId);
+    }
+
+    public List<Post> findNotReviewedPost() {
+        log.info("start reading not reviewed posts");
+        return postRepository.findByVerifiedDateIsNull();
+    }
+
+    @Async(value = VerificationContentConfig.THREAD_POOL_BEAN_NAME)
+    public void verifyPostAsync(List<Post> posts) {
+        posts.forEach(post -> {
+            log.info("start verifying post with id {}", post.getId());
+            sightEngineReactiveClient.analyzeText(post.getContent())
+                    .subscribe(
+                            response -> {
+                                log.debug("Response received! Verifying post with id {}", post.getId());
+                                boolean verified = isVerified(response, post);
+                                post.setVerified(verified);
+                                post.setVerifiedDate(LocalDateTime.now());
+                                postRepository.save(post);
+                            },
+                            ex -> {
+                                log.error("Text analyzer client return error {}", ex.getMessage(), ex);
+                                boolean verified = moderationDictionary.isVerified(post.getContent());
+                                post.setVerified(verified);
+                                post.setVerifiedDate(LocalDateTime.now());
+                                postRepository.save(post);
+                            }
+                    );
+        });
+    }
+
+    private boolean isVerified(TextAnalysisResponse textAnalysisResponse, Post post) {
+        if (textAnalysisResponse == null) {
+            log.warn("Text analysis response is null. Analyse with dictionary");
+            return moderationDictionary.isVerified(post.getContent());
+        }
+        if (textAnalysisResponse.getModerationClasses() == null) {
+            log.warn("Moderation classes is null. Analyse with dictionary");
+            return moderationDictionary.isVerified(post.getContent());
+        }
+
+        log.debug("Start analysing response");
+        ModerationClasses moderationClasses = textAnalysisResponse.getModerationClasses();
+        return new ModerationVerifier()
+                .sexual(moderationClasses.getSexual())
+                .discriminatory(moderationClasses.getDiscriminatory())
+                .discriminatory(moderationClasses.getInsulting())
+                .discriminatory(moderationClasses.getViolent())
+                .toxic(moderationClasses.getToxic())
+                .verify();
     }
 }

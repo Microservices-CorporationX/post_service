@@ -9,14 +9,19 @@ import java.util.List;
 public class ModerationClasses {
     @JsonProperty("available")
     private List<String> available;
+
     @JsonProperty("sexual")
-    private double sexual;
+    private Double sexual;
+
     @JsonProperty("discriminatory")
-    private double discriminatory;
+    private Double discriminatory;
+
     @JsonProperty("insulting")
-    private double insulting;
+    private Double insulting;
+
     @JsonProperty("violent")
-    private double violent;
+    private Double violent;
+
     @JsonProperty("toxic")
-    private double toxic;
+    private Double toxic;
 }
