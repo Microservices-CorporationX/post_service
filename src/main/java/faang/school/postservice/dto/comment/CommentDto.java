@@ -22,7 +22,6 @@ public class CommentDto {
     private Long id;
 
     @NotBlank(message = "Content should not be blank")
-    @NotBlank(message = "Content should not be null")
     @Size(max = 4096, message = "Content must not exceed 4096 characters")
     private String content;
 
