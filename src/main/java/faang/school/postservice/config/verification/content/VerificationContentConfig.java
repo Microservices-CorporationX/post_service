@@ -18,7 +18,6 @@ public class VerificationContentConfig {
     public static final String THREAD_POOL_BEAN_NAME = "verificationContentPool";
 
     @Bean(name = THREAD_POOL_BEAN_NAME)
-
     public ExecutorService getThreadPool() {
         return Executors.newFixedThreadPool(numOfThreads);
     }

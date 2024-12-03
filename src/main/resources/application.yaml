@@ -81,8 +81,8 @@ moderation:
     path: src/main/resources/dictionary.json
     text-split-regex: "[^\\p{L}\\p{N}]+"
   targets:
-    sexual: 0.7
-    discriminatory: 0.7
-    insulting: 0.7
-    violent: 0.7
-    toxic: 0.7
+    SEXUAL: 0.7
+    DISCRIMINATORY: 0.7
+    INSULTING: 0.7
+    VIOLENT: 0.7
+    TOXIC: 0.7

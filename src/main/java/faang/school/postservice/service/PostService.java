@@ -13,8 +13,8 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.moderation.ModerationDictionary;
-import faang.school.postservice.service.moderation.sightengine.ModerationVerifier;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
+import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
 import faang.school.postservice.validator.PostValidator;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.View;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -40,7 +39,7 @@ public class PostService {
     private final PostValidator validator;
     private final SightEngineReactiveClient sightEngineReactiveClient;
     private final ModerationDictionary moderationDictionary;
-    private final View error;
+    private final ModerationVerifierFactory moderationVerifierFactory;
 
     @Transactional
     public PostDto createPost(PostDto postDto) {
@@ -216,11 +215,11 @@ public class PostService {
 
         log.debug("Start analysing response");
         ModerationClasses moderationClasses = textAnalysisResponse.getModerationClasses();
-        return new ModerationVerifier()
+        return moderationVerifierFactory.create()
                 .sexual(moderationClasses.getSexual())
                 .discriminatory(moderationClasses.getDiscriminatory())
-                .discriminatory(moderationClasses.getInsulting())
-                .discriminatory(moderationClasses.getViolent())
+                .insulting(moderationClasses.getInsulting())
+                .violent(moderationClasses.getViolent())
                 .toxic(moderationClasses.getToxic())
                 .verify();
     }
