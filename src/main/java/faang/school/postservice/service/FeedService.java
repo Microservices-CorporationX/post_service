@@ -11,4 +11,5 @@ public interface FeedService {
 
     List<RedisPostDto> getNewsFeed(Long userId, int page, int pageSize);
 
+    void startHeating();
 }

@@ -13,6 +13,4 @@ import java.util.Optional;
 @Repository
 public interface UserShortInfoRepository extends JpaRepository<UserShortInfo, Long> {
 
-    @Query("SELECT u.lastSavedAt FROM UserShortInfo u WHERE u.userId = :userId")
-    Optional<LocalDateTime> findLastSavedAtByUserId(@Param("userId") Long userId);
 }

@@ -2,8 +2,6 @@ package faang.school.postservice.client;
 
 import faang.school.postservice.model.dto.UserDto;
 import faang.school.postservice.model.dto.UserWithFollowersDto;
-import faang.school.postservice.model.dto.UserWithoutFollowersDto;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +26,4 @@ public interface UserServiceClient {
 
     @GetMapping("/users/{userId}/with-followers")
     UserWithFollowersDto getUserWithFollowers(@PathVariable long userId);
-
-    @GetMapping("/users/{userId}/without-followers")
-    UserWithoutFollowersDto getUserWithoutFollowers(@PathVariable long userId);
 }

@@ -37,7 +37,7 @@ spring:
 
   kafka:
     admin:
-      auto-create-topics: true
+      auto-create-topics: false
       client-id: post-service-kafka-admin
     bootstrap-servers: localhost:9092
     producer:
@@ -46,14 +46,12 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
     consumer:
-      group-id: post-service-group
       bootstrap-servers: localhost:9092
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: faang.school.postservice.model.event.kafka
     listener:
-      concurrency: 3
       ack-mode: manual
 
 server:
@@ -145,6 +143,15 @@ kafka:
     comment: comment_topic
     post-view: post_view_topic
     like: like_topic
+    init-heat-data: init_heat_data_topic
+  consumer:
+    groups:
+      post-service:
+        concurrency: 3
+        group-id: post-service-group
+      cache-heater:
+        concurrency:
+        group-id: cache-heater-group
 
 scheduler:
   cron:

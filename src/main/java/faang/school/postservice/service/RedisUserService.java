@@ -1,8 +1,10 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.model.dto.redis.cache.RedisUserDto;
+import faang.school.postservice.model.entity.UserShortInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface RedisUserService {
     void saveUserIfNotExists(RedisUserDto userDto);
@@ -12,4 +14,6 @@ public interface RedisUserService {
     void saveUser(RedisUserDto redisUserDto);
 
     List<Long> getFollowerIds(Long userId);
+
+    void updateUserIfStale(UserShortInfo userShortInfo, int refreshTime);
 }

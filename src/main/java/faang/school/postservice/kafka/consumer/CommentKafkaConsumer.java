@@ -24,7 +24,11 @@ public class CommentKafkaConsumer extends AbstractKafkaConsumer<CommentSentKafka
     private final UserShortInfoService userShortInfoService;
 
     @Override
-    @KafkaListener(topics = "${kafka.topics.comment}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(
+            topics = "${kafka.topics.comment}",
+            groupId = "${kafka.consumer.groups.post-service.group-id}",
+            concurrency = "${kafka.consumer.groups.post-service.concurrency}"
+    )
     public void consume(ConsumerRecord<String, CommentSentKafkaEvent> record, Acknowledgment acknowledgment) {
         super.consume(record, acknowledgment);
         acknowledgment.acknowledge();
@@ -32,18 +36,9 @@ public class CommentKafkaConsumer extends AbstractKafkaConsumer<CommentSentKafka
 
     @Override
     protected void processEvent(CommentSentKafkaEvent event) {
-        UserShortInfo userShortInfo = userShortInfoService.updateUserShortInfoIfStale(event.getCommentAuthorId());
-        RedisUserDto user = redisUserService.getUser(event.getCommentAuthorId());
-        if (user == null || user.getUpdatedAt().isBefore(LocalDateTime.now().minusHours(REFRESH_TIME_IN_HOURS))) {
-            user = new RedisUserDto(
-                    userShortInfo.getUserId(),
-                    userShortInfo.getUsername(),
-                    userShortInfo.getFileId(),
-                    userShortInfo.getSmallFileId(),
-                    null,
-                    LocalDateTime.now());
-            redisUserService.saveUser(user);
-        }
+        UserShortInfo userShortInfo = userShortInfoService
+                .updateUserShortInfoIfStale(event.getCommentAuthorId(), REFRESH_TIME_IN_HOURS);
+        redisUserService.updateUserIfStale(userShortInfo, REFRESH_TIME_IN_HOURS);
         redisPostService.addComment(event.getPostId(), event.getCommentId(), event.getCommentContent());
     }
 }

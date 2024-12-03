@@ -22,8 +22,12 @@ public class KafkaLikeConsumer extends AbstractKafkaConsumer<LikeKafkaEvent> {
         acknowledgment.acknowledge();
     }
 
-    @KafkaListener(topics = "${kafka.topics.like}", groupId = "${spring.kafka.consumer.group-id}")
     @Override
+    @KafkaListener(
+            topics = "${kafka.topics.like}",
+            groupId = "${kafka.consumer.groups.post-service.group-id}",
+            concurrency = "${kafka.consumer.groups.post-service.concurrency}"
+    )
     protected void processEvent(LikeKafkaEvent event) {
         try {
             redisPostService.incrementLikesWithTransaction(event.getPostId(), event.getLikeId());

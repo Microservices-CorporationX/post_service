@@ -14,7 +14,11 @@ public class PostViewKafkaConsumer extends AbstractKafkaConsumer<PostViewKafkaEv
     private final RedisPostService redisPostService;
 
     @Override
-    @KafkaListener(topics = "${kafka.topics.post-view}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(
+            topics = "${kafka.topics.post-view}",
+            groupId = "${kafka.consumer.groups.post-service.group-id}",
+            concurrency = "${kafka.consumer.groups.post-service.concurrency}"
+    )
     public void consume(ConsumerRecord<String, PostViewKafkaEvent> record, Acknowledgment acknowledgment) {
         super.consume(record, acknowledgment);
         acknowledgment.acknowledge();

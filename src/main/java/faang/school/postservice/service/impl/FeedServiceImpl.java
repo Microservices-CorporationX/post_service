@@ -105,6 +105,11 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
         return posts;
     }
 
+    @Override
+    public void startHeating() {
+
+    }
+
     private RedisPostDto convertMapToRedisPostDto(Map<Object, Object> postData) {
         RedisPostDto postDto = new RedisPostDto();
         postDto.setPostId(Long.valueOf(postData.get(PostFields.POST_ID).toString()));

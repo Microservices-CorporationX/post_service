@@ -28,7 +28,7 @@ public class UserShortInfo {
     @Column(name = "small_file_id")
     private String smallFileId;
 
-    @Column(name = "follower_ids", columnDefinition = "TEXT") // Сохраняем список ID как JSON-строку
+    @Column(name = "follower_ids", columnDefinition = "TEXT")
     private String followerIds;
 
     @Column(name = "last_saved_at", nullable = false, updatable = false, insertable = false)

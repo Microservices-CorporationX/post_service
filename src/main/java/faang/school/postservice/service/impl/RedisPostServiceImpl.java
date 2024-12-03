@@ -265,8 +265,8 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
         return COMMENT_KEY_PREFIX + commentId;
     }
 
-    private Map<String, Object> fetchAndCachePostIfAbsent(Long postId, String key) {
-        Map<Object, Object> postMap = redisTemplate.opsForHash().entries(key);
+    private Map<String, Object> fetchAndCachePostIfAbsent(Long postId, String postKey) {
+        Map<Object, Object> postMap = redisTemplate.opsForHash().entries(postKey);
         if (postMap.isEmpty()) {
             log.warn("Post with ID {} not found in Redis, fetching from database", postId);
             RedisPostDto postFromDb = fetchPostFromDatabase(postId);

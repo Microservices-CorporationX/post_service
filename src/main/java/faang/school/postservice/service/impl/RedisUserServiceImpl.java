@@ -13,7 +13,6 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -30,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class RedisUserServiceImpl implements RedisUserService, RedisTransactional {
     private static final String KEY_PREFIX = "user:";
-    private static final DateTimeFormatter formatter =  DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
     @Value("${redis.feed.ttl.user:86400}")
     private long userTtlInSeconds;
@@ -63,8 +62,17 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
     @Override
     public RedisUserDto getUser(Long userId) {
         String key = createKey(userId);
-        Map<String, Object> userMap = fetchAndCacheUserIfAbsent(userId, key);
-        return convertMapToUserDto(userMap);
+        if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
+            log.warn("User with ID {} not found in Redis, fetching from database", userId);
+            RedisUserDto redisUserDto = fetchUserFromDatabase(userId);
+            saveUser(redisUserDto);
+            return redisUserDto;
+        }
+
+        Map<Object, Object> redisData = redisTemplate.opsForHash().entries(key);
+        HashMap<String, Object> redisDataStrKey = redisData.entrySet().stream()
+                .collect(HashMap::new, (m, e) -> m.put(e.getKey().toString(), e.getValue()), Map::putAll);
+        return convertMapToUserDto(redisDataStrKey);
     }
 
     @Override
@@ -74,19 +82,19 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
         return deserializeFollowerIds(serializedFollowerIds);
     }
 
-
-    private Map<String, Object> fetchAndCacheUserIfAbsent(Long userId, String key) {
-        if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
-            log.warn("User with ID {} not found in Redis, fetching from database", userId);
-            RedisUserDto userFromDb = fetchUserFromDatabase(userId);
-            //TODO можно сделать чтобы saveUser возвращал Map<String, Object>
-            saveUser(userFromDb);
-            return convertUserDtoToMap(userFromDb);
+    @Override
+    public void updateUserIfStale(UserShortInfo userShortInfo, int refreshTime) {
+        RedisUserDto user = getUser(userShortInfo.getUserId());
+        if (user == null || user.getUpdatedAt().isBefore(LocalDateTime.now().minusHours(refreshTime))) {
+            user = new RedisUserDto(
+                    userShortInfo.getUserId(),
+                    userShortInfo.getUsername(),
+                    userShortInfo.getFileId(),
+                    userShortInfo.getSmallFileId(),
+                    deserializeFollowerIds(userShortInfo.getFollowerIds()),
+                    LocalDateTime.now());
+            saveUser(user);
         }
-
-        Map<Object, Object> redisData = redisTemplate.opsForHash().entries(key);
-        return redisData.entrySet().stream()
-                .collect(HashMap::new, (m, e) -> m.put(e.getKey().toString(), e.getValue()), Map::putAll);
     }
 
     private RedisUserDto fetchUserFromDatabase(Long userId) {
@@ -105,21 +113,17 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
     @Retryable(retryFor = RuntimeException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void saveUser(RedisUserDto redisUserDto) {
         String key = createKey(redisUserDto.getUserId());
+        Map<String, Object> userMap = convertUserDtoToMap(redisUserDto);
         executeRedisTransaction(() -> {
-            Map<String, Object> userMap = convertUserDtoToMap(redisUserDto);
             userMap.entrySet().stream()
                     .filter(entry -> entry.getValue() != null)
                     .forEach(entry -> redisTemplate.opsForHash().put(key, entry.getKey(), entry.getValue()));
-            updateTtl(key);
+            redisTemplate.expire(key, userTtlInSeconds, TimeUnit.SECONDS);
         });
     }
 
     private String createKey(Long userId) {
         return KEY_PREFIX + userId;
-    }
-
-    private void updateTtl(String key) {
-        redisTemplate.expire(key, userTtlInSeconds, TimeUnit.SECONDS);
     }
 
     private Map<String, Object> convertUserDtoToMap(RedisUserDto userDto) {

@@ -14,7 +14,11 @@ public class PostKafkaConsumer extends AbstractKafkaConsumer<PostPublishedKafkaE
     private final FeedService feedService;
 
     @Override
-    @KafkaListener(topics = "${kafka.topics.post}", groupId = "${spring.kafka.consumer.group-id}")
+    @KafkaListener(
+            topics = "${kafka.topics.post}",
+            groupId = "${kafka.consumer.groups.post-service.group-id}",
+            concurrency = "${kafka.consumer.groups.post-service.concurrency}"
+    )
     public void consume(ConsumerRecord<String, PostPublishedKafkaEvent> record, Acknowledgment acknowledgment) {
         super.consume(record, acknowledgment);
         acknowledgment.acknowledge();
