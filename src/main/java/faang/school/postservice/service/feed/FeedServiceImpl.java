@@ -5,7 +5,9 @@ import faang.school.postservice.repository.feed.FeedRedisRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -14,8 +16,9 @@ public class FeedServiceImpl implements FeedService {
 
     private final FeedRedisRepository redisRepository;
     @Override
-    public Set<PostRedis> getPosts(Long start, Long end, Long userId) {
+    public List<PostRedis> getPosts(Long start, Long end, Long userId) {
         Set<Object> posts = redisRepository.getAllFeedAsc(userId);
-        return Set.of();
+        List<PostRedis> postRedisList = posts.stream().map(o -> (PostRedis) o).toList();
+        return postRedisList;
     }
 }

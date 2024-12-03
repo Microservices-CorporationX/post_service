@@ -69,7 +69,6 @@ public class PostServiceImpl implements PostService {
         KafkaPostEvent event = KafkaPostEvent.builder()
                 .author(userDto)
                 .postId(post.getId())
-                .followersIds(userServiceClient.getUser(post.getAuthorId()).getFollowersIds())
                 .countComments((long) post.getComments().size())
                 .countLikes((long) post.getLikes().size())
                 .createdAt(LocalDateTime.now())
