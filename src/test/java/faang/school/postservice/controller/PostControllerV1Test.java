@@ -20,20 +20,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-public class PostControllerTest {
+public class PostControllerV1Test {
 
     private MockMvc mockMvc;
     @Mock
     private PostService postService;
     @InjectMocks
-    private PostController postController;
+    private PostControllerV1 postControllerV1;
 
     private PostDto postDto;
     private List<PostDto> postDtoList;
 
     @BeforeEach
     public void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(postController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(postControllerV1).build();
         postDto = PostDto.builder()
                 .id(1L)
                 .authorId(1L)
@@ -48,7 +48,7 @@ public class PostControllerTest {
 
     @Test
     public void testGetPost() throws Exception {
-        when(postService.getPostById(1L)).thenReturn(postDto);
+        when(postService.getPostDtoById(1L)).thenReturn(postDto);
 
         mockMvc.perform(get("/api/v1/post/1"))
                 .andExpect(status().isOk())
@@ -56,14 +56,14 @@ public class PostControllerTest {
                 .andExpect(jsonPath("$.authorId").value(1L))
                 .andExpect(jsonPath("$.content").value("content"))
                 .andExpect(jsonPath("$.published").value(false));
-        verify(postService, times(1)).getPostById(1L);
+        verify(postService, times(1)).getPostDtoById(1L);
     }
 
     @Test
     public void testPublishPost() throws Exception {
         when(postService.publishPost(1L)).thenReturn(postDto);
 
-        mockMvc.perform(patch("/api/v1/post/publish/1"))
+        mockMvc.perform(put("/api/v1/post/publish/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.authorId").value(1L))
@@ -76,7 +76,7 @@ public class PostControllerTest {
     public void testDeletePost() throws Exception {
         when(postService.deletePost(1L)).thenReturn(postDto);
 
-        mockMvc.perform(delete("/api/v1/post/delete/1"))
+        mockMvc.perform(delete("/api/v1/post/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.authorId").value(1L))
@@ -89,7 +89,7 @@ public class PostControllerTest {
     public void testGetAllDraftNotDeletedPostsByUserId() throws Exception {
         when(postService.getAllDraftNotDeletedPostsByUserId(1L)).thenReturn(postDtoList);
 
-        mockMvc.perform(get("/api/v1/post/get/draft/byUser/1"))
+        mockMvc.perform(get("/api/v1/post/drafts/byUser/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -104,7 +104,7 @@ public class PostControllerTest {
     public void testGetAllDraftNotDeletedPostsByProjectId() throws Exception {
         when(postService.getAllDraftNotDeletedPostsByProjectId(1L)).thenReturn(postDtoList);
 
-        mockMvc.perform(get("/api/v1/post/get/draft/byProject/1"))
+        mockMvc.perform(get("/api/v1/post/drafts/byProject/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -119,7 +119,7 @@ public class PostControllerTest {
     public void testGetAllPublishedNotDeletedPostsByUserId() throws Exception {
         when(postService.getAllPublishedNotDeletedPostsByUserId(1L)).thenReturn(postDtoList);
 
-        mockMvc.perform(get("/api/v1/post/get/published/byUser/1"))
+        mockMvc.perform(get("/api/v1/post/publications/byUser/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(1L))
@@ -134,7 +134,7 @@ public class PostControllerTest {
     public void testGetAllPublishedNotDeletedPostsByProjectId() throws Exception {
         when(postService.getAllPublishedNotDeletedPostsByProjectId(1L)).thenReturn(postDtoList);
 
-        mockMvc.perform(get("/api/v1/post/get/published/byProject/1"))
+        mockMvc.perform(get("/api/v1/post/publications/byProject/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].id").value(1L))

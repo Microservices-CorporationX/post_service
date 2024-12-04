@@ -1,13 +1,11 @@
 package faang.school.postservice.dto.post;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
 @Builder
 public record UpdatePostDto(
-        @NotNull(message = "Id cannot be null")
-        Long id,
-        @NotNull(message = "Content cannot be null")
+        @NotBlank(message = "Content cannot be blank")
         String content
 ) {
 }

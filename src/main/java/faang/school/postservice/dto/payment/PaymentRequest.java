@@ -8,12 +8,8 @@ import java.math.BigDecimal;
 
 @Builder
 public record PaymentRequest(
-        @NotNull
-        long paymentNumber,
-        @Min(1)
-        @NotNull
-        BigDecimal amount,
-        @NotNull
-        Currency currency
+        @NotNull long paymentNumber,
+        @Min(1) @NotNull BigDecimal amount,
+        @NotNull Currency currency
 ) {
 }

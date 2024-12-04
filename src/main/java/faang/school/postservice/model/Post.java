@@ -71,4 +71,8 @@ public class Post {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public void addComment(Comment comment) {
+        comments.add(comment);
+    }
 }

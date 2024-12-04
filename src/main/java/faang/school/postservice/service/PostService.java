@@ -4,8 +4,9 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
-import faang.school.postservice.exeption.DataValidationException;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
@@ -47,7 +48,7 @@ public class PostService {
         Post post = findPostById(id);
         log.info("Request to publish a post: {}", post);
         if (post.isPublished()) {
-            throw new DataValidationException("Post is already published");
+            return postMapper.toDto(post);
         }
         validateThatPostDeleted(post);
 
@@ -58,8 +59,8 @@ public class PostService {
     }
 
     @Transactional
-    public PostDto updatePost(UpdatePostDto updatePostDto) {
-        Post post = findPostById(updatePostDto.id());
+    public PostDto updatePost(long id, UpdatePostDto updatePostDto) {
+        Post post = findPostById(id);
         log.info("Request to update a post: {}", post);
         validateThatPostDeleted(post);
 
@@ -119,6 +120,10 @@ public class PostService {
                 .toList();
     }
 
+    public void addCommentToPost(Post post, Comment comment) {
+        post.addComment(comment);
+    }
+
     private void validateUserOrProjectExist(PostDto postDto) {
         try {
             if (postDto.projectId() != null) {
@@ -137,13 +142,25 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id)));
     }
 
-    public PostDto getPostById(long id) {
+    public PostDto getPostDtoById(long id) {
         return postMapper.toDto(findPostById(id));
+    }
+
+    public Post getPostById(long postId) {
+        log.debug("start searching post by id {}", postId);
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post is not found"));
+
     }
 
     private void validateThatPostDeleted(Post post) {
         if (post.isDeleted()) {
             throw new DataValidationException("It is not possible to update a deleted post");
         }
+    }
+
+    public boolean isPostNotExist(long postId) {
+        log.debug("start searching for existence post with id {}", postId);
+        return !postRepository.existsById(postId);
     }
 }

@@ -6,11 +6,12 @@ import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.exeption.DataValidationException;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,19 +25,31 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
+
     @InjectMocks
     private PostService postService;
+
     @Mock
     private PostRepository postRepository;
+
     @Spy
     private PostMapper postMapper = Mappers.getMapper(PostMapper.class);
+
     @Mock
     private UserServiceClient userServiceClient;
+
     @Spy
     private PostValidator validator;
 
@@ -45,6 +58,8 @@ public class PostServiceTest {
     private ProjectDto projectDto;
     private UserDto userDto;
     private List<Post> postList;
+    long postId;
+    Post post5;
 
     @BeforeEach
     public void setUp() {
@@ -52,17 +67,21 @@ public class PostServiceTest {
         post.setId(1L);
         post.setCreatedAt(LocalDateTime.MIN);
         post.setPublishedAt(LocalDateTime.now());
+
         userDto = UserDto.builder()
                 .id(1L)
                 .username("John")
                 .email("john@example.com")
                 .build();
+
         projectDto = ProjectDto.builder()
                 .id(1L)
                 .build();
+
         postDto = PostDto.builder()
                 .authorId(1L)
                 .build();
+
         Post secondPost = new Post();
         secondPost.setId(2L);
         secondPost.setAuthorId(2L);
@@ -70,13 +89,17 @@ public class PostServiceTest {
         secondPost.setPublishedAt(LocalDateTime.now());
         postList = List.of(post, secondPost);
 
+        postId = 5L;
+        post5 = Post.builder()
+                .id(postId)
+                .build();
     }
 
     @Test
     public void testCreatePost() {
         when(postMapper.toEntity(postDto)).thenReturn(post);
         when(postMapper.toDto(post)).thenReturn(postDto);
-        when(userServiceClient.getUser(userDto.id())).thenReturn(userDto);
+        when(userServiceClient.getUser(userDto.getId())).thenReturn(userDto);
         when(postRepository.save(post)).thenReturn(post);
 
         postService.createPost(postDto);
@@ -84,7 +107,7 @@ public class PostServiceTest {
         verify(postMapper, times(1)).toEntity(postDto);
         verify(postMapper, times(1)).toDto(post);
         verify(postRepository, times(1)).save(post);
-        verify(userServiceClient, times(1)).getUser(userDto.id());
+        verify(userServiceClient, times(1)).getUser(userDto.getId());
     }
 
     @Test
@@ -113,14 +136,6 @@ public class PostServiceTest {
     }
 
     @Test
-    public void testPublishPublishedPost() {
-        post.setPublished(true);
-        when(postRepository.findById(anyLong())).thenReturn(Optional.of(post));
-        assertThrows(DataValidationException.class, () -> postService.publishPost(1L));
-        verify(postRepository, times(1)).findById(anyLong());
-    }
-
-    @Test
     public void testPublishDeletedPost() {
         post.setDeleted(true);
         when(postRepository.findById(anyLong())).thenReturn(Optional.of(post));
@@ -132,12 +147,11 @@ public class PostServiceTest {
     public void testUpdatePost() {
         post.setContent("content");
         UpdatePostDto updatePostDto = UpdatePostDto.builder()
-                .id(1L)
                 .content("new content")
                 .build();
         when(postRepository.findById(anyLong())).thenReturn(Optional.of(post));
 
-        PostDto dto = postService.updatePost(updatePostDto);
+        PostDto dto = postService.updatePost(1L, updatePostDto);
 
         verify(postRepository, times(1)).findById(anyLong());
         assertEquals(dto.content(), updatePostDto.content());
@@ -146,13 +160,12 @@ public class PostServiceTest {
     @Test
     public void testUpdateDeletedPost() {
         UpdatePostDto updatePostDto = UpdatePostDto.builder()
-                .id(1L)
                 .content("new content")
                 .build();
         post.setDeleted(true);
         when(postRepository.findById(anyLong())).thenReturn(Optional.of(post));
 
-        assertThrows(DataValidationException.class, () -> postService.updatePost(updatePostDto));
+        assertThrows(DataValidationException.class, () -> postService.updatePost(1L, updatePostDto));
 
         verify(postRepository, times(1)).findById(anyLong());
     }
@@ -198,5 +211,71 @@ public class PostServiceTest {
         verify(postRepository, times(1)).findByAuthorId(anyLong());
         assertTrue(dtoList.stream()
                 .allMatch(dto -> dto.published() && !dto.deleted()));
+    }
+
+    @Test
+    public void testGetById() {
+        // arrange
+        long postId = 5L;
+        Post post = Post.builder()
+                .id(postId)
+                .build();
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+
+        // act
+        Post returnedPost = postService.findPostById(postId);
+
+        // assert
+        assertEquals(post, returnedPost);
+    }
+
+    @Test
+    public void testGetByIdPostNotFound() {
+        // arrange
+        long postId = 5L;
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        // act and assert
+        assertThrows(EntityNotFoundException.class,
+                () -> postService.findPostById(postId));
+    }
+
+    @Test
+    public void testGetPostByIdWithExistentPost(){
+        when(postRepository.findById(postId))
+                .thenReturn(Optional.ofNullable(post5));
+
+        Post result = postService.getPostById(postId);
+
+        assertNotNull(result);
+        assertEquals(postId, result.getId());
+    }
+
+    @Test
+    public void testGetPostByIdWhenPostNotExist(){
+        when(postRepository.findById(postId))
+                .thenThrow(EntityNotFoundException.class);
+
+        assertThrows(EntityNotFoundException.class,
+                () -> postService.getPostById(postId));
+    }
+
+    @Test
+    public void testIsPostNotExistWithExistentPost(){
+        when(postRepository.existsById(postId)).thenReturn(true);
+
+        boolean result = postService.isPostNotExist(postId);
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void testIsPostNotExistWhenPostNotExist() {
+        when(postRepository.existsById(postId)).thenReturn(false);
+
+        boolean result = postService.isPostNotExist(postId);
+
+        assertTrue(result);
     }
 }

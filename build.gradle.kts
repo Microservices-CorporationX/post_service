@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.0.6"
     id("io.spring.dependency-management") version "1.1.0"
+    jacoco
 }
 
 group = "faang.school"
@@ -24,6 +25,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.retry:spring-retry:2.0.10")
+    implementation("io.github.resilience4j:resilience4j-all:2.0.2")
+    implementation("io.github.resilience4j:resilience4j-spring-boot2:2.0.2")
 
     /**
      * Database
@@ -77,4 +82,43 @@ val test by tasks.getting(Test::class) { testLogging.showStandardStreams = true 
 
 tasks.bootJar {
     archiveFileName.set("service.jar")
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+    reportsDirectory.set(layout.buildDirectory.dir("$buildDir/reports/jacoco"))
+}
+
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+}
+
+tasks.jacocoTestReport {
+    reports {
+        xml.required.set(false)
+        csv.required.set(false)
+        html.required.set(true)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                value = "COVEREDRATIO"
+                counter = "BRANCH"
+                minimum = "0.7".toBigDecimal()
+            }
+
+            limit {
+                value = "COVEREDRATIO"
+                counter = "LINE"
+                minimum = "0.7".toBigDecimal()
+            }
+        }
+    }
 }
