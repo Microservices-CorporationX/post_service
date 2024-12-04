@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Component
 public class ModerationDictionary {
 
-    @Value("classpath:profanities.txt")
+    @Value("classpath:files/profanities.txt")
     private Resource dictionaryFile;
     private final Set<String> profaneWords = new HashSet<>();
 
