@@ -36,7 +36,7 @@ public class ModerationScheduler {
         List<Post> notCheckedToVerificationPosts = new ArrayList<>();
         postRepository.findNotCheckedToVerificationPosts()
                 .ifPresentOrElse(
-                        notCheckedToVerificationPosts::addAll,
+                        posts -> notCheckedToVerificationPosts.addAll(posts),
                         () -> log.info("not checked posts to offensive content not found!")
                 );
         if (notCheckedToVerificationPosts.isEmpty()) {
@@ -50,8 +50,9 @@ public class ModerationScheduler {
                 .toList();
 
         CompletableFuture.allOf(verifiedPostsFuture.toArray(new CompletableFuture[0]))
-                .thenRun(() -> log.info("moderation to offensive content finished, checked posts number: {}",
-                        notCheckedToVerificationPosts.size()));
+                .join();
+        log.info("moderation to offensive content finished, checked posts number: {}",
+                notCheckedToVerificationPosts.size());
     }
 
     public CompletableFuture<Void> checkToOffensive(List<Post> posts) {
@@ -63,6 +64,6 @@ public class ModerationScheduler {
                         post.setVerifiedDate(LocalDateTime.now());
                         post.setVerified(false);
                     });
-        }, Executors.newSingleThreadExecutor());
+        });
     }
 }
