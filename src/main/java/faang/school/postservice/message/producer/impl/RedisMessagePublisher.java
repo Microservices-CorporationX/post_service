@@ -1,7 +1,7 @@
-package faang.school.postservice.service.producer.impl;
+package faang.school.postservice.message.producer.impl;
 
 import faang.school.postservice.config.redis.RedisConfig;
-import faang.school.postservice.service.producer.MessagePublisher;
+import faang.school.postservice.message.producer.MessagePublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

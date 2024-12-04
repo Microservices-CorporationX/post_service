@@ -16,7 +16,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
-import faang.school.postservice.service.producer.MessagePublisher;
+import faang.school.postservice.message.producer.MessagePublisher;
 import faang.school.postservice.validator.PostValidator;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;

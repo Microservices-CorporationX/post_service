@@ -18,7 +18,7 @@ import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifier;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
-import faang.school.postservice.service.producer.MessagePublisher;
+import faang.school.postservice.message.producer.MessagePublisher;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
