@@ -24,6 +24,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        ban-user-channel:
+          name: ban_user_channel
 
 server:
   port: 8081
@@ -75,6 +77,7 @@ thread-pool:
 schedule:
   verify-posts:
     cron: "0 0 3 * * ?"
+  ban-users: "0 0 3 * * ?"
 
 moderation:
   dictionary:

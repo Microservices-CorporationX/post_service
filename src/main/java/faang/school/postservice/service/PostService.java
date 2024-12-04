@@ -2,7 +2,8 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.verification.content.VerificationContentConfig;
+import faang.school.postservice.config.redis.RedisTopicProperties;
+import faang.school.postservice.config.thread.pool.ThreadPoolConfig;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.sightengine.textAnalysis.ModerationClasses;
@@ -13,8 +14,9 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.moderation.ModerationDictionary;
-import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
+import faang.school.postservice.service.producer.MessagePublisher;
 import faang.school.postservice.validator.PostValidator;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,11 +29,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class PostService {
+    private static final int MAX_UNVERIFIED_POSTS_BEFORE_BAN = 5;
+
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserServiceClient userServiceClient;
@@ -40,6 +46,8 @@ public class PostService {
     private final SightEngineReactiveClient sightEngineReactiveClient;
     private final ModerationDictionary moderationDictionary;
     private final ModerationVerifierFactory moderationVerifierFactory;
+    private final MessagePublisher messagePublisher;
+    private final RedisTopicProperties redisTopicProperties;
 
     @Transactional
     public PostDto createPost(PostDto postDto) {
@@ -179,7 +187,7 @@ public class PostService {
         return postRepository.findByVerifiedDateIsNull();
     }
 
-    @Async(value = VerificationContentConfig.THREAD_POOL_BEAN_NAME)
+    @Async(value = ThreadPoolConfig.VERIFICATION_POOL_BEAN_NAME)
     public void verifyPostAsync(List<Post> posts) {
         posts.forEach(post -> {
             log.info("start verifying post with id {}", post.getId());
@@ -222,5 +230,24 @@ public class PostService {
                 .violent(moderationClasses.getViolent())
                 .toxic(moderationClasses.getToxic())
                 .verify();
+    }
+
+    public void banAuthorsWithTooManyUnverifiedPosts() {
+        List<Post> posts = postRepository.findByVerifiedIsFalse();
+
+        log.info("Start sending users to ban");
+        posts.stream()
+                .collect(Collectors.groupingBy(Post::getAuthorId))
+                .entrySet()
+                .stream()
+                .filter(this::isNeedToBan)
+                .forEach(entry -> {
+                    log.debug("Send message to channel {}", redisTopicProperties.getBanUserTopic());
+                    messagePublisher.publish(redisTopicProperties.getBanUserTopic(), entry.getKey());
+                });
+    }
+
+    private boolean isNeedToBan(Map.Entry<Long, List<Post>> authorNotVerifiedPosts) {
+        return authorNotVerifiedPosts.getValue().size() > MAX_UNVERIFIED_POSTS_BEFORE_BAN;
     }
 }
