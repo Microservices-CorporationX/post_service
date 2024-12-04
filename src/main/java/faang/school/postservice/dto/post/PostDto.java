@@ -5,11 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record PostDto(
+        @Min(1)
+        Long id,
         @NotBlank(message = "Content should not be blank")
         @Size(max = 255, message = "Content must not exceed 255 characters")
         String content,
         @Min(1)
         Long userId,
         @Min(1)
-        Long projectId) {
+        Long projectId,
+        int likesCount) {
 }
