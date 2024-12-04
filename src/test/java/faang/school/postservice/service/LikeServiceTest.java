@@ -5,6 +5,7 @@ import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -85,7 +86,7 @@ class LikeServiceTest {
     }
 
     @Test
-    void shouldFailWhenUserNotFound() {
+    void shouldFailWhenUserNotFoundDuringLikeComment() {
         Long commentId = 1L;
         LikeDto likeDto = createLikeDto(1L);
 
@@ -110,7 +111,7 @@ class LikeServiceTest {
     }
 
     @Test
-    void shouldFailWhenCommentNotFoundDuringUnlike() {
+    void shouldFailWhenCommentNotFoundDuringUnlikeComment() {
         Long commentId = 1L;
         LikeDto likeDto = createLikeDto(1L);
 
@@ -128,6 +129,95 @@ class LikeServiceTest {
                 .when(userServiceClient).getUser(anyLong());
 
         assertThrows(IllegalArgumentException.class, () -> likeService.unlikeComment(commentId, likeDto));
+    }
+
+    // likePost
+    @Test
+    void shouldLikePostSuccessfully() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+        Post post = mock(Post.class);
+        Like likeEntity = new Like();
+
+        when(userServiceClient.getUser(anyLong())).thenReturn(null);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(likeRepository.findByPostIdAndUserId(postId, likeDto.getUserId())).thenReturn(Optional.empty());
+        when(likeRepository.save(any(Like.class))).thenReturn(likeEntity);
+        when(likeMapper.toDto(any(Like.class))).thenReturn(likeDto);
+
+        LikeDto result = likeService.likePost(postId, likeDto);
+        assertEquals(likeDto, result);
+    }
+
+    @Test
+    void shouldFailWhenUserAlreadyLikedPost() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+        Post post = mock(Post.class);
+        Like existingLike = new Like();
+
+        when(userServiceClient.getUser(anyLong())).thenReturn(null);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(likeRepository.findByPostIdAndUserId(postId, likeDto.getUserId())).thenReturn(Optional.of(existingLike));
+
+        assertThrows(IllegalArgumentException.class, () -> likeService.likePost(postId, likeDto));
+    }
+
+    @Test
+    void shouldFailWhenPostNotFound() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+
+        when(userServiceClient.getUser(anyLong())).thenReturn(null);
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> likeService.likePost(postId, likeDto));
+    }
+
+    @Test
+    void shouldFailWhenUserNotFoundDuringLikePost() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+
+        doThrow(new IllegalArgumentException("User does not exist"))
+                .when(userServiceClient).getUser(anyLong());
+
+        assertThrows(IllegalArgumentException.class, () -> likeService.likePost(postId, likeDto));
+    }
+
+    // unlikePost
+    @Test
+    void shouldUnlikePostSuccessfully() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+        Post post = mock(Post.class);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        doNothing().when(likeRepository).deleteByPostIdAndUserId(postId, likeDto.getUserId());
+
+        likeService.unlikePost(postId, likeDto);
+        verify(likeRepository, times(1)).deleteByPostIdAndUserId(postId, likeDto.getUserId());
+    }
+
+    @Test
+    void shouldFailWhenPostNotFoundDuringUnlikePost() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> likeService.unlikePost(postId, likeDto));
+    }
+
+    @Test
+    void shouldFailWhenUserNotFoundDuringUnlikePost() {
+        Long postId = 1L;
+        LikeDto likeDto = createLikeDto(1L);
+
+        doThrow(new IllegalArgumentException("User does not exist"))
+                .when(userServiceClient).getUser(anyLong());
+
+        assertThrows(IllegalArgumentException.class, () -> likeService.unlikePost(postId, likeDto));
     }
 
     private LikeDto createLikeDto(Long userId) {
