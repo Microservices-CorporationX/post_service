@@ -2,7 +2,6 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -13,7 +12,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -88,32 +86,25 @@ public class CommentService {
         }
     }
 
-    @Async("customTaskExecutor")
-    public void moderationOfComments() {
-        List<Comment> allNotVerifiedComments = commentRepository.findByVerifiedIsNull();
-        log.info("Starting moderation of {} comments", allNotVerifiedComments.size());
+    public void verifyComments() {
+        List<Comment> notVerifiedComments = commentRepository.findByVerifiedIsNull();
+        log.info("Starting moderation of {} comments", notVerifiedComments.size());
 
-        Flux.fromIterable(allNotVerifiedComments)
+        Flux.fromIterable(notVerifiedComments)
                 .parallel()
                 .runOn(Schedulers.parallel())
                 .flatMap(comment -> textAnalysisService.analyzeText(comment.getContent())
                         .publishOn(Schedulers.boundedElastic())
                         .doOnNext(response -> {
-                            comment.setVerified(textAnalysisProcessing(response));
+                            comment.setVerified(textAnalysisService.textAnalysisProcessing(response));
                             comment.setVerifiedDate(LocalDateTime.now());
                             commentRepository.save(comment);
                         })
-                        .doOnError(e -> log.error("Error processing comment '{}': {}", comment, e.getMessage()))
+                        .doOnError(e -> log.error("Error processing comment '{}'", comment, e))
                         .onErrorResume(e -> Mono.empty())
                 ).sequential()
                 .doOnComplete(() -> log.info("The comment moderation process has been completed"))
-                .doOnError(e -> log.error("Error during overall comment processing: {}", e.getMessage()))
+                .doOnError(e -> log.error("Error during overall comment processing: ", e))
                 .subscribe();
-    }
-
-    private boolean textAnalysisProcessing(TextAnalysisResponse response) {
-        List<Double> analysisResults = response.getModerationClasses().collectingTextAnalysisResult();
-        return analysisResults.stream()
-                .allMatch(assessmentResult -> assessmentResult < 0.6);
     }
 }

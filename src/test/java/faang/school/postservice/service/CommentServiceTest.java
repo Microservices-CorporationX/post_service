@@ -179,14 +179,14 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void testModerationOfComments() {
+    public void testVerifyComments() {
         List<Comment> comments = List.of(comment);
         TextAnalysisResponse analysisResponse = new TextAnalysisResponse();
 
         when(commentRepository.findByVerifiedIsNull()).thenReturn(comments);
         when(textAnalysisService.analyzeText(comment.getContent())).thenReturn(Mono.just(analysisResponse));
 
-        commentService.moderationOfComments();
+        commentService.verifyComments();
 
         verify(commentRepository).findByVerifiedIsNull();
     }
