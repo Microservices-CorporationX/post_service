@@ -58,7 +58,10 @@ public class ModerationScheduler {
     public CompletableFuture<Void> checkToOffensive(List<Post> posts) {
         return CompletableFuture.runAsync(() -> {
             posts.stream()
-                    .peek(post -> post.setVerified(true))
+                    .peek(post -> {
+                        post.setVerified(true);
+                        post.setVerifiedDate(LocalDateTime.now());
+                    })
                     .filter(post -> moderationDictionary.containsProfanity(post.getContent()))
                     .forEach(post -> {
                         post.setVerifiedDate(LocalDateTime.now());

@@ -85,9 +85,9 @@ public class Post {
 
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "verified")
-    private boolean verified;
+    private Boolean verified;
 
     @Temporal(TemporalType.TIMESTAMP)
-    @Column(name = "verifiedDate")
+    @Column(name = "verified_date")
     private LocalDateTime verifiedDate;
 }
