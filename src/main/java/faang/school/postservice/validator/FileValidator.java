@@ -1,7 +1,7 @@
 package faang.school.postservice.validator;
 
-import faang.school.postservice.exeption.DataValidationException;
-import faang.school.postservice.exeption.ImageProcessingException;
+import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.exception.ImageProcessingException;
 import faang.school.postservice.model.ResourceType;
 import faang.school.postservice.util.ImageUtil;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package faang.school.postservice.util;
 
-import faang.school.postservice.exeption.ImageProcessingException;
+import faang.school.postservice.exception.ImageProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.stereotype.Component;
