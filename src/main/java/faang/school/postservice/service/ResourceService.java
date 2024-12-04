@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.awt.image.BufferedImage;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -54,42 +55,37 @@ public class ResourceService {
     }
 
     public ResourceDto updateFiles(Long resourceId, MultipartFile file) {
-        Resource resource = findResourceById(resourceId);
-        requestValidator.validateAuthorUpdatesPost(resource.getPost());
+        Resource resource = findResourceById(resourceId)
+                .orElseThrow(() -> {
+                    log.warn("Resource with ID {} not found", resourceId);
+                    return new ResourceNotFoundException("Resource", "id", resourceId);
+                });
         s3Service.deleteResource(resource.getKey());
 
-        BufferedImage image = fileValidator.getValidatedImage(file);
-        String folder = "post_" + resource.getPost().getId();
-        String key = s3Service.uploadImageFile(file, folder, image);
-        Resource updatedResource = buildResource(key, file);
+        List<ResourceDto> resourceDtos = uploadFiles(resource.getPostId(), List.of(file));
+        ResourceDto updatedResourceDto = resourceDtos.get(0);
 
-        updateResourceFields(resource, updatedResource);
+        Resource updatedResource = resourceMapper.toEntity(updatedResourceDto);
+        updatedResource.setId(resourceId);
 
-        resourceRepository.save(resource);
+        resourceRepository.save(updatedResource);
 
-        return resourceMapper.toResourceDto(resource);
+        return updatedResourceDto;
     }
 
     public void deleteFiles(Long resourceId) {
-        Resource resource = findResourceById(resourceId);
+        Resource resource = findResourceById(resourceId)
+                .orElseThrow(() -> {
+                    log.warn("Resource with ID {} not found", resourceId);
+                    return new ResourceNotFoundException("Resource", "id", resourceId);
+                });
         requestValidator.validateAuthorUpdatesPost(resource.getPost());
         s3Service.deleteResource(resource.getKey());
         resourceRepository.delete(resource);
     }
 
-    public Resource findResourceById(Long resourceId) {
-        return resourceRepository.findById(resourceId)
-                .orElseThrow(() -> {
-                    log.warn("Resource with ID {} not found", resourceId);
-                    return new ResourceNotFoundException("Resource", "id", resourceId);
-                });
-    }
-
-    private void updateResourceFields(Resource resource, Resource updatedResource) {
-        resource.setKey(updatedResource.getKey());
-        resource.setName(updatedResource.getName());
-        resource.setSize(updatedResource.getSize());
-        resource.setType(updatedResource.getType());
+    public Optional<Resource> findResourceById(Long resourceId) {
+        return resourceRepository.findById(resourceId);
     }
 
     private List<String> uploadFilesToCloud(List<MultipartFile> files, String folder, List<BufferedImage> images) {

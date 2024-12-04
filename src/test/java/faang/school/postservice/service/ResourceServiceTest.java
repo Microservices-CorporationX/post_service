@@ -1,7 +1,6 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.ResourceDto;
-import faang.school.postservice.exception.ResourceNotFoundException;
 import faang.school.postservice.mapper.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyLong;
@@ -101,20 +99,24 @@ public class ResourceServiceTest {
     @Test
     public void testUpdateFiles() {
         when(resourceRepository.findById(anyLong())).thenReturn(Optional.of(resource));
+        when(postService.findPostById(anyLong())).thenReturn(Optional.of(post));
         when(file.getContentType()).thenReturn("image/png");
         when(fileValidator.getValidatedImage(any(MultipartFile.class))).thenReturn(image);
         when(s3Service.uploadImageFile(any(MultipartFile.class), anyString(), any(BufferedImage.class))).thenReturn("new-key");
-        when(resourceMapper.toResourceDto(any(Resource.class))).thenReturn(ResourceDto.builder()
+        when(resourceMapper.toResourceDto(anyList())).thenReturn(List.of(ResourceDto.builder()
                 .id(1L)
                 .postId(1L)
                 .type(ResourceType.IMAGE)
-                .build());
+                .build()));
+        when(resourceMapper.toEntity(any(ResourceDto.class))).thenReturn(resource);
 
         ResourceDto resourceDto = resourceService.updateFiles(1L, file);
 
         verify(resourceRepository, times(1)).findById(anyLong());
-        verify(fileValidator, times(1)).getValidatedImage(any(MultipartFile.class));
+        verify(postService, times(1)).findPostById(anyLong());
+        verify(requestValidator, times(1)).validateAuthorUpdatesPost(any(Post.class));
         verify(s3Service, times(1)).deleteResource(anyString());
+        verify(fileValidator, times(1)).getValidatedImage(any(MultipartFile.class));
         verify(s3Service, times(1)).uploadImageFile(any(MultipartFile.class), anyString(), any(BufferedImage.class));
         verify(resourceRepository, times(1)).save(any(Resource.class));
         assertNotNull(resourceDto);
@@ -135,16 +137,9 @@ public class ResourceServiceTest {
     public void testFindResourceById() {
         when(resourceRepository.findById(anyLong())).thenReturn(Optional.of(resource));
 
-        Resource foundResource = resourceService.findResourceById(1L);
+        Optional<Resource> foundResource = resourceService.findResourceById(1L);
 
         verify(resourceRepository, times(1)).findById(anyLong());
         assertNotNull(foundResource);
-    }
-
-    @Test
-    public void testFindResourceByIdNotFound() {
-        when(resourceRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        assertThrows(ResourceNotFoundException.class, () -> resourceService.findResourceById(1L));
     }
 }
