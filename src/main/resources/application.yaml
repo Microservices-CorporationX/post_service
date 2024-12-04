@@ -1,6 +1,7 @@
 spring:
+
   datasource:
-    driver-class-name: org.postgresql.Driver
+    driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
     username: user
     password: password
@@ -9,14 +10,14 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
   crontab:
-    checkPostsGrammar: "16 47 20 * * *"
+    checkPostsGrammar: "10 35 22 * * *"
   task:
      execution:
         pool:
           core-size: 5
           max-size: 10
           queue-capacity: 25
-        thread-name-prefix: my-executor
+        thread-name-prefix: checkPostsGrammarExecutor
 
 
   jpa:
@@ -67,3 +68,12 @@ services:
     max-width-horizontal-image: 1080
     max-height-horizontal-image: 566
     max-side-square-image: 1080
+  text-gears:
+    url: https://textgears-textgears-v1.p.rapidapi.com/correct
+    header-1: x-rapidapi-key
+    api-key: 52b8fb4f25msh122fa7902a41e9bp1105cejsn54289f3bb474
+    header-2: x-rapidapi-host
+    value-host: textgears-textgears-v1.p.rapidapi.com
+    header-3: Content-Type
+    method: POST
+    body: text=

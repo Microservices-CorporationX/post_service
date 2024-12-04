@@ -14,14 +14,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -40,6 +35,7 @@ public class PostService {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final UserContext userContext;
+    private final ResponseTextGears responseTextGears;
 
     public Long createDraftPost(PostDto postDto) {
         checkAuthorIdExist(postDto.userId(), postDto.projectId());
@@ -81,7 +77,6 @@ public class PostService {
     }
 
     public List<PostDto> getDraftPostsForUser(Long idUser) {
-        userContext.setUserId(idUser);
         checkUserExistById(idUser);
         return postRepository.findByAuthorId(idUser)
                 .stream()
@@ -92,7 +87,6 @@ public class PostService {
     }
 
     public List<PostDto> getDraftPostsForProject(Long idProject) {
-        checkProjectExistById(idProject);
         return postRepository.findByProjectId(idProject)
                 .stream()
                 .filter(post -> !post.isPublished() && !post.isDeleted())
@@ -102,7 +96,6 @@ public class PostService {
     }
 
     public List<PostDto> getPublishedPostsForUser(Long idUser) {
-        userContext.setUserId(idUser);
         checkUserExistById(idUser);
         return postRepository.findByAuthorId(idUser)
                 .stream()
@@ -128,9 +121,9 @@ public class PostService {
             String content = post.getContent();
             String result;
             try {
-                HttpResponse<String> response = getResponsesWithCorrectText(content);
-                result = extractTextFromRequest(response);
+                HttpResponse<String> response = responseTextGears.getResponsesWithCorrectText(content);
                 if (extractBooleanSafely(response)) {
+                    result = extractTextFromRequest(response);
                     post.setContent(result);
                     postRepository.save(post);
                     log.info("Post with id: {} was checked for grammar. New content: {}", post.getId(), post.getContent());
@@ -148,12 +141,10 @@ public class PostService {
                 .stream(postRepository.findAll().spliterator(), false)
                 .filter(post -> !post.isPublished() && !post.isDeleted())
                 .collect(Collectors.toList());
-        System.out.println(unpublishedPosts.size());
         if (unpublishedPosts.isEmpty()) {
             log.error("The list of unpublished posts is null.");
             throw new EntityNotFoundException("The list of unpublished posts is null.");
         }
-
         return unpublishedPosts;
     }
 
@@ -180,7 +171,6 @@ public class PostService {
         String temp = "User id: ";
         try {
             if (idUser != null) {
-                userContext.setUserId(idUser);
                 userServiceClient.getUser(idUser);
             } else if (idProject != null) {
                 temp = "Project id: ";
@@ -226,27 +216,6 @@ public class PostService {
         }
     }
 
-    @Retryable(value = {InterruptedException.class, IOException.class}, maxAttempts = 5, backoff = @Backoff(delay = 1000, multiplier = 2))
-    HttpResponse<String> getResponsesWithCorrectText(String text) throws IOException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://textgears-textgears-v1.p.rapidapi.com/correct"))
-                .header("x-rapidapi-key", "52b8fb4f25msh122fa7902a41e9bp1105cejsn54289f3bb474")
-                .header("x-rapidapi-host", "textgears-textgears-v1.p.rapidapi.com")
-                .header("Content-Type", "application/x-www-form-urlencoded")
-                .method("POST", HttpRequest.BodyPublishers.ofString("text=" + text))
-                .build();
-        int attempts = 0;
-        try {
-            HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-        } catch (IOException e) {
-            log.error("Request failed. Attempt: " + attempts);
-            throw new IOException("Request failed. Attempt: " + attempts);
-        } catch (InterruptedException e) {
-            log.error("Request failed. Attempt: " + attempts);
-            throw new InterruptedException("Request failed. Attempt: " + attempts);
-        }
-        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-    }
 
     String extractTextFromRequest(HttpResponse<String> response) throws IOException, InterruptedException {
         JsonObject jsonResponse = JsonParser.parseString(response.body()).getAsJsonObject();

@@ -41,6 +41,8 @@ public class PostServiceTest {
 
     @InjectMocks
     private PostService postService;
+    @Mock
+    private ResponseTextGears responseTextGears;
 
     private final PostDto postDtoForUser = new PostDto("Test", 1L, null);
 
@@ -330,7 +332,7 @@ public class PostServiceTest {
     }
 
     @Test
-    void getDraftPostsForUserNotDraftsSuccesTest() {
+    void getDraftPostsForUserNotDraftsSuccessTest() {
         long userId = 1L;
 
         when(postRepository.findByAuthorId(userId)).thenReturn(List.of());
@@ -377,10 +379,12 @@ public class PostServiceTest {
         HttpResponse<String> mockResponse = mock(HttpResponse.class);
 
         List<Post> mockPosts = List.of(post);
+
         when(postRepository.findAll()).thenReturn(mockPosts);
+        when(responseTextGears.getResponsesWithCorrectText("Original content")).thenReturn(mockResponse);
 
         PostService spyPostService = spy(postService);
-        doReturn(mockResponse).when(spyPostService).getResponsesWithCorrectText("Original content");
+
         doReturn(true).when(spyPostService).extractBooleanSafely(mockResponse);
         doReturn("Corrected content").when(spyPostService).extractTextFromRequest(mockResponse);
 
@@ -389,6 +393,7 @@ public class PostServiceTest {
         verify(postRepository).save(post);
         assertEquals("Corrected content", post.getContent());
     }
+
 
     @Test
     void testCheckGrammarPostContentAndChangeIfNeedResponseStatusFalseFailTest() throws IOException, InterruptedException {
@@ -401,22 +406,13 @@ public class PostServiceTest {
 
         HttpResponse<String> mockResponse = mock(HttpResponse.class);
 
-        when(mockResponse.body()).thenReturn("{\n" +
-                "  \"response\": {\n" +
-                "    \"corrected\": \"My mother is a doctor, but my father is an engineer.\"\n" +
-                "  },\n" +
-                "  \"status\": false\n" +
-                "}");
-
         List<Post> mockPosts = List.of(post);
         when(postRepository.findAll()).thenReturn(mockPosts);
-
+        when(responseTextGears.getResponsesWithCorrectText("Original content")).thenReturn(mockResponse);
         PostService spyPostService = spy(postService);
-        doReturn(mockResponse).when(spyPostService).getResponsesWithCorrectText("Original content");
+
         doReturn(false).when(spyPostService).extractBooleanSafely(mockResponse);
-
         spyPostService.checkGrammarPostContentAndChangeIfNeed();
-
         verify(postRepository, never()).save(any());
     }
 
