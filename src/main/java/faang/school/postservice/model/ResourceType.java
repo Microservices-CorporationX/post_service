@@ -1,8 +1,6 @@
 package faang.school.postservice.model;
 
-import static java.util.Objects.isNull;
 public enum ResourceType {
-    NONE,
     VIDEO,
     AUDIO,
     IMAGE,
@@ -14,9 +12,7 @@ public enum ResourceType {
     OTHER;
 
     public static ResourceType getResourceType(String contentType) {
-        if (isNull(contentType)) {
-            return ResourceType.NONE;
-        } else if (contentType.contains("image")) {
+        if (contentType.contains("image")) {
             return ResourceType.IMAGE;
         } else if (contentType.contains("video")) {
             return ResourceType.VIDEO;
