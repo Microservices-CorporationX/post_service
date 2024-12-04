@@ -2,7 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.verification.content.VerificationContentConfig;
+import faang.school.postservice.config.thread.pool.ThreadPoolConfig;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.sightengine.textAnalysis.ModerationClasses;
@@ -13,8 +13,8 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.moderation.ModerationDictionary;
-import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import faang.school.postservice.validator.PostValidator;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -174,27 +174,28 @@ public class PostService {
         return !postRepository.existsById(postId);
     }
 
-    public List<Post> findNotReviewedPost() {
-        log.info("start reading not reviewed posts");
+    public List<Post> findNotReviewedPosts() {
+        log.info("Trying to get posts that have not been reviewed");
         return postRepository.findByVerifiedDateIsNull();
     }
 
-    @Async(value = VerificationContentConfig.THREAD_POOL_BEAN_NAME)
-    public void verifyPostAsync(List<Post> posts) {
+    @Async(value = ThreadPoolConfig.VERIFICATION_POOL_BEAN_NAME)
+    public void verifyPostsAsync(List<Post> posts) {
         posts.forEach(post -> {
             log.info("start verifying post with id {}", post.getId());
             sightEngineReactiveClient.analyzeText(post.getContent())
                     .subscribe(
                             response -> {
                                 log.debug("Response received! Verifying post with id {}", post.getId());
-                                boolean verified = isVerified(response, post);
+                                boolean verified = postIsVerified(response, post);
                                 post.setVerified(verified);
                                 post.setVerifiedDate(LocalDateTime.now());
                                 postRepository.save(post);
                             },
                             ex -> {
-                                log.error("Text analyzer client return error {}", ex.getMessage(), ex);
-                                boolean verified = moderationDictionary.isVerified(post.getContent());
+                                log.error("Text analyzer client return error {}. Post with id {}",
+                                        ex.getMessage(), post.getId(), ex);
+                                boolean verified = moderationDictionary.hasNoRestrictedWords(post.getContent());
                                 post.setVerified(verified);
                                 post.setVerifiedDate(LocalDateTime.now());
                                 postRepository.save(post);
@@ -203,14 +204,14 @@ public class PostService {
         });
     }
 
-    private boolean isVerified(TextAnalysisResponse textAnalysisResponse, Post post) {
+    private boolean postIsVerified(TextAnalysisResponse textAnalysisResponse, Post post) {
         if (textAnalysisResponse == null) {
             log.warn("Text analysis response is null. Analyse with dictionary");
-            return moderationDictionary.isVerified(post.getContent());
+            return moderationDictionary.hasNoRestrictedWords(post.getContent());
         }
         if (textAnalysisResponse.getModerationClasses() == null) {
             log.warn("Moderation classes is null. Analyse with dictionary");
-            return moderationDictionary.isVerified(post.getContent());
+            return moderationDictionary.hasNoRestrictedWords(post.getContent());
         }
 
         log.debug("Start analysing response");

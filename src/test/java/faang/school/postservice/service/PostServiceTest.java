@@ -307,7 +307,7 @@ public class PostServiceTest {
     }
 
     @Test
-    void testVerifyPostAsync_WhenSuccessfulResponse_ShouldVerifyAndSavePost() {
+    void testVerifyPostAsync_WhenSuccessfulResponse_ShouldVerifyAndSavePosts() {
         post.setContent(verifiedContent);
         List<Post> posts = List.of(post);
 
@@ -324,7 +324,7 @@ public class PostServiceTest {
         when(sightEngineReactiveClient.analyzeText(verifiedContent))
                 .thenReturn(Mono.just(textAnalysisResponse));
 
-        postService.verifyPostAsync(posts);
+        postService.verifyPostsAsync(posts);
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postRepository).save(postCaptor.capture());
@@ -336,15 +336,15 @@ public class PostServiceTest {
     }
 
     @Test
-    void testVerifyPostAsync_WhenClientError_ShouldUseDictionaryAndSavePost() {
+    void testVerifyPostAsync_WhenClientError_ShouldUseDictionaryAndSavePosts() {
         post.setContent(verifiedContent);
         List<Post> posts = List.of(post);
 
         when(sightEngineReactiveClient.analyzeText(verifiedContent))
                 .thenReturn(Mono.error(new SightengineBadRequestException("Bad request")));
-        when(dictionary.isVerified(anyString())).thenReturn(true);
+        when(dictionary.hasNoRestrictedWords(anyString())).thenReturn(true);
 
-        postService.verifyPostAsync(posts);
+        postService.verifyPostsAsync(posts);
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postRepository).save(postCaptor.capture());
@@ -356,16 +356,16 @@ public class PostServiceTest {
     }
 
     @Test
-    void testVerifyPostAsync_WhenResponseIsNull_ShouldUseDictionaryAndSavePost() {
+    void testVerifyPostAsync_WhenResponseIsNull_ShouldUseDictionaryAndSavePosts() {
         post.setContent(verifiedContent);
         List<Post> posts = List.of(post);
 
         TextAnalysisResponse textAnalysisResponse = new TextAnalysisResponse();
         when(sightEngineReactiveClient.analyzeText(verifiedContent))
                 .thenReturn(Mono.just(textAnalysisResponse));
-        when(dictionary.isVerified(anyString())).thenReturn(true);
+        when(dictionary.hasNoRestrictedWords(anyString())).thenReturn(true);
 
-        postService.verifyPostAsync(posts);
+        postService.verifyPostsAsync(posts);
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postRepository).save(postCaptor.capture());
@@ -377,7 +377,7 @@ public class PostServiceTest {
     }
 
     @Test
-    void testIsVerified_WhenHighToxicityLevels_ShouldNotVerifyContent() {
+    void testPostIsVerified_WhenHighToxicityLevels_ShouldNotVerifyContent() {
         post.setContent(verifiedContent);
 
         TextAnalysisResponse response = new TextAnalysisResponse();
@@ -393,7 +393,7 @@ public class PostServiceTest {
         when(sightEngineReactiveClient.analyzeText(verifiedContent))
                 .thenReturn(Mono.just(response));
 
-        postService.verifyPostAsync(List.of(post));
+        postService.verifyPostsAsync(List.of(post));
 
         ArgumentCaptor<Post> postCaptor = ArgumentCaptor.forClass(Post.class);
         verify(postRepository).save(postCaptor.capture());
