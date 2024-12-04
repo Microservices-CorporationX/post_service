@@ -34,7 +34,7 @@ public class ModerationScheduler {
     public void moderatePostToOffensiveContent() {
         log.info("moderation to offensive content is starting");
         List<Post> notCheckedToVerificationPosts = new ArrayList<>();
-        postRepository.findNotCheckedToVerificationPosts()
+        postRepository.findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L))
                 .ifPresentOrElse(
                         posts -> notCheckedToVerificationPosts.addAll(posts),
                         () -> log.info("not checked posts to offensive content not found!")

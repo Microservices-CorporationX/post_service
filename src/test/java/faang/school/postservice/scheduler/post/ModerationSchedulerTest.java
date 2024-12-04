@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,20 +50,20 @@ public class ModerationSchedulerTest {
 
     @Test
     public void testToPostContentToOffensive_ShouldSuccessProcessed() {
-        when(postRepository.findNotCheckedToVerificationPosts())
+        when(postRepository.findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L)))
                 .thenReturn(Optional.of(posts));
         mockAllPostsAsProfane(posts);
 
         moderationScheduler.moderatePostToOffensiveContent();
 
         verify(postRepository, times(1))
-                .findNotCheckedToVerificationPosts();
+                .findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L));
         checkToChangingPostFields(posts);
     }
 
     @Test
     public void testToPostContentToOffensive_DontSuccessProcessed() {
-        when(postRepository.findNotCheckedToVerificationPosts())
+        when(postRepository.findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L)))
                 .thenReturn(Optional.empty());
 
         moderationScheduler.moderatePostToOffensiveContent();
@@ -87,7 +88,7 @@ public class ModerationSchedulerTest {
             verify(moderationDictionary, times(1))
                     .containsProfanity(post.getContent());
             assertNotNull(post.getContent());
-            assertFalse(post.isVerified());
+            assertFalse(post.getVerified());
         }
     }
 
