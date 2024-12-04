@@ -188,6 +188,7 @@ public class PostService {
         return result;
     }
 
+
     @Transactional
     public void checkAndVerifyPosts() {
         List<Post> postsToVerify = postRepository.findAllByVerifiedDateIsNull();
