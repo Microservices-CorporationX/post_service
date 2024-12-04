@@ -8,7 +8,8 @@ import faang.school.postservice.model.Resource;
 import faang.school.postservice.model.ResourceType;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.validator.FileValidator;
-import faang.school.postservice.validator.PostValidator;
+import faang.school.postservice.validator.RequestValidator;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,14 +29,15 @@ public class ResourceService {
     private final PostService postService;
     private final S3Service s3Service;
     private final ResourceRepository resourceRepository;
-    private final PostValidator postValidator;
+    private final RequestValidator requestValidator;
     private final FileValidator fileValidator;
     private final ResourceMapper resourceMapper;
 
     public List<ResourceDto> uploadFiles(Long postId, List<MultipartFile> files) {
-        Post post = postService.findPostById(postId);
+        Post post = postService.findPostById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(postId)));
 
-        postValidator.validateAuthorUpdatesPost(post);
+        requestValidator.validateAuthorUpdatesPost(post);
         fileValidator.validateNumberOfFiles(files, MAX_FILES);
         List<BufferedImage> images = files.stream()
                 .map(fileValidator::getValidatedImage)
@@ -53,7 +55,7 @@ public class ResourceService {
 
     public ResourceDto updateFiles(Long resourceId, MultipartFile file) {
         Resource resource = findResourceById(resourceId);
-        postValidator.validateAuthorUpdatesPost(resource.getPost());
+        requestValidator.validateAuthorUpdatesPost(resource.getPost());
         s3Service.deleteResource(resource.getKey());
 
         BufferedImage image = fileValidator.getValidatedImage(file);
@@ -70,7 +72,7 @@ public class ResourceService {
 
     public void deleteFiles(Long resourceId) {
         Resource resource = findResourceById(resourceId);
-        postValidator.validateAuthorUpdatesPost(resource.getPost());
+        requestValidator.validateAuthorUpdatesPost(resource.getPost());
         s3Service.deleteResource(resource.getKey());
         resourceRepository.delete(resource);
     }

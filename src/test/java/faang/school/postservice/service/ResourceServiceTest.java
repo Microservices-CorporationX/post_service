@@ -8,7 +8,7 @@ import faang.school.postservice.model.Resource;
 import faang.school.postservice.model.ResourceType;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.validator.FileValidator;
-import faang.school.postservice.validator.PostValidator;
+import faang.school.postservice.validator.RequestValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +23,14 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ResourceServiceTest {
@@ -41,7 +48,7 @@ public class ResourceServiceTest {
     private ResourceRepository resourceRepository;
 
     @Mock
-    private PostValidator postValidator;
+    private RequestValidator requestValidator;
 
     @Mock
     private FileValidator fileValidator;
@@ -62,6 +69,7 @@ public class ResourceServiceTest {
                 .id(1L)
                 .post(post)
                 .key("test-key")
+                .type(ResourceType.IMAGE)
                 .build();
 
         file = mock(MultipartFile.class);
@@ -70,7 +78,8 @@ public class ResourceServiceTest {
 
     @Test
     public void testUploadFiles() {
-        when(postService.findPostById(anyLong())).thenReturn(post);
+        when(postService.findPostById(anyLong())).thenReturn(Optional.of(post));
+        when(file.getContentType()).thenReturn("image/png");
         when(fileValidator.getValidatedImage(any(MultipartFile.class))).thenReturn(image);
         when(s3Service.uploadImageFile(any(MultipartFile.class), anyString(), any(BufferedImage.class))).thenReturn("test-key");
         when(resourceMapper.toResourceDto(anyList())).thenReturn(List.of(ResourceDto.builder()
@@ -92,6 +101,7 @@ public class ResourceServiceTest {
     @Test
     public void testUpdateFiles() {
         when(resourceRepository.findById(anyLong())).thenReturn(Optional.of(resource));
+        when(file.getContentType()).thenReturn("image/png");
         when(fileValidator.getValidatedImage(any(MultipartFile.class))).thenReturn(image);
         when(s3Service.uploadImageFile(any(MultipartFile.class), anyString(), any(BufferedImage.class))).thenReturn("new-key");
         when(resourceMapper.toResourceDto(any(Resource.class))).thenReturn(ResourceDto.builder()

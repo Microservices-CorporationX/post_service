@@ -29,7 +29,8 @@ public class CommentService {
         log.info("Trying to add comment: {} to post: {}", commentDto, postId);
         validateUserExists(commentDto.authorId());
 
-        Post post = postService.findPostById(postId);
+        Post post = postService.findPostById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(postId)));
         Comment comment = commentMapper.toEntity(commentDto);
 
         postService.addCommentToPost(post, comment);
