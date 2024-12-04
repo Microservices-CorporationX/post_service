@@ -13,6 +13,7 @@ import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -184,6 +186,8 @@ public class PostService {
 
     public void banOffensiveAuthors() {
         List<AuthorPostCount> unverifiedPostsByAuthor = getUnverifiedPostsGroupedByAuthor();
+
+        log.info("Found {} authors with more than 5 unverified posts", unverifiedPostsByAuthor.size());
 
         unverifiedPostsByAuthor.stream()
                 .filter(entry -> entry.getPostCount() > 5)
