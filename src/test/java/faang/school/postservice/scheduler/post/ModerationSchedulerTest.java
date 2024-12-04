@@ -12,13 +12,13 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,20 +50,20 @@ public class ModerationSchedulerTest {
 
     @Test
     public void testToPostContentToOffensive_ShouldSuccessProcessed() {
-        when(postRepository.findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L)))
+        when(postRepository.findNotCheckedToVerificationPosts(any()))
                 .thenReturn(Optional.of(posts));
         mockAllPostsAsProfane(posts);
 
         moderationScheduler.moderatePostToOffensiveContent();
 
         verify(postRepository, times(1))
-                .findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L));
+                .findNotCheckedToVerificationPosts(any());
         checkToChangingPostFields(posts);
     }
 
     @Test
     public void testToPostContentToOffensive_DontSuccessProcessed() {
-        when(postRepository.findNotCheckedToVerificationPosts(LocalDateTime.now().minusDays(1L)))
+        when(postRepository.findNotCheckedToVerificationPosts(any()))
                 .thenReturn(Optional.empty());
 
         moderationScheduler.moderatePostToOffensiveContent();
