@@ -2,35 +2,38 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.service.LikeService;
+import faang.school.postservice.utilities.UrlUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping(UrlUtils.MAIN_URL + UrlUtils.V1)
 public class LikeController {
     private final LikeService likeService;
 
-    @PostMapping("/api/post-service/v1/posts/{postId}/like")
-    public LikeDto likePost(@PathVariable long postId, @Valid @RequestBody LikeDto like) {
-        return likeService.likePost(postId, like);
+    @PostMapping(UrlUtils.POSTS + UrlUtils.ID + UrlUtils.LIKE)
+    public LikeDto likePost(@PathVariable long id, @Valid @RequestBody LikeDto like) {
+        return likeService.likePost(id, like);
     }
 
-    @DeleteMapping("/api/post-service/v1/posts/{postId}/like")
-    public void unlikePost(@PathVariable long postId, @Valid @RequestBody LikeDto like) {
-        likeService.unlikePost(postId, like);
+    @DeleteMapping(UrlUtils.POSTS + UrlUtils.ID + UrlUtils.LIKE)
+    public void unlikePost(@PathVariable long id, @Valid @RequestBody LikeDto like) {
+        likeService.unlikePost(id, like);
     }
 
-    @PostMapping("/api/post-service/v1/comment/{commentId}/like")
+    @PostMapping(UrlUtils.COMMENT + UrlUtils.COMMENT_ID + UrlUtils.LIKE)
     public LikeDto likeComment(@PathVariable long commentId, @Valid @RequestBody LikeDto like) {
         return likeService.likeComment(commentId, like);
     }
 
-    @DeleteMapping("/api/post-service/v1/comment/{commentId}/like")
+    @DeleteMapping(UrlUtils.COMMENT + UrlUtils.COMMENT_ID + UrlUtils.LIKE)
     public void unlikeComment(@PathVariable long commentId, @Valid @RequestBody LikeDto like) {
         likeService.unlikeComment(commentId, like);
     }
