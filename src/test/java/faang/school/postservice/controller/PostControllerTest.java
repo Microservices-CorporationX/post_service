@@ -71,7 +71,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserSuccessTest() throws Exception {
-        PostDto postDto = new PostDto("Test content", 1L, null);
+        PostDto postDto = new PostDto(1L,"Test content", 1L, null,1);
         Long expectedPostId = 1L;
         when(postService.createDraftPost(postDto)).thenReturn(1L);
 
@@ -86,7 +86,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByProjectSuccessTest() throws Exception {
-        PostDto postDto = new PostDto("Test content", null, 3L);
+        PostDto postDto = new PostDto(1L,"Test content", null, 3L, 1);
         Long expectedPostId = 2L;
         when(postService.createDraftPost(postDto)).thenReturn(2L);
 
@@ -101,7 +101,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserContentIsBlankFailTest() throws Exception {
-        PostDto postDto = new PostDto("  ", 1L, null);
+        PostDto postDto = new PostDto(1L,"  ", 1L, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,7 +113,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserContentNullFailTest() throws Exception {
-        PostDto postDto = new PostDto(null, 1L, null);
+        PostDto postDto = new PostDto(1L,null, 1L, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +125,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserIdNullAndProjectIdNullFailTest() throws Exception {
-        PostDto postDto = new PostDto("Test for test", null, null);
+        PostDto postDto = new PostDto(1L,"Test for test", null, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +136,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserIdAndProjectIdFailTest() throws Exception {
-        PostDto postDto = new PostDto("Test for test", 1L, 2L);
+        PostDto postDto = new PostDto(1L, "Test for test", 1L, 2L,1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +147,7 @@ class PostControllerTest {
 
     @Test
     void publishPostSuccessTest() throws Exception {
-        PostDto postDto = new PostDto("Test content", 1L, null);
+        PostDto postDto = new PostDto(1L, "Test content", 1L, null, 1);
         Long postId = 1L;
 
         when(postService.publishPost(postId)).thenReturn(postDto);
@@ -215,7 +215,7 @@ class PostControllerTest {
     @Test
     void getPostSuccessTest() throws Exception {
 
-        PostDto postDto = new PostDto("Sample Post", 1L, 2L);
+        PostDto postDto = new PostDto(1L, "Sample Post", 1L, 2L, 1);
         when(postService.getPost(anyLong())).thenReturn(postDto);
 
         mockMvc.perform(get(mainUrl)
@@ -244,8 +244,8 @@ class PostControllerTest {
     void getDraftPostsByUserIdSuccessTest() throws Exception {
         Long userId = 1L;
         List<PostDto> drafts = List.of(
-                new PostDto("Draft 1", 1L, null),
-                new PostDto("Draft 2", 2L, null)
+                new PostDto(1L, "Draft 1", 1L, null, 1),
+                new PostDto(2L, "Draft 2", 2L, null, 1)
         );
         when(postService.getDraftPostsForUser(userId)).thenReturn(drafts);
 
@@ -284,8 +284,8 @@ class PostControllerTest {
     void getDraftPostsByProjectIdSuccessTest() throws Exception {
         Long projectId = 1L;
         List<PostDto> drafts = List.of(
-                new PostDto("Draft 1", null, 1L),
-                new PostDto("Draft 2", null, 2L)
+                new PostDto(1L, "Draft 1", null, 1L, 1),
+                new PostDto(2L, "Draft 2", null, 2L, 1)
         );
         when(postService.getDraftPostsForProject(projectId)).thenReturn(drafts);
 
@@ -324,8 +324,8 @@ class PostControllerTest {
     void getPublishedPostsByUserIdSuccessTest() throws Exception {
         Long userId = 1L;
         List<PostDto> drafts = List.of(
-                new PostDto("Publish 1", 1L, null),
-                new PostDto("Publish 2", 2L, null)
+                new PostDto(1L,"Publish 1", 1L, null, 1),
+                new PostDto(2L, "Publish 2", 2L, null, 2)
         );
         when(postService.getPublishedPostsForUser(userId)).thenReturn(drafts);
 
@@ -364,8 +364,8 @@ class PostControllerTest {
     void getPublishedPostsByProjectIdSuccessTest() throws Exception {
         Long projectId = 1L;
         List<PostDto> publishedPosts = List.of(
-                new PostDto("Post 1", null, 1L),
-                new PostDto("Post 2", null, 2L)
+                new PostDto(1L,"Post 1", null, 1L,1 ),
+                new PostDto(2L, "Post 2", null, 2L, 1)
         );
         when(postService.getPublishedPostForProject(projectId)).thenReturn(publishedPosts);
 

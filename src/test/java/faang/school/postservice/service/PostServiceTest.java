@@ -38,7 +38,7 @@ public class PostServiceTest {
 
     @InjectMocks
     private PostService postService;
-    private final PostDto postDtoForUser = new PostDto("Test", 1L, null);
+    private final PostDto postDtoForUser = new PostDto(1L,"Test", 1L, null, 1);
 
     @Test
     void createDraftPostByUserSuccessTest() {
@@ -153,7 +153,7 @@ public class PostServiceTest {
     void updatePostSuccessTest() {
         Long postId = 1L;
         String updatedContent = "Updated content";
-        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null);
+        PostDto postDtoForUpdate = new PostDto(1L, updatedContent, 1L, null, 1);
 
         Post existingPost = new Post();
         existingPost.setId(postId);
@@ -180,7 +180,7 @@ public class PostServiceTest {
     void updatePostNotFoundFailTest() {
         Long postId = 100L;
         String updatedContent = "Updated content";
-        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null);
+        PostDto postDtoForUpdate = new PostDto(1L, updatedContent, 1L, null, 1);
 
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
@@ -260,7 +260,7 @@ public class PostServiceTest {
         existingPost.setId(postId);
         existingPost.setContent("Sample content");
 
-        PostDto postDto = new PostDto("Sample content", 1L, null);
+        PostDto postDto = new PostDto(1L, "Sample content", 1L, null, 1);
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(existingPost));
         when(postMapper.toDto(existingPost)).thenReturn(postDto);
@@ -307,8 +307,8 @@ public class PostServiceTest {
         draftPost2.setDeleted(false);
         draftPost2.setCreatedAt(LocalDateTime.now());
 
-        PostDto draftPostDto1 = new PostDto("Dto 1", 1L, null);
-        PostDto draftPostDto2 = new PostDto("Dto 2", 2L, null);
+        PostDto draftPostDto1 = new PostDto(1L,"Dto 1", 1L, null, 1);
+        PostDto draftPostDto2 = new PostDto(2L,"Dto 2", 2L, null, 1);
 
         when(postRepository.findByAuthorId(userId)).thenReturn(List.of(draftPost1, draftPost2));
         when(postMapper.toDto(draftPost1)).thenReturn(draftPostDto1);
