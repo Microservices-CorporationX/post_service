@@ -18,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -134,6 +135,20 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
             Map<String, Object> postMap = convertPostDtoToMap(postDto);
             postMap.forEach((field, value) -> redisTemplate.opsForHash().put(key, field, value));
             updatePostTtl(key);
+        });
+    }
+
+    @Override
+    @Retryable(retryFor = RuntimeException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    public void savePosts(List<RedisPostDto> postDtos) {
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            for (RedisPostDto postDto : postDtos) {
+                String key = createPostKey(postDto.getPostId());
+                Map<String, Object> postMap = convertPostDtoToMap(postDto);
+                postMap.forEach((field, value) -> redisTemplate.opsForHash().put(key, field, value));
+                updatePostTtl(key);
+            }
+            return null;
         });
     }
 

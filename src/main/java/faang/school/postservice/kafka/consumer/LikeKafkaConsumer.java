@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class KafkaLikeConsumer extends AbstractKafkaConsumer<LikeKafkaEvent> {
+public class LikeKafkaConsumer extends AbstractKafkaConsumer<LikeKafkaEvent> {
 
     private final RedisPostService redisPostService;
 

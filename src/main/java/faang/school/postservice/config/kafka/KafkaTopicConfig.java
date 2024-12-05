@@ -20,8 +20,8 @@ public class KafkaTopicConfig {
     @Value("${kafka.topics.like}")
     private String kafkaLikeTopic;
 
-    @Value("${kafka.topics.init-heat-data}")
-    private String kafkaInitHeatDataTopic;
+    @Value("${kafka.topics.feed-heat}")
+    private String kafkaFeedHeatTopic;
 
     @Bean
     public NewTopic kafkaPostTopic() {
@@ -44,7 +44,7 @@ public class KafkaTopicConfig {
     }
 
     @Bean
-    public NewTopic kafkaInitHeatDataTopic() {
-        return new NewTopic(kafkaInitHeatDataTopic, 3, (short) 1);
+    public NewTopic kafkaFeedHeatTopic() {
+        return new NewTopic(kafkaFeedHeatTopic, 3, (short) 1);
     }
 }

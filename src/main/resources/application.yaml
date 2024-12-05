@@ -134,6 +134,9 @@ redis:
       post-view: 86400
       like: 86400
     size: 500
+    heater:
+      time-range-days: 7
+      batch-size: 100
 
 kafka:
   batch-size:
@@ -143,15 +146,15 @@ kafka:
     comment: comment_topic
     post-view: post_view_topic
     like: like_topic
-    init-heat-data: init_heat_data_topic
+    feed-heat: feed_heat_topic
   consumer:
     groups:
       post-service:
         concurrency: 3
         group-id: post-service-group
-      cache-heater:
-        concurrency:
-        group-id: cache-heater-group
+      feed-heat:
+        concurrency: 3
+        group-id: feed-heater-group
 
 scheduler:
   cron:

@@ -13,6 +13,8 @@ public interface RedisUserService {
 
     void saveUser(RedisUserDto redisUserDto);
 
+    void saveUsers(List<RedisUserDto> userDtos);
+
     List<Long> getFollowerIds(Long userId);
 
     void updateUserIfStale(UserShortInfo userShortInfo, int refreshTime);

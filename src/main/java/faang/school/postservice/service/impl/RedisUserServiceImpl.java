@@ -3,6 +3,7 @@ package faang.school.postservice.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import faang.school.postservice.mapper.UserShortInfoMapper;
 import faang.school.postservice.model.dto.redis.cache.RedisUserDto;
 import faang.school.postservice.model.dto.redis.cache.UserFields;
 import faang.school.postservice.model.entity.UserShortInfo;
@@ -13,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -37,11 +39,14 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
     private final RedisTemplate<String, Object> redisTemplate;
     private final UserShortInfoRepository userShortInfoRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private final UserShortInfoMapper userShortInfoMapper;
 
     public RedisUserServiceImpl(@Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
-                                UserShortInfoRepository userShortInfoRepository) {
+                                UserShortInfoRepository userShortInfoRepository,
+                                UserShortInfoMapper userShortInfoMapper) {
         this.redisTemplate = redisTemplate;
         this.userShortInfoRepository = userShortInfoRepository;
+        this.userShortInfoMapper = userShortInfoMapper;
     }
 
     @Override
@@ -51,7 +56,7 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
 
     @Override
     public void saveUserIfNotExists(RedisUserDto userDto) {
-        String key = createKey(userDto.getUserId());
+        String key = createUserKey(userDto.getUserId());
         if (Boolean.TRUE.equals(redisTemplate.hasKey(key))) {
             log.info("User with ID {} already exists in Redis, skipping...", userDto.getUserId());
             return;
@@ -61,7 +66,7 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
 
     @Override
     public RedisUserDto getUser(Long userId) {
-        String key = createKey(userId);
+        String key = createUserKey(userId);
         if (Boolean.FALSE.equals(redisTemplate.hasKey(key))) {
             log.warn("User with ID {} not found in Redis, fetching from database", userId);
             RedisUserDto redisUserDto = fetchUserFromDatabase(userId);
@@ -77,7 +82,7 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
 
     @Override
     public List<Long> getFollowerIds(Long userId) {
-        String key = createKey(userId);
+        String key = createUserKey(userId);
         String serializedFollowerIds = (String) redisTemplate.opsForHash().get(key, UserFields.FOLLOWER_IDS);
         return deserializeFollowerIds(serializedFollowerIds);
     }
@@ -86,13 +91,7 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
     public void updateUserIfStale(UserShortInfo userShortInfo, int refreshTime) {
         RedisUserDto user = getUser(userShortInfo.getUserId());
         if (user == null || user.getUpdatedAt().isBefore(LocalDateTime.now().minusHours(refreshTime))) {
-            user = new RedisUserDto(
-                    userShortInfo.getUserId(),
-                    userShortInfo.getUsername(),
-                    userShortInfo.getFileId(),
-                    userShortInfo.getSmallFileId(),
-                    deserializeFollowerIds(userShortInfo.getFollowerIds()),
-                    LocalDateTime.now());
+            user = userShortInfoMapper.toRedisUserDto(userShortInfo);
             saveUser(user);
         }
     }
@@ -100,19 +99,13 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
     private RedisUserDto fetchUserFromDatabase(Long userId) {
         UserShortInfo userShortInfo = userShortInfoRepository.findById(userId).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Short info about user with id = %d not found in DB", userId)));
-        return new RedisUserDto(
-                userShortInfo.getUserId(),
-                userShortInfo.getUsername(),
-                userShortInfo.getFileId(),
-                userShortInfo.getSmallFileId(),
-                deserializeFollowerIds(userShortInfo.getFollowerIds()),
-                LocalDateTime.now());
+        return userShortInfoMapper.toRedisUserDto(userShortInfo);
     }
 
     @Override
     @Retryable(retryFor = RuntimeException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void saveUser(RedisUserDto redisUserDto) {
-        String key = createKey(redisUserDto.getUserId());
+        String key = createUserKey(redisUserDto.getUserId());
         Map<String, Object> userMap = convertUserDtoToMap(redisUserDto);
         executeRedisTransaction(() -> {
             userMap.entrySet().stream()
@@ -122,7 +115,23 @@ public class RedisUserServiceImpl implements RedisUserService, RedisTransactiona
         });
     }
 
-    private String createKey(Long userId) {
+    @Override
+    @Retryable(retryFor = RuntimeException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    public void saveUsers(List<RedisUserDto> userDtos) {
+        redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
+            for (RedisUserDto userDto : userDtos) {
+                String key = createUserKey(userDto.getUserId());
+                Map<String, Object> userMap = convertUserDtoToMap(userDto);
+                userMap.entrySet().stream()
+                        .filter(entry -> entry.getValue() != null)
+                        .forEach(entry -> redisTemplate.opsForHash().put(key, entry.getKey(), entry.getValue()));
+                redisTemplate.expire(key, userTtlInSeconds, TimeUnit.SECONDS);
+            }
+            return null;
+        });
+    }
+
+    private String createUserKey(Long userId) {
         return KEY_PREFIX + userId;
     }
 
