@@ -24,6 +24,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        ban_user_channel:
+          name: ban_user
 
 server:
   port: 8081
@@ -44,6 +46,11 @@ payment-service:
 
 moderation:
   batch-size: 50
+  cron: 0 0 0 * * *
+  zone: Europe/Moscow
+  thread-pool: 1
+
+banner:
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool: 1

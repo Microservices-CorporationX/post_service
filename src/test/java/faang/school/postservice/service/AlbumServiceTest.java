@@ -7,6 +7,7 @@ import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.AlbumRepository;
 import faang.school.postservice.service.album.AlbumService;
+import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.AlbumValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
