@@ -187,14 +187,16 @@ public class PostService {
     public void banOffensiveAuthors() {
         List<AuthorPostCount> unverifiedPostsByAuthor = getUnverifiedPostsGroupedByAuthor();
 
-        log.info("Found {} authors with more than 5 unverified posts", unverifiedPostsByAuthor.size());
-
-        unverifiedPostsByAuthor.stream()
+        List<AuthorPostCount> offensiveAuthors = unverifiedPostsByAuthor.stream()
                 .filter(entry -> entry.getPostCount() > 5)
-                .forEach(entry -> {
-                    Long authorId = entry.getAuthorId();
-                    redisTemplate.convertAndSend("user_ban", authorId);
-                });
+                .toList();
+
+        log.info("Found {} authors with more than 5 unverified posts", offensiveAuthors.size());
+
+        offensiveAuthors.forEach(entry -> {
+            Long authorId = entry.getAuthorId();
+            redisTemplate.convertAndSend("user_ban", authorId);
+        });
     }
 
     private List<AuthorPostCount> getUnverifiedPostsGroupedByAuthor() {
