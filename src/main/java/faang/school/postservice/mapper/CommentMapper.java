@@ -10,6 +10,7 @@ import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -26,6 +27,9 @@ public interface CommentMapper {
 
     @Named("mapToLikesIds")
     default List<Long> mapToLikeIds(List<Like> likes) {
+        if (likes == null) {
+            return new ArrayList<>();
+        }
         return likes.stream().map(Like::getId).toList();
     }
 }

@@ -24,6 +24,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        events_channel:
+          name: events_channel
 
   springdoc:
     api-docs:
