@@ -24,6 +24,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        user_bans_channel:
+          name: user_ban
 
   springdoc:
     api-docs:
@@ -47,6 +49,9 @@ post:
   ad-remover:
     scheduler:
       cron: "0 0/1 * 1/1 * ?" # every minute
+  ban-authors:
+    scheduler:
+      cron: "0 0 0 * * *" # every day at midnight
 
 user-service:
   host: localhost
