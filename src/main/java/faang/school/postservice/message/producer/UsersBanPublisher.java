@@ -1,6 +1,6 @@
-package faang.school.postservice.messaging;
+package faang.school.postservice.message.producer;
 
-import faang.school.postservice.event.UsersBanEvent;
+import faang.school.postservice.message.event.UsersBanEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;

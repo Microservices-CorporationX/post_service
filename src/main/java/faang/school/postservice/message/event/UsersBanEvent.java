@@ -1,4 +1,4 @@
-package faang.school.postservice.event;
+package faang.school.postservice.message.event;
 
 import java.util.List;
 

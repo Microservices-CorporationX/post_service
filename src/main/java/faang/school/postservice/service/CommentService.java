@@ -2,10 +2,10 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.event.UsersBanEvent;
+import faang.school.postservice.message.event.UsersBanEvent;
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.mapper.comment.CommentMapper;
-import faang.school.postservice.messaging.UsersBanPublisher;
+import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;

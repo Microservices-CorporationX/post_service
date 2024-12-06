@@ -12,6 +12,7 @@ public class UsersBanScheduler {
 
     @Scheduled(cron = "${daily.cron.user-ban}")
     public void banCommenters() {
+        System.out.println(Thread.currentThread().getName());
         commentService.publishUsersToBanEvent();
     }
 }
