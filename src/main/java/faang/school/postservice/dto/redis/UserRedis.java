@@ -12,16 +12,11 @@ import java.util.List;
 
 @Data
 @Builder
-@RedisHash(value = "users")
+@RedisHash(value = "users", timeToLive = 86400)
 public class UserRedis {
     @Id
     private Long id;
     private String username;
     private String email;
     private List<Long> followers;
-
-    @Transient
-    @Value("${cache.author.live-time}")
-    @TimeToLive
-    private long ttl;
 }

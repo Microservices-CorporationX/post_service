@@ -21,11 +21,10 @@ public class FeedServiceImpl implements FeedService {
     @Override
     public List<PostRedis> getPosts(Long userId) {
         Set<Object> postsIds = redisRepository.getFirst20Posts(userId);
-        List<PostRedis> posts = postsIds.stream()
+        return postsIds.stream()
                 .map(Object::toString)
                 .map(id -> postRedisRepository.findById(id)
                         .orElseThrow(() -> new EntityNotFoundException(String.format("Post with id %s not found", id))))
                 .toList();
-        return posts;
     }
 }
