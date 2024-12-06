@@ -2,8 +2,11 @@ package faang.school.postservice.controller;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.ResponseLikeDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.LikeService;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -14,8 +17,8 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
-
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -29,9 +32,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 @ContextConfiguration(classes = {LikeController.class, LikeService.class})
 public class LikeControllerTest {
-    private final static String POST_URL = "/post/{postId}/likes";
+    private final static String POST_URL = "/posts/{postId}/likes";
 
-    private final static String COMMENT_URL = "/comment/{commentId}/likes";
+    private final static String COMMENT_URL = "/comments/{commentId}/likes";
 
     private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -98,7 +101,7 @@ public class LikeControllerTest {
         when(likeService.addLikeToPost(any(LikeDto.class)))
                 .thenReturn(responseLikeDto);
 
-        mockMvc.perform(post("/post/like")
+        mockMvc.perform(post("/posts/like")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

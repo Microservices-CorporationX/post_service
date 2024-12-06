@@ -60,13 +60,7 @@ public class LikeService {
 
         likeRepository.save(like);
 
-        LikeEvent event = LikeEvent.builder()
-                .likeAuthorId(likeDto.getUserId())
-                .postId(likeDto.getPostId())
-                .postAuthorId(post.getAuthorId())
-                .build();
-
-        likeEventPublisher.publishLikeEvent(event);
+        likeEventPublisher.publishLikeEvent(createEvent(likeDto, post.getAuthorId()));
 
         return likeMapper.toDto(like);
     }
@@ -94,5 +88,13 @@ public class LikeService {
             log.error("Error fetching users for batch {}: {}", batch, ex.getMessage(), ex);
             return Collections.emptyList();
         }
+    }
+
+    private LikeEvent createEvent(LikeDto likeDto, Long authorId) {
+        return LikeEvent.builder()
+                .likeAuthorId(likeDto.getUserId())
+                .postId(likeDto.getPostId())
+                .postAuthorId(authorId)
+                .build();
     }
 }
