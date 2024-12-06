@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dictionary.ModerationDictionary;
+import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
@@ -19,16 +19,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -55,6 +55,9 @@ class PostServiceTest {
 
     @Mock
     private HashtagService hashtagService;
+
+    @Mock
+    private RedisTemplate<String, Long> redisTemplate;
 
     @Mock
     private ModerationDictionary moderationDictionary;
@@ -426,5 +429,24 @@ class PostServiceTest {
                 .id(1L)
                 .content("Test content")
                 .build();
+    }
+
+    @Test
+    void testBanOffensiveAuthors() {
+        List<Object[]> rawData = List.of(
+                new Object[]{1L, 3L},
+                new Object[]{2L, 10L},
+                new Object[]{3L, 6L}
+        );
+
+        when(postRepository.findUnverifiedPostsGroupedByAuthor()).thenReturn(rawData);
+
+        postService.banOffensiveAuthors();
+
+        verify(redisTemplate).convertAndSend("user_ban", 2L);
+        verify(redisTemplate).convertAndSend("user_ban", 3L);
+
+        verify(redisTemplate, never()).convertAndSend("user_ban", 1L);
+        verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
     }
 }

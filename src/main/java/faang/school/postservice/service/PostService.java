@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dictionary.ModerationDictionary;
+import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -13,21 +13,20 @@ import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -36,10 +35,7 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
-    private final ModerationDictionary moderationDictionary;
-
-    @Value("${moderation.batch-size}")
-    private int batchSize;
+    private final RedisTemplate<String, Long> redisTemplate;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -100,7 +96,7 @@ public class PostService {
         }
 
         post.setContent(updatePostDto.getContent());
-        post.setUpdatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC+3")));
 
         postRepository.save(post);
 
@@ -173,7 +169,7 @@ public class PostService {
     private boolean hasHashtags(List<String> hashtags) {
         return hashtags != null && !hashtags.isEmpty();
     }
-
+    
     private Set<Hashtag> getAndCreateHashtags(List<String> hashtags) {
         Map<String, Hashtag> existingHashtags = hashtagService.findAllByTags(hashtags)
                 .stream()
@@ -186,6 +182,29 @@ public class PostService {
             result.add(hashtag);
         }
         return result;
+    }
+
+    public void banOffensiveAuthors() {
+        List<AuthorPostCount> unverifiedPostsByAuthor = getUnverifiedPostsGroupedByAuthor();
+
+        List<AuthorPostCount> offensiveAuthors = unverifiedPostsByAuthor.stream()
+                .filter(entry -> entry.getPostCount() > 5)
+                .toList();
+
+        log.info("Found {} authors with more than 5 unverified posts", offensiveAuthors.size());
+
+        offensiveAuthors.forEach(entry -> {
+            Long authorId = entry.getAuthorId();
+            redisTemplate.convertAndSend("user_ban", authorId);
+        });
+    }
+
+    private List<AuthorPostCount> getUnverifiedPostsGroupedByAuthor() {
+        List<Object[]> rawResults = postRepository.findUnverifiedPostsGroupedByAuthor();
+
+        return rawResults.stream()
+                .map(result -> new AuthorPostCount((Long) result[0], (Long) result[1]))
+                .collect(Collectors.toList());
     }
 
 

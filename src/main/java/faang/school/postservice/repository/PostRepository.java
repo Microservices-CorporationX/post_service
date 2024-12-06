@@ -1,11 +1,13 @@
 package faang.school.postservice.repository;
 
+import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.model.Post;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 public interface PostRepository extends CrudRepository<Post, Long> {
@@ -39,6 +41,9 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT p FROM Post p JOIN p.hashtags h WHERE p.published = true AND p.deleted = false " +
             "AND h.tag = :tag ORDER BY p.publishedAt DESC")
     List<Post> findByHashtags(String tag);
+
+    @Query("SELECT p.authorId, COUNT(p) FROM Post p WHERE p.verified = false and p.authorId IS NOT NULL GROUP BY p.authorId")
+    List<Object[]> findUnverifiedPostsGroupedByAuthor();
 
     List<Post> findAllByVerifiedDateIsNull();
 }

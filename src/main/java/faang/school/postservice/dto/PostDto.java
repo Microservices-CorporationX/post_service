@@ -6,7 +6,6 @@ import lombok.Data;
 
 @Data
 public class PostDto {
-
     @Positive(message = "ID is required")
     private long id;
 }
