@@ -13,7 +13,7 @@ public class PostCorrector {
 
     private final PostService postService;
 
-    @Async("my-executor")
+    @Async("checkPostsGrammarExecutor")
     @Scheduled(cron = "${spring.crontab.checkPostsGrammar}")
     public void checkGrammarPosts() {
         try {

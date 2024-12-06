@@ -10,7 +10,7 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
   crontab:
-    checkPostsGrammar: "10 35 22 * * *"
+    checkPostsGrammar: "15 54 19 * * *"
   task:
      execution:
         pool:

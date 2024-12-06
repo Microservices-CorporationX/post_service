@@ -15,13 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
-import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -42,7 +37,7 @@ public class PostServiceTest {
     @InjectMocks
     private PostService postService;
     @Mock
-    private ResponseTextGears responseTextGears;
+    private OrthographyService orthographyService;
 
     private final PostDto postDtoForUser = new PostDto("Test", 1L, null);
 
@@ -366,54 +361,36 @@ public class PostServiceTest {
         verify(userServiceClient).getUser(anyLong());
     }
 
-
     @Test
-    void testCheckGrammarPostContentAndChangeIfNeedSuccessTest() throws IOException, InterruptedException {
-        Long postId = 1L;
-        Post post = new Post();
-        post.setId(postId);
-        post.setPublished(false);
-        post.setDeleted(false);
-        post.setContent("Original content");
+    void checkGrammarPostContentAndChangeIfNeedSuccessTest() {
+        Post post1 = new Post();
+        post1.setId(1L);
+        post1.setContent("Teh content");
 
-        HttpResponse<String> mockResponse = mock(HttpResponse.class);
+        Post post2 = new Post();
+        post2.setId(2L);
+        post2.setContent("Anothr contnt");
 
-        List<Post> mockPosts = List.of(post);
+        List<Post> unpublishedPosts = Arrays.asList(post1, post2);
 
-        when(postRepository.findAll()).thenReturn(mockPosts);
-        when(responseTextGears.getResponsesWithCorrectText("Original content")).thenReturn(mockResponse);
-
-        PostService spyPostService = spy(postService);
-
-        doReturn(true).when(spyPostService).extractBooleanSafely(mockResponse);
-        doReturn("Corrected content").when(spyPostService).extractTextFromRequest(mockResponse);
-
-        spyPostService.checkGrammarPostContentAndChangeIfNeed();
-
-        verify(postRepository).save(post);
-        assertEquals("Corrected content", post.getContent());
-    }
+        when(postRepository.findAll()).thenReturn(unpublishedPosts);
+        when(orthographyService.getCorrectContent("Teh content", 1L)).thenReturn("The content");
+        when(orthographyService.getCorrectContent("Anothr contnt", 2L)).thenReturn("Another content");
 
 
-    @Test
-    void testCheckGrammarPostContentAndChangeIfNeedResponseStatusFalseFailTest() throws IOException, InterruptedException {
-        Long postId = 1L;
-        Post post = new Post();
-        post.setId(postId);
-        post.setPublished(false);
-        post.setDeleted(false);
-        post.setContent("Original content");
+        postService.checkGrammarPostContentAndChangeIfNeed();
 
-        HttpResponse<String> mockResponse = mock(HttpResponse.class);
+        verify(postRepository).save(argThat(post ->
+                post.getId().equals(1L) && "The content".equals(post.getContent())
+        ));
+        verify(postRepository).save(argThat(post ->
+                post.getId().equals(2L) && "Another content".equals(post.getContent())
+        ));
 
-        List<Post> mockPosts = List.of(post);
-        when(postRepository.findAll()).thenReturn(mockPosts);
-        when(responseTextGears.getResponsesWithCorrectText("Original content")).thenReturn(mockResponse);
-        PostService spyPostService = spy(postService);
-
-        doReturn(false).when(spyPostService).extractBooleanSafely(mockResponse);
-        spyPostService.checkGrammarPostContentAndChangeIfNeed();
-        verify(postRepository, never()).save(any());
+        verify(orthographyService).getCorrectContent("Teh content", 1L);
+        verify(orthographyService).getCorrectContent("Anothr contnt", 2L);
+        verify(postRepository).findAll();
+        verifyNoMoreInteractions(postRepository, orthographyService);
     }
 
     @Test

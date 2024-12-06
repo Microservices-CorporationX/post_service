@@ -1,7 +1,5 @@
 package faang.school.postservice.service;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
@@ -16,8 +14,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
-import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -35,7 +31,7 @@ public class PostService {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final UserContext userContext;
-    private final ResponseTextGears responseTextGears;
+    private final OrthographyService orthographyService;
 
     public Long createDraftPost(PostDto postDto) {
         checkAuthorIdExist(postDto.userId(), postDto.projectId());
@@ -115,24 +111,12 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+
     public void checkGrammarPostContentAndChangeIfNeed() {
         List<Post> posts = getAllUnpublishedPostsOrThrow();
         posts.forEach(post -> {
-            String content = post.getContent();
-            String result;
-            try {
-                HttpResponse<String> response = responseTextGears.getResponsesWithCorrectText(content);
-                if (extractBooleanSafely(response)) {
-                    result = extractTextFromRequest(response);
-                    post.setContent(result);
-                    postRepository.save(post);
-                    log.info("Post with id: {} was checked for grammar. New content: {}", post.getId(), post.getContent());
-                } else {
-                    log.error("Response status was false for post id: {}", post.getId());
-                }
-            } catch (IOException | InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            post.setContent(orthographyService.getCorrectContent(post.getContent(), post.getId()));
+            postRepository.save(post);
         });
     }
 
@@ -215,23 +199,4 @@ public class PostService {
             throw new IllegalArgumentException("Post with id: " + post.getId() + " was deleted");
         }
     }
-
-
-    String extractTextFromRequest(HttpResponse<String> response) throws IOException, InterruptedException {
-        JsonObject jsonResponse = JsonParser.parseString(response.body()).getAsJsonObject();
-        return jsonResponse.getAsJsonObject("response").get("corrected").getAsString();
-    }
-
-    boolean extractBooleanSafely(HttpResponse<String> response) {
-        JsonObject jsonResponse = JsonParser.parseString(response.body()).getAsJsonObject();
-        try {
-            if (jsonResponse.has("status")) {
-                return jsonResponse.get("status").getAsBoolean();
-            }
-        } catch (Exception e) {
-            System.err.println("Error extracting boolean: " + e.getMessage());
-        }
-        return false;
-    }
-
 }
