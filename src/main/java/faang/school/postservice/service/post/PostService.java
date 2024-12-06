@@ -112,21 +112,28 @@ public class PostService {
     }
 
     public void banUsers() {
-        List<Post> banningPosts = postRepository.findNotVerifiedPots()
+        List<Post> postsWithOffensiveContent = postRepository.findNotVerifiedPots()
                 .orElseGet(() -> null);
-        if (banningPosts == null) {
-            log.info("users for ban no found!");
+        if (postsWithOffensiveContent == null) {
+            log.info("users for ban not found!");
             return;
         }
-        List<Long> banningUsersIds = banningPosts.stream()
-                .filter(post -> Collections.frequency(banningPosts
-                        .stream().map(Post::getId).toList(), post.getId()) >= 5
+        List<Long> banningUsersIds = getBanningUsersIdsBy(postsWithOffensiveContent);
+        if(banningUsersIds == null) {
+            log.info("users for ban not found!");
+            return;
+        }
+        log.info("users for ban received, usersIds: {}", banningUsersIds);
+        userBanPublisher.publish(banningUsersIds);
+    }
+
+    public List<Long> getBanningUsersIdsBy(List<Post> posts) {
+        return posts.stream()
+                .filter(post -> Collections.frequency(posts
+                        .stream().map(Post::getId).toList(), post.getId()) >= 1
                 )
                 .map(Post::getAuthorId)
                 .distinct()
                 .toList();
-
-        log.info("users for ban received, usersIds: {}", banningUsersIds);
-        userBanPublisher.publish(banningUsersIds);
     }
 }
