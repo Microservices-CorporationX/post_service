@@ -1,4 +1,5 @@
 package faang.school.postservice.dto.payment;
 
-public class PaymentRequest {
+public record PaymentRequest() {
+
 }
