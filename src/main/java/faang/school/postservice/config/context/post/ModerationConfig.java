@@ -11,10 +11,10 @@ import java.util.concurrent.Executors;
 public class ModerationConfig {
 
     @Value("${moderation.thread-pool-size}")
-    private int fixedThreadPool;
+    private int fixedThreadPoolSize;
 
     @Bean
     public ExecutorService moderationPostThreadPool() {
-        return Executors.newFixedThreadPool(fixedThreadPool);
+        return Executors.newFixedThreadPool(fixedThreadPoolSize);
     }
 }
