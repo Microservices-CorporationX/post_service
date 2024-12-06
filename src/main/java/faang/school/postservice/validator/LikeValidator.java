@@ -7,6 +7,7 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
 import feign.FeignException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ public class LikeValidator {
     private final LikeRepository likeRepository;
     private final UserServiceClient userServiceClient;
 
-    public boolean validateWhereIsLikePlaced(LikeDto likeDto) {
+    public boolean validateWhereIsLikePlaced(@Valid LikeDto likeDto) {
         if (likeDto.getCommentId() != null && likeDto.getPostId() != null) {
             log.error("Trying to like a post and a comment at the same time");
             throw new DataValidationException("You can't like a post and a comment at the same time");
@@ -36,7 +37,7 @@ public class LikeValidator {
         return true;
     }
 
-    public boolean validateComment(long commentId, LikeDto likeDto) {
+    public boolean validateComment(long commentId, @Valid LikeDto likeDto) {
         if (!commentRepository.existsById(commentId)) {
             log.error("Comment with ID {} does not exist", commentId);
             throw new DataValidationException("Comment does not exist");
@@ -48,7 +49,7 @@ public class LikeValidator {
         return true;
     }
 
-    public boolean validatePost(long postId, LikeDto likeDto) {
+    public boolean validatePost(long postId, @Valid LikeDto likeDto) {
         if (!postRepository.existsById(postId)) {
             log.error("Post with ID {} does not exist", postId);
             throw new DataValidationException("Post does not exist");

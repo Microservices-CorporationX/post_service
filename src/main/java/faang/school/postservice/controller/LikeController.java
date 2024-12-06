@@ -4,6 +4,8 @@ import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.service.LikeService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,7 +21,7 @@ public class LikeController {
     private final LikeService likeService;
 
     @PostMapping("/comments/{commentId}/likes")
-    public LikeDto likeComment(@PathVariable Long commentId, @RequestBody @Valid LikeDto likeDto) {
+    public LikeDto likeComment(@PathVariable @NotNull @Positive Long commentId, @RequestBody @Valid LikeDto likeDto) {
         if (likeDto.getId() != null) {
             throw new DataValidationException("The like must not contain an ID for creation");
         }
@@ -27,7 +29,7 @@ public class LikeController {
     }
 
     @PostMapping("/posts/{postId}/likes")
-    public LikeDto likePost(@PathVariable Long postId, @RequestBody @Valid LikeDto likeDto) {
+    public LikeDto likePost(@PathVariable @NotNull @Positive Long postId, @RequestBody @Valid LikeDto likeDto) {
         if (likeDto.getId() != null) {
             throw new DataValidationException("The like must not contain an ID for creation");
         }
@@ -35,7 +37,7 @@ public class LikeController {
     }
 
     @DeleteMapping("/comments/{commentId}/likes")
-    public LikeDto removeLikeUnderComment(@PathVariable long commentId, @RequestBody @Valid LikeDto likeDto) {
+    public LikeDto removeLikeUnderComment(@PathVariable @Positive long commentId, @RequestBody @Valid LikeDto likeDto) {
         if (likeDto.getId() == null) {
             throw new DataValidationException("The like must contain ID to be removed");
         }
@@ -43,7 +45,7 @@ public class LikeController {
     }
 
     @DeleteMapping("/posts/{postId}/likes")
-    public LikeDto removeLikeUnderPost(@PathVariable long postId, @RequestBody @Valid LikeDto likeDto) {
+    public LikeDto removeLikeUnderPost(@PathVariable @Positive long postId, @RequestBody @Valid LikeDto likeDto) {
         if (likeDto.getId() == null) {
             throw new DataValidationException("The like must contain ID to be removed");
         }
