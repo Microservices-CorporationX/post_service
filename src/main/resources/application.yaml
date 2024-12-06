@@ -46,4 +46,4 @@ moderation:
   batch-size: 50
   cron: 0 0 0 * * *
   zone: Europe/Moscow
-  thread-pool: 1
+  thread-pool-size: 1

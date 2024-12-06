@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 @Configuration
 public class ModerationConfig {
 
-    @Value("${moderation.thread-pool}")
+    @Value("${moderation.thread-pool-size}")
     private int fixedThreadPool;
 
     @Bean
