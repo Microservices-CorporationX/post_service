@@ -85,10 +85,8 @@ public class Post {
     )
     private Set<Hashtag> hashtags;
 
-    @Column(name = "verified")
-    private Boolean verified;
-
     @Temporal(TemporalType.TIMESTAMP)
+
     @Column(name = "verified_date")
     private LocalDateTime verifiedDate;
 }

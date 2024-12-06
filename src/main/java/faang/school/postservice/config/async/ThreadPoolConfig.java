@@ -23,7 +23,7 @@ public class ThreadPoolConfig {
 
     private ThreadPoolTaskExecutor executor;
 
-    @Bean
+    @Bean(name = "doniyorTaskExecutor")
     public TaskExecutor taskExecutor() {
         executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(corePoolSize);

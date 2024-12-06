@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dictionary.ModerationDictionary;
 import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
@@ -14,15 +15,19 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +41,10 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Long> redisTemplate;
+    private final ModerationDictionary moderationDictionary;
+
+    @Value("${ad.batch.size}")
+    private int batchSize;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -226,7 +235,7 @@ public class PostService {
     }
 
     @Transactional
-    @Async("taskExecutor")
+    @Async("doniyorTaskExecutor")
     public CompletableFuture<Void> checkAndVerifyPostsInBatch(List<Post> postsToVerify) {
         for (Post post : postsToVerify) {
             if (moderationDictionary.containsForbiddenWord(post.getContent())) {
