@@ -16,6 +16,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
+import java.math.BigInteger;
 import java.time.LocalDateTime;
 
 @Data
@@ -34,7 +35,7 @@ public class Resource {
     private String key;
 
     @Column(name = "size")
-    private long size;
+    private BigInteger size;
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)
@@ -45,9 +46,13 @@ public class Resource {
     private String name;
 
     @Column(name = "type", length = 50)
-    private String type;
+    private ResourceType type;
 
     @ManyToOne
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
+
+    public long getPostId() {
+        return post.getId();
+    }
 }
