@@ -3,6 +3,7 @@ package faang.school.postservice.dto.sightengine.textAnalysis;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -19,4 +20,14 @@ public class ModerationClasses {
     private double violent;
     @JsonProperty("toxic")
     private double toxic;
+
+    public List<Double> collectingTextAnalysisResult() {
+        List<Double> results = new ArrayList<>();
+        results.add(sexual);
+        results.add(discriminatory);
+        results.add(insulting);
+        results.add(violent);
+        results.add(toxic);
+        return results;
+    }
 }

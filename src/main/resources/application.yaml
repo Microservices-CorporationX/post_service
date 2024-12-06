@@ -28,6 +28,11 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+  task:
+    scheduling:
+      pool:
+        size: 5
+
 server:
   port: 8081
 
@@ -75,3 +80,7 @@ resilience4j:
         max-attempts: 10
         wait-duration: 200ms
         exponential-backoff-multiplier: 2.0
+
+daily:
+  cron:
+   comment-moderation: 0 0 10 * * *

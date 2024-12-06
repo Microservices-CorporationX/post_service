@@ -6,13 +6,18 @@ import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.sightengine.TextAnalysisService;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -23,6 +28,7 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final PostService postService;
     private final UserServiceClient userServiceClient;
+    private final TextAnalysisService textAnalysisService;
 
     @Transactional
     public CommentDto addComment(long postId, CommentDto commentDto) {
@@ -79,5 +85,27 @@ public class CommentService {
         } catch (FeignException ex) {
             throw new EntityNotFoundException("User does not exist");
         }
+    }
+
+    public void verifyComments() {
+        List<Comment> notVerifiedComments = commentRepository.findByVerifiedIsNull();
+        log.info("Starting moderation of {} comments", notVerifiedComments.size());
+
+        Flux.fromIterable(notVerifiedComments)
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .flatMap(comment -> textAnalysisService.analyzeText(comment.getContent())
+                        .publishOn(Schedulers.boundedElastic())
+                        .doOnNext(response -> {
+                            comment.setVerified(textAnalysisService.textAnalysisProcessing(response));
+                            comment.setVerifiedDate(LocalDateTime.now());
+                            commentRepository.save(comment);
+                        })
+                        .doOnError(e -> log.error("Error processing comment '{}'", comment, e))
+                        .onErrorResume(e -> Mono.empty())
+                ).sequential()
+                .doOnComplete(() -> log.info("The comment moderation process has been completed"))
+                .doOnError(e -> log.error("Error during overall comment processing: ", e))
+                .subscribe();
     }
 }
