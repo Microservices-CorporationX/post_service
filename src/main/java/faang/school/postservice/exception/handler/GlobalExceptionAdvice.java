@@ -1,11 +1,9 @@
 package faang.school.postservice.exception.handler;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -20,41 +18,41 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
-public class GlobalExceptionHandler {
+public class GlobalExceptionAdvice {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException ex) {
+    public Map<String, String> handleValidationException(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
 
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
+        ex.getBindingResult()
+                .getAllErrors()
+                .forEach((error) -> {
+                    String fieldName = ((FieldError) error).getField();
+                    String errorMessage = error.getDefaultMessage();
+                    errors.put(fieldName, errorMessage);
+                });
 
-        return ResponseEntity.badRequest().body(errors);
+        return errors;
     }
 
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ResponseEntity<Object> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.internalServerError().body(ex.getMessage());
+    public String handleRuntimeException(RuntimeException ex) {
+        return ex.getMessage();
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        String errorMessage = String.format("Недопустимое значение \"%s\" для \"%s\".",
+    public String handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return String.format("Недопустимое значение \"%s\" для \"%s\".",
                 ex.getValue(),
                 ex.getName());
-        return ResponseEntity.badRequest().body(errorMessage);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ResponseEntity<String> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
-        String errorMessage = "Тело запроса имеет недопустимый формат.";
-        return ResponseEntity.badRequest().body(errorMessage);
+    public String handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+        return "Тело запроса имеет недопустимый формат.";
     }
 }
