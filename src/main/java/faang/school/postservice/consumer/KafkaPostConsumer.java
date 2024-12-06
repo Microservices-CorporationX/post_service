@@ -54,9 +54,9 @@ public class KafkaPostConsumer {
                     for (Long followerId : followersIds) {
                         long timestamp = event.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
                         feedRedisRepository.addPostToFeed(followerId, event.getPostId(), timestamp);
-                        for (Object o : feedRedisRepository.getAllFeedAsc(followerId)) {
-                            System.out.println(followerId + " - " + o);
-                        }
+                    }
+                    for (Object o : feedRedisRepository.getFirst20Posts(userRedis.getId())) {
+                        System.out.println(o);
                     }
                 }
                 log.info("Event: {}", event);

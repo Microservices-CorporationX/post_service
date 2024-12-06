@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Data
 @Builder
-@RedisHash(value = "posts")
+@RedisHash(value = "posts", timeToLive = 86400)
 public class PostRedis {
     @Id
     private Long postId;
@@ -20,9 +20,4 @@ public class PostRedis {
     private Long countLikes;
     private Long countComments;
     private Long countViews;
-
-    @Transient
-    @Value("${cache.post.live-time}")
-    @TimeToLive
-    private long ttl;
 }

@@ -6,6 +6,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Repository
@@ -25,9 +27,14 @@ public class FeedRedisRepository {
         zSetOperations.add(feedKey, postId, timestamp);
     }
 
-    public Set<Object> getAllFeedAsc(Long userId) {
+    public Set<Object> getFirst20Posts(Long userId) {
         String feedKey = getFeedKey(userId);
-        return zSetOperations.reverseRange(feedKey, 0, -1);
+        Set<Object> posts = zSetOperations.range(feedKey, 0, 19);
+        if (!posts.isEmpty()) {
+            List<Object> postList = new ArrayList<>(posts);
+            zSetOperations.remove(feedKey, postList.toArray());
+        }
+        return posts;
     }
 
     private String getFeedKey(Long userId) {
@@ -39,5 +46,9 @@ public class FeedRedisRepository {
         if (size >= 500) {
             zSetOperations.removeRange(feedKey, 0, 0);
         }
+    }
+
+    public void deleteBatchPost(List<Long> postIds, Long userId) {
+
     }
 }
