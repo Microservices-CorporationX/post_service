@@ -53,8 +53,7 @@ post:
       cron: "0 0/1 * 1/1 * ?" # every minute
   ban-authors:
     scheduler:
-      cron: "0 0/1 * 1/1 * ?" # every day at midnight
-#      cron: "0 0 0 * * *" # every day at midnight
+      cron: "0 0 0 * * *" # every day at midnight
 
 user-service:
   host: localhost
