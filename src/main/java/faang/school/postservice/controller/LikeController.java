@@ -3,7 +3,6 @@ package faang.school.postservice.controller;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeCommentDto;
 import faang.school.postservice.dto.like.LikePostDto;
-
 import faang.school.postservice.service.LikeService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
@@ -29,37 +28,26 @@ public class LikeController {
     @PostMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.CREATED)
     public LikePostDto likePost(@PathVariable @Positive long postId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+        @Positive long userId = userContext.getUserId();
         return likeService.createLikePost(postId, userId);
     }
 
     @PostMapping("/comment/{commentId}")
     @ResponseStatus(HttpStatus.CREATED)
     public LikeCommentDto likeComment(@PathVariable @Positive long commentId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+        @Positive long userId = userContext.getUserId();
         return likeService.createLikeComment(commentId, userId);
     }
 
     @DeleteMapping("/post/{postId}")
     public void removeLikeFromPost(@PathVariable @Positive long postId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+        @Positive long userId = userContext.getUserId();
         likeService.deleteLikeFromPost(postId, userId);
     }
 
     @DeleteMapping("/comment/{commentId}")
     public void removeLikeFromComment(@PathVariable @Positive long commentId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+        @Positive long userId = userContext.getUserId();
         likeService.deleteLikeFromComment(commentId, userId);
-    }
-
-    private void validateUserId(Long userId) {
-        if (userId <= 0) {
-            log.warn("User with negative id tried to send request");
-            throw new IllegalArgumentException("User id must be more 0");
-        }
     }
 }
