@@ -6,6 +6,9 @@ import faang.school.postservice.dto.like.LikePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.event.model.LikeEvent;
+import faang.school.postservice.event.publisher.LikeEventPublisher;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -13,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -23,6 +28,7 @@ public class LikeService {
     private final PostService postService;
     private final CommentService commentService;
     private final LikeMapper likeMapper;
+    private final LikeEventPublisher likeEventPublisher;
 
     public LikePostDto createLikePost(long postId, long userId) {
         log.info("Creating like with ownerLikeId={} and postId={}", userId, postId);
@@ -31,14 +37,20 @@ public class LikeService {
         validatePostExists(postId);
         validatePostLiked(postId, userId);
 
+        Post post = postService.getPostById(postId);
         Like like = Like.builder()
                 .userId(userId)
-                .post(postService.getPostById(postId))
+                .post(post)
                 .build();
 
         Like savedLike = likeRepository.save(like);
 
         log.info("UserId={} successfully liked postId={} with {} ", userId, postId, savedLike);
+
+        long authorId = post.getAuthorId();
+        LikeEvent likeEvent = new LikeEvent(postId, authorId, userId, LocalDateTime.now());
+        likeEventPublisher.publish(likeEvent);
+
         return likeMapper.toLikePostDto(savedLike);
     }
 
@@ -73,12 +85,12 @@ public class LikeService {
     }
 
     private void validateUserExists(long userId) {
-          try {
-              userServiceClient.getUser(userId);
-          }catch (FeignException e){
-              log.error("User not exist with userID={}", userId);
-              throw new EntityNotFoundException("User not exist");
-          }
+        try {
+            userServiceClient.getUser(userId);
+        } catch (FeignException e) {
+            log.error("User not exist with userID={}", userId);
+            throw new EntityNotFoundException("User not exist");
+        }
     }
 
     private void validatePostExists(long postId) {

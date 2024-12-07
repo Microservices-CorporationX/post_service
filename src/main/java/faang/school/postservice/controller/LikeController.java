@@ -7,6 +7,7 @@ import faang.school.postservice.dto.like.LikePostDto;
 import faang.school.postservice.service.LikeService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,10 +17,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Validated
-@RequestMapping("/like")
+@RequestMapping("api/v1/like")
 public class LikeController {
     private final LikeService likeService;
     private final UserContext userContext;
@@ -41,14 +43,14 @@ public class LikeController {
     }
 
     @DeleteMapping("/post/{postId}")
-    public void deleteLikeFromPost(@PathVariable @Positive long postId) {
+    public void removeLikeFromPost(@PathVariable @Positive long postId) {
         long userId = userContext.getUserId();
         validateUserId(userId);
         likeService.deleteLikeFromPost(postId, userId);
     }
 
     @DeleteMapping("/comment/{commentId}")
-    public void deleteLikeFromComment(@PathVariable @Positive long commentId) {
+    public void removeLikeFromComment(@PathVariable @Positive long commentId) {
         long userId = userContext.getUserId();
         validateUserId(userId);
         likeService.deleteLikeFromComment(commentId, userId);
@@ -56,6 +58,7 @@ public class LikeController {
 
     private void validateUserId(Long userId) {
         if (userId <= 0) {
+            log.warn("User with negative id tried to send request");
             throw new IllegalArgumentException("User id must be more 0");
         }
     }
