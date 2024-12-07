@@ -4,27 +4,41 @@ import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.PostValidator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
+    @Mock
+    private UserBanPublisher userBanPublisher;
     @Mock
     private PostValidator postValidator;
     @Mock
@@ -33,6 +47,15 @@ class PostServiceTest {
     private PostMapper postMapper;
     @InjectMocks
     private PostService postService;
+
+    @Captor
+    private ArgumentCaptor<List<Long>> usersIdsForBanCapture = ArgumentCaptor.forClass(ArrayList.class);
+    private int minimumSizeOfUnverifiedPosts = 5;
+
+    @BeforeEach
+    void setup() {
+        ReflectionTestUtils.setField(postService, "minimumSizeOfUnverifiedPosts", minimumSizeOfUnverifiedPosts);
+    }
 
     @Test
     void testFindEntityByIdFounded() {
@@ -181,4 +204,52 @@ class PostServiceTest {
         );
     }
 
+    @Test
+    void testToBanUsers_ShouldSuccessPublish() {
+        List<Post> postsForBan = getPostsForBan(minimumSizeOfUnverifiedPosts);
+        when(postRepository.findNotVerifiedPots())
+                .thenReturn(Optional.of(postsForBan));
+
+        postService.banUsers();
+
+        verify(postRepository, times(1)).findNotVerifiedPots();
+        verify(userBanPublisher, times(1)).publish(usersIdsForBanCapture.capture());
+        assertEquals(1, usersIdsForBanCapture.getValue().size());
+        assertEquals(minimumSizeOfUnverifiedPosts, usersIdsForBanCapture.getValue().get(0));
+    }
+
+    private List<Post> getPostsForBan(int size) {
+        List<Post> posts = new ArrayList<>();
+        for (int i = 1; i <= size; i++) {
+            posts.add(Post
+                    .builder()
+                    .id((long) i)
+                    .authorId(5L)
+                    .build());
+        }
+        return posts;
+    }
+
+    @Test
+    void testToBanUsers_ShouldNotFoundUnVerifiedPosts() {
+        when(postRepository.findNotVerifiedPots())
+                .thenReturn(Optional.empty());
+
+        postService.banUsers();
+
+        verify(postRepository, times(1)).findNotVerifiedPots();
+        verify(userBanPublisher, never()).publish(usersIdsForBanCapture.capture());
+    }
+
+    @Test
+    void testToBanUsers_ShouldNotFoundUsersWhichUnVerifiedPostsMoreThanMinimum() {
+        List<Post> postsForBan = getPostsForBan(minimumSizeOfUnverifiedPosts - 1);
+        when(postRepository.findNotVerifiedPots())
+                .thenReturn(Optional.of(postsForBan));
+
+        postService.banUsers();
+
+        verify(postRepository, times(1)).findNotVerifiedPots();
+        verify(userBanPublisher, times(0)).publish(usersIdsForBanCapture.capture());
+    }
 }

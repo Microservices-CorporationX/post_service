@@ -8,7 +8,10 @@ import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -18,12 +21,15 @@ import java.util.List;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PostService {
     private final PostValidator postValidator;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserBanPublisher userBanPublisher;
+    @Getter
+    @Value("${banner.minimum-size-of-unverified-posts}")
+    private int minimumSizeOfUnverifiedPosts;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -115,24 +121,25 @@ public class PostService {
         List<Post> postsWithOffensiveContent = postRepository.findNotVerifiedPots()
                 .orElseGet(() -> null);
         if (postsWithOffensiveContent == null) {
-            log.info("users for ban not found!");
+            log.info("users for ban not found! cause not posts which not verified");
             return;
         }
-        List<Long> banningUsersIds = getBanningUsersIdsBy(postsWithOffensiveContent);
-        if(banningUsersIds == null) {
-            log.info("users for ban not found!");
+        List<Long> banningUsersIds = getBanningUsersIds(postsWithOffensiveContent);
+        if(banningUsersIds.size() == 0) {
+            log.info("users for ban not found!, " +
+                    "cause no users who have unverified posts exceeding {}", minimumSizeOfUnverifiedPosts);
             return;
         }
-        log.info("users for ban received, usersIds: {}", banningUsersIds);
+        log.info("users for ban received! users ids: {}", banningUsersIds);
         userBanPublisher.publish(banningUsersIds);
     }
 
-    public List<Long> getBanningUsersIdsBy(List<Post> posts) {
+    public List<Long> getBanningUsersIds(List<Post> posts) {
         return posts.stream()
-                .filter(post -> Collections.frequency(posts
-                        .stream().map(Post::getId).toList(), post.getId()) >= 1
-                )
                 .map(Post::getAuthorId)
+                .filter(authorId -> Collections.frequency(posts
+                        .stream().map(Post::getAuthorId).toList(), authorId) >= minimumSizeOfUnverifiedPosts
+                )
                 .distinct()
                 .toList();
     }

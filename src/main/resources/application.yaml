@@ -51,6 +51,7 @@ moderation:
   thread-pool: 1
 
 banner:
+  minimum-size-of-unverified-posts: 5
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool: 1
