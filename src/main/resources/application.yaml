@@ -39,6 +39,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        userBanChannel:
+          name: user_ban_channel
 
 server:
   port: 8081
@@ -46,6 +48,12 @@ server:
 logging:
   level:
     root: info
+
+post:
+  author-banner:
+    schedule:
+      cron: "0 0 0 * * *"
+    unverified-posts-limit: 5
 
 user-service:
   host: localhost
