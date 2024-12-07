@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @Log4j2
 @Service
@@ -30,6 +31,7 @@ public class PostService {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final UserContext userContext;
+    private final OrthographyService orthographyService;
 
     public Long createDraftPost(PostDto postDto) {
         checkAuthorIdExist(postDto.userId(), postDto.projectId());
@@ -81,7 +83,6 @@ public class PostService {
     }
 
     public List<PostDto> getDraftPostsForProject(Long idProject) {
-        checkProjectExistById(idProject);
         return postRepository.findByProjectId(idProject)
                 .stream()
                 .filter(post -> !post.isPublished() && !post.isDeleted())
@@ -108,6 +109,27 @@ public class PostService {
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
                 .map(postMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+
+    public void checkGrammarPostContentAndChangeIfNeed() {
+        List<Post> posts = getAllUnpublishedPostsOrThrow();
+        posts.forEach(post -> {
+            post.setContent(orthographyService.getCorrectContent(post.getContent(), post.getId()));
+            postRepository.save(post);
+        });
+    }
+
+    List<Post> getAllUnpublishedPostsOrThrow() {
+        List<Post> unpublishedPosts = StreamSupport
+                .stream(postRepository.findAll().spliterator(), false)
+                .filter(post -> !post.isPublished() && !post.isDeleted())
+                .collect(Collectors.toList());
+        if (unpublishedPosts.isEmpty()) {
+            log.error("The list of unpublished posts is null.");
+            throw new EntityNotFoundException("The list of unpublished posts is null.");
+        }
+        return unpublishedPosts;
     }
 
     private void checkIdUserAndIdProjectNotEquals(Long idUser, Long idProject) {

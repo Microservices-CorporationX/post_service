@@ -16,9 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -38,6 +36,9 @@ public class PostServiceTest {
 
     @InjectMocks
     private PostService postService;
+    @Mock
+    private OrthographyService orthographyService;
+
     private final PostDto postDtoForUser = new PostDto("Test", 1L, null);
 
     @Test
@@ -326,7 +327,7 @@ public class PostServiceTest {
     }
 
     @Test
-    void getDraftPostsForUserNotDraftsSuccesTest() {
+    void getDraftPostsForUserNotDraftsSuccessTest() {
         long userId = 1L;
 
         when(postRepository.findByAuthorId(userId)).thenReturn(List.of());
@@ -358,5 +359,46 @@ public class PostServiceTest {
 
         assertTrue(exception.getMessage().contains("User id:"));
         verify(userServiceClient).getUser(anyLong());
+    }
+
+    @Test
+    void checkGrammarPostContentAndChangeIfNeedSuccessTest() {
+        Post post1 = new Post();
+        post1.setId(1L);
+        post1.setContent("Teh content");
+
+        Post post2 = new Post();
+        post2.setId(2L);
+        post2.setContent("Anothr contnt");
+
+        List<Post> unpublishedPosts = Arrays.asList(post1, post2);
+
+        when(postRepository.findAll()).thenReturn(unpublishedPosts);
+        when(orthographyService.getCorrectContent("Teh content", 1L)).thenReturn("The content");
+        when(orthographyService.getCorrectContent("Anothr contnt", 2L)).thenReturn("Another content");
+
+
+        postService.checkGrammarPostContentAndChangeIfNeed();
+
+        verify(postRepository).save(argThat(post ->
+                post.getId().equals(1L) && "The content".equals(post.getContent())
+        ));
+        verify(postRepository).save(argThat(post ->
+                post.getId().equals(2L) && "Another content".equals(post.getContent())
+        ));
+
+        verify(orthographyService).getCorrectContent("Teh content", 1L);
+        verify(orthographyService).getCorrectContent("Anothr contnt", 2L);
+        verify(postRepository).findAll();
+        verifyNoMoreInteractions(postRepository, orthographyService);
+    }
+
+    @Test
+    void testCheckGrammarPostContentAndChangeIfNeedExceptionNotFoundPublishedPostsFailTest() {
+        when(postRepository.findAll()).thenReturn(Collections.emptyList());
+        RuntimeException exception = assertThrows(EntityNotFoundException.class, postService::checkGrammarPostContentAndChangeIfNeed);
+        assertEquals("The list of unpublished posts is null.", exception.getMessage());
+
+        verify(postRepository).findAll();
     }
 }

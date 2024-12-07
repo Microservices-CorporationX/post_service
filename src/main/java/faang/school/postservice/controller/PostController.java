@@ -32,7 +32,6 @@ public class PostController {
 
     private final PostService postService;
     private final PostResourceService postResourceService;
-    private final UserContext userContext;
 
     @PostMapping
     public ResponseEntity<Long> draftPost(@RequestBody @Valid PostDto postDto) {
@@ -60,9 +59,9 @@ public class PostController {
         return ResponseEntity.ok().body(postDeletedId);
     }
 
-    @GetMapping
-    public ResponseEntity<PostDto> getPost(@RequestParam @Min(1) Long postId) {
-        return ResponseEntity.ok(postService.getPost(postId));
+    @GetMapping(UrlUtils.ID)
+    public ResponseEntity<PostDto> getPost(@PathVariable("id") @Min(1) Long id) {
+        return ResponseEntity.ok(postService.getPost(id));
     }
 
     @GetMapping(UrlUtils.USER + UrlUtils.DRAFT)
