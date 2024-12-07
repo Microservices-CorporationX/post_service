@@ -24,6 +24,7 @@ public class LikeService {
     private static final String ERROR_USER_NOT_FOUND = "User does not exist";
     private static final String ERROR_POST_NOT_FOUND = "Post does not exist";
     private static final String ERROR_COMMENT_NOT_FOUND = "Comment does not exist";
+    private static final String ERROR_LIKE_NOT_FOUND = "Like does not exist";
     private static final String ERROR_USER_LIKED = "User already liked this entity";
 
     private final UserServiceClient userServiceClient;
@@ -53,23 +54,17 @@ public class LikeService {
     @Transactional
     public void unlikePost(long postId, @Valid LikeDto like) {
         validateUserExists(like.getUserId());
-        postRepository.findById(postId).ifPresentOrElse(post ->
-                        likeRepository.deleteByPostIdAndUserId(postId, like.getUserId()),
-                () -> {
-                    throw new IllegalArgumentException(ERROR_POST_NOT_FOUND);
-                }
-        );
+        validatePostExists(postId);
+        validatePostLikeExists(postId, like.getUserId());
+        likeRepository.deleteByPostIdAndUserId(postId, like.getUserId());
     }
 
     @Transactional
     public void unlikeComment(long commentId, @Valid LikeDto like) {
         validateUserExists(like.getUserId());
-        commentRepository.findById(commentId).ifPresentOrElse(comment ->
-                        likeRepository.deleteByCommentIdAndUserId(commentId, like.getUserId()),
-                () -> {
-                    throw new IllegalArgumentException(ERROR_COMMENT_NOT_FOUND);
-                }
-        );
+        validateCommentExists(commentId);
+        validateCommentLikeExists(commentId, like.getUserId());
+        likeRepository.deleteByCommentIdAndUserId(commentId, like.getUserId());
     }
 
     private void validateUserExists(Long userId) {
@@ -83,6 +78,30 @@ public class LikeService {
     private void checkForDuplicateLike(Optional<Like> existingLike) {
         if (existingLike.isPresent()) {
             throw new IllegalArgumentException(ERROR_USER_LIKED);
+        }
+    }
+
+    private void validatePostExists(long postId) {
+        if (!postRepository.existsById(postId)) {
+            throw new IllegalArgumentException(ERROR_POST_NOT_FOUND);
+        }
+    }
+
+    private void validatePostLikeExists(long postId, long userId) {
+        if (!likeRepository.existsByPostIdAndUserId(postId, userId)) {
+            throw new IllegalArgumentException(ERROR_LIKE_NOT_FOUND);
+        }
+    }
+
+    private void validateCommentExists(long commentId) {
+        if (!commentRepository.existsById(commentId)) {
+            throw new IllegalArgumentException(ERROR_COMMENT_NOT_FOUND);
+        }
+    }
+
+    private void validateCommentLikeExists(long commentId, long userId) {
+        if (!likeRepository.existsByCommentIdAndUserId(commentId, userId)) {
+            throw new IllegalArgumentException(ERROR_LIKE_NOT_FOUND);
         }
     }
 

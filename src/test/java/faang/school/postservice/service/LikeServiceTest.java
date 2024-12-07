@@ -103,7 +103,8 @@ class LikeServiceTest {
         LikeDto likeDto = createLikeDto(1L);
         Comment comment = mock(Comment.class);
 
-        when(commentRepository.findById(commentId)).thenReturn(Optional.of(comment));
+        when(commentRepository.existsById(commentId)).thenReturn(true);
+        when(likeRepository.existsByCommentIdAndUserId(commentId, likeDto.getUserId())).thenReturn(true);
         doNothing().when(likeRepository).deleteByCommentIdAndUserId(commentId, likeDto.getUserId());
 
         likeService.unlikeComment(commentId, likeDto);
@@ -115,7 +116,7 @@ class LikeServiceTest {
         Long commentId = 1L;
         LikeDto likeDto = createLikeDto(1L);
 
-        when(commentRepository.findById(commentId)).thenReturn(Optional.empty());
+        when(commentRepository.existsById(commentId)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class, () -> likeService.unlikeComment(commentId, likeDto));
     }
@@ -192,7 +193,8 @@ class LikeServiceTest {
         LikeDto likeDto = createLikeDto(1L);
         Post post = mock(Post.class);
 
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postRepository.existsById(postId)).thenReturn(true);
+        when(likeRepository.existsByPostIdAndUserId(postId, likeDto.getUserId())).thenReturn(true);
         doNothing().when(likeRepository).deleteByPostIdAndUserId(postId, likeDto.getUserId());
 
         likeService.unlikePost(postId, likeDto);
@@ -204,7 +206,7 @@ class LikeServiceTest {
         Long postId = 1L;
         LikeDto likeDto = createLikeDto(1L);
 
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+        when(postRepository.existsById(postId)).thenReturn(false);
 
         assertThrows(IllegalArgumentException.class, () -> likeService.unlikePost(postId, likeDto));
     }
