@@ -3,6 +3,7 @@ package faang.school.postservice.controller.album;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.album.AlbumFilterDto;
+import faang.school.postservice.model.album.AlbumVisibility;
 import faang.school.postservice.service.album.AlbumService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -81,7 +83,15 @@ public class AlbumController {
         return albumService.update(albumDto);
     }
 
-    @DeleteMapping("/remove/{albumId}")
+    @PutMapping("{albumId}/visibility")
+    public AlbumDto updateVisibility(
+            @PathVariable("albumId") Long albumId,
+            @RequestParam("visibility") AlbumVisibility visibility,
+            @RequestBody(required = false) List<Long> userIds) {
+        return albumService.updateVisibility(albumId, visibility, userIds);
+    }
+
+    @DeleteMapping("/{albumId}")
     public void remove(@PathVariable Long albumId) {
         albumService.remove(albumId);
     }

@@ -1,5 +1,6 @@
-package faang.school.postservice.model;
+package faang.school.postservice.model.album;
 
+import faang.school.postservice.model.Post;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +33,18 @@ public class Album {
     @Column(name = "author_id", nullable = false)
     private long authorId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "visibility", nullable = false)
+    private AlbumVisibility visibility;
+
     @ManyToMany
     @JoinTable(name = "post_album", joinColumns = @JoinColumn(name = "album_id"), inverseJoinColumns = @JoinColumn(name = "post_id"))
     private List<Post> posts;
+
+    @ElementCollection
+    @CollectionTable(name = "album_users", joinColumns = @JoinColumn(name = "album_id"))
+    @Column(name = "user_id")
+    private List<Long> favouriteUserIds;
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)

@@ -1,14 +1,18 @@
 package faang.school.postservice.dto.album;
 
+import faang.school.postservice.model.album.AlbumVisibility;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 public class AlbumDto {
     private Long id;
@@ -21,7 +25,9 @@ public class AlbumDto {
     @Size(max = 4096, message = "Description must not exceed 4096 characters")
     private String description;
     private Long authorId;
-    private List<Long> postIds = new ArrayList<>();
+    private AlbumVisibility visibility;
+    private List<Long> postIds;
+    private List<Long> favouriteUserIds;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

@@ -6,6 +6,10 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/post_V003_resource.sql
   - include:
+      file: db/changelog/changeset/post_V004_album_users.sql
+  - include:
+      file: db/changelog/changeset/post_V005_album_visibility.sql
+  - include:
       file: db/changelog/changeset/post_V004_comment_add_column.sql
   - include:
       file: db/changelog/changeset/post_V005_change_verified_column_and_add_new.sql

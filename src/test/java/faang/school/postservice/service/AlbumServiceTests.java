@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.PostDto;
 import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.dto.album.AlbumDto;
@@ -10,8 +11,9 @@ import faang.school.postservice.filter.album.CreatedAtAlbumFilter;
 import faang.school.postservice.filter.album.TitleAlbumFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.album.AlbumMapper;
-import faang.school.postservice.model.Album;
+import faang.school.postservice.model.album.Album;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.album.AlbumVisibility;
 import faang.school.postservice.repository.AlbumRepository;
 import faang.school.postservice.service.album.AlbumService;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,6 +53,8 @@ class AlbumServiceTests {
     private UserServiceClient userServiceClient;
     @Mock
     private PostService postService;
+    @Mock
+    private UserContext userContext;
     @Spy
     private final AlbumMapper albumMapper = Mappers.getMapper(AlbumMapper.class);
     @Spy
@@ -74,8 +78,10 @@ class AlbumServiceTests {
     void setUp() {
 
         album = new Album();
+        album.setVisibility(AlbumVisibility.PUBLIC);
         albumDto = new AlbumDto();
         albumDto.setId(1L);
+        albumDto.setVisibility(AlbumVisibility.PUBLIC);
         post = new Post();
         post.setId(1L);
         userDto = new UserDto(1L, "v", "@");
@@ -87,7 +93,8 @@ class AlbumServiceTests {
                 postMapper,
                 albumFilters,
                 userServiceClient,
-                postService
+                postService,
+                userContext
         );
     }
 
@@ -473,11 +480,89 @@ class AlbumServiceTests {
 
         when(albumRepository.save(any(Album.class))).thenReturn(album);
         when(albumMapper.toDto(any(Album.class))).thenReturn(albumDto);
+        when(albumRepository.findById(anyLong())).thenReturn(Optional.of(album));
         AlbumDto result = albumService.update(albumDto);
 
         verify(albumRepository, times(1)).save(any(Album.class));
         assertEquals(albumDto.getTitle(), result.getTitle());
         assertEquals(albumDto.getDescription(), result.getDescription());
+    }
+
+    @Test
+    void updateVisibilityPublic() {
+        prepareDtoWithTitleAndDescription();
+        prepareAlbumEntity();
+
+        when(albumRepository.save(any(Album.class))).thenReturn(album);
+        when(albumMapper.toDto(any(Album.class))).thenReturn(albumDto);
+        when(albumRepository.findById(anyLong())).thenReturn(Optional.of(album));
+        AlbumDto result = albumService.updateVisibility(1L, AlbumVisibility.PUBLIC, null);
+
+        verify(albumRepository, times(1)).save(any(Album.class));
+        assertEquals(AlbumVisibility.PUBLIC, result.getVisibility());
+    }
+
+    @Test
+    void updateVisibilityPrivate() {
+        prepareDtoWithTitleAndDescription();
+        prepareAlbumEntity();
+
+        Album album = new Album();
+        album.setVisibility(AlbumVisibility.PRIVATE);
+
+        AlbumDto albumDto = new AlbumDto();
+        albumDto.setVisibility(AlbumVisibility.PRIVATE);
+
+        when(albumRepository.save(any(Album.class))).thenReturn(album);
+        when(albumMapper.toDto(any(Album.class))).thenReturn(albumDto);
+        when(albumRepository.findById(anyLong())).thenReturn(Optional.of(album));
+        AlbumDto result = albumService.updateVisibility(1L, AlbumVisibility.PRIVATE, null);
+
+        verify(albumRepository, times(1)).save(any(Album.class));
+        assertEquals(AlbumVisibility.PRIVATE, result.getVisibility());
+    }
+
+    @Test
+    void updateVisibilitySelectedUser() {
+        prepareDtoWithTitleAndDescription();
+        prepareAlbumEntity();
+
+        Album album = new Album();
+        album.setVisibility(AlbumVisibility.SELECTED_USERS);
+        album.setFavouriteUserIds(List.of(1L, 2L));
+
+        AlbumDto albumDto = new AlbumDto();
+        albumDto.setVisibility(AlbumVisibility.SELECTED_USERS);
+        albumDto.setFavouriteUserIds(List.of(1L, 2L));
+
+        when(albumRepository.save(any(Album.class))).thenReturn(album);
+        when(albumMapper.toDto(any(Album.class))).thenReturn(albumDto);
+        when(albumRepository.findById(anyLong())).thenReturn(Optional.of(album));
+        AlbumDto result = albumService.updateVisibility(1L, AlbumVisibility.SELECTED_USERS, null);
+
+        verify(albumRepository, times(1)).save(any(Album.class));
+        assertEquals(AlbumVisibility.SELECTED_USERS, result.getVisibility());
+        assertEquals(List.of(1L, 2L), result.getFavouriteUserIds());
+    }
+
+    @Test
+    void updateVisibilitySubscribers() {
+        prepareDtoWithTitleAndDescription();
+        prepareAlbumEntity();
+
+        Album album = new Album();
+        album.setVisibility(AlbumVisibility.SUBSCRIBERS);
+
+        AlbumDto albumDto = new AlbumDto();
+        albumDto.setVisibility(AlbumVisibility.SUBSCRIBERS);
+
+        when(albumRepository.save(any(Album.class))).thenReturn(album);
+        when(albumMapper.toDto(any(Album.class))).thenReturn(albumDto);
+        when(albumRepository.findById(anyLong())).thenReturn(Optional.of(album));
+        AlbumDto result = albumService.updateVisibility(1L, AlbumVisibility.SUBSCRIBERS, null);
+
+        verify(albumRepository, times(1)).save(any(Album.class));
+        assertEquals(AlbumVisibility.SUBSCRIBERS, result.getVisibility());
     }
 
     @Test
@@ -499,5 +584,4 @@ class AlbumServiceTests {
         album.setAuthorId(1L);
         album.setPosts(new ArrayList<>());
     }
-
 }
