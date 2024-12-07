@@ -40,7 +40,7 @@ public class PostService {
     private final RedisBanMessagePublisher redisBanMessagePublisher;
 
     public PostDto createPost(PostDto postDto) {
-        log.info("validate post dto");
+        log.info("validate post dto argument");
         PostServiceValidator.checkDtoValidAuthorOrProjectId(postDto);
         PostServiceValidator.checkThatUserOrProjectIsExist(postDto, userServiceClient, projectServiceClient);
 
@@ -50,7 +50,7 @@ public class PostService {
         post.setPublished(false);
         post.setDeleted(false);
 
-        log.info("saving post in db");
+        log.info("saving new post in db");
         postRepository.save(post);
 
         log.info("mapping entity to postDto");
@@ -66,7 +66,7 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(post.getPublishedAt());
 
-        log.info("update post at db");
+        log.info("update at db post " + post.getId());
         savePost(post);
 
         log.info("mapping entity to dto");
@@ -76,10 +76,10 @@ public class PostService {
     public PostDto updatePost(long id, PostDto postDto) {
         Post post = getPost(id);
 
-        log.info("mapping update");
+        log.info("mapping update to post " + post.getId());
         postMapper.update(postDto, post);
 
-        log.info("update post at db");
+        log.info("update at db post " + post.getId());
         savePost(post);
 
         log.info("mapping entity to dto");
@@ -98,7 +98,7 @@ public class PostService {
         post.setPublished(false);
         post.setUpdatedAt(LocalDateTime.now());
 
-        log.info("update post at db");
+        log.info("update at db post " + post.getId());
         savePost(post);
 
         log.info("mapping entity to dto");
@@ -109,7 +109,7 @@ public class PostService {
         List<Post> posts = getPostWithLikes(authorId, filterDto.getAuthor());
 
         if (posts == null) {
-            log.warn("post was null return empty array list");
+            log.warn("post was null, return empty array list");
             return new ArrayList<>();
         }
 

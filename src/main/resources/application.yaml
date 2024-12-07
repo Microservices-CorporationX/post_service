@@ -51,8 +51,7 @@ payment-service:
 
 schedule:
   banUser:
-    cron:
-
+    cron: 0 0 * * * *
 services:
   s3:
     endpoint: http://127.0.0.1:9000

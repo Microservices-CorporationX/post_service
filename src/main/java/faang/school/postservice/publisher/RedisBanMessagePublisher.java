@@ -14,7 +14,7 @@ public class RedisBanMessagePublisher {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ChannelTopic topic;
     public void publish(BanUserEvent event) {
-        log.warn("sending message to redis");
+        log.info("sending message to redis");
         redisTemplate.convertAndSend(topic.getTopic(), event);
     }
 }
