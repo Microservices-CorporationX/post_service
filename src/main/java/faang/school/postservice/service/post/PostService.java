@@ -1,13 +1,13 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.user.BanUsersDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -125,13 +125,16 @@ public class PostService {
             return;
         }
         List<Long> banningUsersIds = getBanningUsersIds(postsWithOffensiveContent);
-        if(banningUsersIds.size() == 0) {
+        if (banningUsersIds.size() == 0) {
             log.info("users for ban not found!, " +
                     "cause no users who have unverified posts exceeding {}", minimumSizeOfUnverifiedPosts);
             return;
         }
         log.info("users for ban received! users ids: {}", banningUsersIds);
-        userBanPublisher.publish(banningUsersIds);
+        userBanPublisher.publish(BanUsersDto
+                                .builder()
+                                .usersIds(banningUsersIds)
+                                .build());
     }
 
     public List<Long> getBanningUsersIds(List<Post> posts) {
