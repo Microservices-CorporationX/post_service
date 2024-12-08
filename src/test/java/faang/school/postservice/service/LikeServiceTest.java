@@ -4,7 +4,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentDto;
 import faang.school.postservice.dto.like.LikePostDto;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.event.model.LikeEvent;
+import faang.school.postservice.dto.like.LikeEvent;
 import faang.school.postservice.event.publisher.LikeEventPublisher;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;

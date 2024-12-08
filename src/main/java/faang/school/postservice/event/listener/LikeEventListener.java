@@ -1,8 +1,7 @@
-package faang.school.postservice.event.subscriber;
+package faang.school.postservice.event.listener;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.event.model.LikeEvent;
-import jakarta.validation.constraints.NotNull;
+import faang.school.postservice.dto.like.LikeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
@@ -13,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class LikeEventSubscriber implements MessageListener {
+public class LikeEventListener implements MessageListener {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     public static List<String> messageList = new ArrayList<>();

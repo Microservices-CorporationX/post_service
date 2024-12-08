@@ -6,7 +6,7 @@ import faang.school.postservice.dto.like.LikePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
-import faang.school.postservice.event.model.LikeEvent;
+import faang.school.postservice.dto.like.LikeEvent;
 import faang.school.postservice.event.publisher.LikeEventPublisher;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
