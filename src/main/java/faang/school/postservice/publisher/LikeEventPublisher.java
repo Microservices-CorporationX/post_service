@@ -1,4 +1,4 @@
-package faang.school.postservice.event.publisher;
+package faang.school.postservice.publisher;
 
 import faang.school.postservice.dto.like.LikeEvent;
 import lombok.RequiredArgsConstructor;
