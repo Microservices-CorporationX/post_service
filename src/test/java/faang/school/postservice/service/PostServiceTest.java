@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.user.BanUsersDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
@@ -49,7 +50,7 @@ class PostServiceTest {
     private PostService postService;
 
     @Captor
-    private ArgumentCaptor<List<Long>> usersIdsForBanCapture = ArgumentCaptor.forClass(ArrayList.class);
+    private ArgumentCaptor<BanUsersDto> usersIdsForBanCapture = ArgumentCaptor.forClass(BanUsersDto.class);
     private int minimumSizeOfUnverifiedPosts = 5;
 
     @BeforeEach
@@ -214,8 +215,8 @@ class PostServiceTest {
 
         verify(postRepository, times(1)).findNotVerifiedPots();
         verify(userBanPublisher, times(1)).publish(usersIdsForBanCapture.capture());
-        assertEquals(1, usersIdsForBanCapture.getValue().size());
-        assertEquals(minimumSizeOfUnverifiedPosts, usersIdsForBanCapture.getValue().get(0));
+        assertEquals(1, usersIdsForBanCapture.getValue().usersIds().size());
+        assertEquals(minimumSizeOfUnverifiedPosts, usersIdsForBanCapture.getValue().usersIds().get(0));
     }
 
     private List<Post> getPostsForBan(int size) {
