@@ -1,6 +1,5 @@
 package faang.school.postservice.config.redis;
 
-import faang.school.postservice.event.listener.LikeEventListener;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,11 +25,6 @@ public class RedisConfig {
     public JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
         return new JedisConnectionFactory(redisConfig);
-    }
-
-    @Bean
-    public MessageListenerAdapter messageListener(LikeEventListener likeEventListener) {
-        return new MessageListenerAdapter(likeEventListener, "onMessage");
     }
 
     @Bean
