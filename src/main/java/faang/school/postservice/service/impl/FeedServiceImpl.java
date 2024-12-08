@@ -5,22 +5,18 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.kafka.producer.FeedHeatKafkaProducer;
+import faang.school.postservice.kafka.producer.AuthorPostByHeatKafkaProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.RedisPostDtoMapper;
-import faang.school.postservice.mapper.UserShortInfoMapper;
 import faang.school.postservice.model.dto.redis.cache.PostFields;
 import faang.school.postservice.model.dto.redis.cache.RedisPostDto;
-import faang.school.postservice.model.dto.redis.cache.RedisUserDto;
 import faang.school.postservice.model.entity.Post;
-import faang.school.postservice.model.entity.UserShortInfo;
+import faang.school.postservice.model.event.kafka.AuthorPostKafkaEvent;
 import faang.school.postservice.model.event.kafka.PostPublishedKafkaEvent;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.repository.UserShortInfoRepository;
 import faang.school.postservice.service.FeedService;
 import faang.school.postservice.service.RedisPostService;
 import faang.school.postservice.service.RedisTransactional;
-import faang.school.postservice.service.RedisUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,10 +31,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -57,20 +51,14 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
     @Value("${redis.feed.heater.batch-size}")
     private int batchSize;
 
-    @Value("${kafka.batch-size.follower:1000}")
-    private int followerBatchSize;
-
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final UserContext userContext;
     private final PostRepository postRepository;
     private final RedisPostService redisPostService;
-    private final RedisUserService redisUserService;
     private final PostMapper postMapper;
     private final RedisPostDtoMapper redisPostDtoMapper;
-    private final UserShortInfoRepository userShortInfoRepository;
-    private final UserShortInfoMapper userShortInfoMapper;
-    private final FeedHeatKafkaProducer heatKafkaProducer;
+    private final AuthorPostByHeatKafkaProducer authorPostByHeatKafkaProducer;
 
     public FeedServiceImpl(
             @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
@@ -78,23 +66,17 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
             UserContext userContext,
             PostRepository postRepository,
             RedisPostService redisPostService,
-            RedisUserService redisUserService,
             PostMapper postMapper,
             RedisPostDtoMapper redisPostDtoMapper,
-            UserShortInfoRepository userShortInfoRepository,
-            UserShortInfoMapper userShortInfoMapper,
-            FeedHeatKafkaProducer heatKafkaProducer) {
+            AuthorPostByHeatKafkaProducer authorPostByHeatKafkaProducer) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.userContext = userContext;
         this.postRepository = postRepository;
         this.redisPostService = redisPostService;
-        this.redisUserService = redisUserService;
         this.postMapper = postMapper;
         this.redisPostDtoMapper = redisPostDtoMapper;
-        this.userShortInfoRepository = userShortInfoRepository;
-        this.userShortInfoMapper = userShortInfoMapper;
-        this.heatKafkaProducer = heatKafkaProducer;
+        this.authorPostByHeatKafkaProducer = authorPostByHeatKafkaProducer;
     }
 
     @Override
@@ -152,6 +134,7 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
         return posts;
     }
 
+    //TODO пусть это выполняется ассинхронно, чтобы не держать порт открытым
     @Override
     public void startHeating() {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(timeRangeDays);
@@ -164,31 +147,10 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
             page = postRepository.findPostsByDateRange(fromDate, toDate, pageable);
             List<Post> posts = page.getContent();
             List<RedisPostDto> redisPostDtoList = getRedisPostDtoList(posts);
-            List<RedisUserDto> redisUserDtoList = getRedisUserDtoList(posts);
             redisPostService.savePosts(redisPostDtoList);
-            redisUserService.saveUsers(redisUserDtoList);
 
-            for (Post post : posts) {
-                List<Long> followerIds = redisUserDtoList.stream()
-                        .filter(redisUserDto -> redisUserDto.getUserId().equals(post.getAuthorId()))
-                        .map(RedisUserDto::getFollowerIds)
-                        .flatMap(Collection::stream)
-                        .toList();
-
-                if (followerIds.isEmpty()) {
-                    continue;
-                }
-
-                for (int indexFrom = 0; indexFrom < followerIds.size(); indexFrom += followerBatchSize) {
-                    int indexTo = Math.min(indexFrom + followerBatchSize, followerIds.size());
-                    PostPublishedKafkaEvent subEvent = new PostPublishedKafkaEvent(
-                            post.getId(),
-                            followerIds.subList(indexFrom, indexTo),
-                            post.getPublishedAt());
-                    heatKafkaProducer.sendEvent(subEvent);
-                }
-
-            }
+            posts.forEach(post -> authorPostByHeatKafkaProducer.sendEvent(
+                    new AuthorPostKafkaEvent(post.getId(), post.getAuthorId(), post.getPublishedAt())));
 
             pageable = pageable.next();
         } while (!page.isLast());
@@ -198,21 +160,6 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
         return posts.stream()
                 .map(postMapper::toPostDto)
                 .map(redisPostDtoMapper::mapToRedisPostDto)
-                .toList();
-    }
-
-    private List<RedisUserDto> getRedisUserDtoList(List<Post> posts) {
-        return posts.stream()
-                .map(Post::getAuthorId)
-                .map(userId -> {
-                    Optional<UserShortInfo> userShortInfo = userShortInfoRepository.findById(userId);
-                    if (userShortInfo.isEmpty()) {
-                        log.error(String.format("User with id = %d not found while heating cache", userId));
-                    }
-                    return userShortInfo;
-                })
-                .flatMap(Optional::stream)
-                .map(userShortInfoMapper::toRedisUserDto)
                 .toList();
     }
 

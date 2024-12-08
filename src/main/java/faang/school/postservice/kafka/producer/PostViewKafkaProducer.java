@@ -1,5 +1,6 @@
 package faang.school.postservice.kafka.producer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.model.event.kafka.PostViewKafkaEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,8 +12,8 @@ public class PostViewKafkaProducer extends AbstractKafkaProducer<PostViewKafkaEv
     @Value("${kafka.topics.post-view}")
     private String postViewKafkaTopic;
 
-    public PostViewKafkaProducer(KafkaTemplate<String, PostViewKafkaEvent> kafkaTemplate) {
-        super(kafkaTemplate);
+    public PostViewKafkaProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper mapper) {
+        super(kafkaTemplate, mapper);
     }
 
     @Override

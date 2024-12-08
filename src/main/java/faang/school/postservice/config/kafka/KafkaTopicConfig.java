@@ -23,6 +23,15 @@ public class KafkaTopicConfig {
     @Value("${kafka.topics.feed-heat}")
     private String kafkaFeedHeatTopic;
 
+    @Value("${kafka.topics.author-published-post}")
+    private String kafkaAuthorPublishedPostTopic;
+
+    @Value("${kafka.topics.author-of-comment}")
+    private String kafkaAuthorOfCommentTopic;
+
+    @Value("${kafka.topics.author-post-by-heat}")
+    private String kafkaAuthorPostByHeatTopic;
+
     @Bean
     public NewTopic kafkaPostTopic() {
         return new NewTopic(kafkaPostTopic, 3, (short) 1);
@@ -46,5 +55,20 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic kafkaFeedHeatTopic() {
         return new NewTopic(kafkaFeedHeatTopic, 3, (short) 1);
+    }
+
+    @Bean
+    public NewTopic kafkaAuthorPublishedPostTopic() {
+        return new NewTopic(kafkaAuthorPublishedPostTopic, 3, (short) 1);
+    }
+
+    @Bean
+    public NewTopic kafkaAuthorOfCommentTopic() {
+        return new NewTopic(kafkaAuthorOfCommentTopic, 3, (short) 1);
+    }
+
+    @Bean
+    public NewTopic kafkaAuthorPostByHeatTopic() {
+        return new NewTopic(kafkaAuthorPostByHeatTopic, 3, (short) 1);
     }
 }

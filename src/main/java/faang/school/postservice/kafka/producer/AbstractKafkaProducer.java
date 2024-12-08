@@ -1,19 +1,27 @@
 package faang.school.postservice.kafka.producer;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.kafka.core.KafkaTemplate;
 
 public abstract class AbstractKafkaProducer<T> {
 
-    private final KafkaTemplate<String, T> kafkaTemplate;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
-    protected AbstractKafkaProducer(KafkaTemplate<String, T> kafkaTemplate) {
+    protected AbstractKafkaProducer(KafkaTemplate<String, String> kafkaTemplate,
+                                    ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
     protected abstract String getTopic();
-//TODO переделать, чтобы отправлялась строка, т.е использовать objectMapper и поменять сериализатор/девериализатор
-// у кафки в application.yaml (чтобы потом можно было через cmd слать json-ы как эвенты)
+
     public void sendEvent(T event) {
-        kafkaTemplate.send(getTopic(), event);
+        try {
+            String json = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(getTopic(), json);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize event to JSON", e);
+        }
     }
 }

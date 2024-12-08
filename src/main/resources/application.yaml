@@ -44,13 +44,13 @@ spring:
       acks: all
       retries: 3
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
       bootstrap-servers: localhost:9092
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       properties:
-        spring.json.trusted.packages: faang.school.postservice.model.event.kafka
+        spring.json.trusted.packages: faang.school.postservice.model.event.kafka,school.faang.user_service.model.event.kafka
     listener:
       ack-mode: manual
 
@@ -139,14 +139,15 @@ redis:
       batch-size: 100
 
 kafka:
-  batch-size:
-    follower: 1000
   topics:
     post: post_topic
     comment: comment_topic
     post-view: post_view_topic
     like: like_topic
     feed-heat: feed_heat_topic
+    author-published-post: author_published_post_topic
+    author-of-comment: author_of_comment_topic
+    author-post-by-heat: author_post_by_heat_topic
   consumer:
     groups:
       post-service:

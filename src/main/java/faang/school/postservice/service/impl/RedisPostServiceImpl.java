@@ -3,7 +3,6 @@ package faang.school.postservice.service.impl;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.RedisPostDtoMapper;
 import faang.school.postservice.model.dto.PostDto;
@@ -13,7 +12,6 @@ import faang.school.postservice.model.entity.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.RedisPostService;
 import faang.school.postservice.service.RedisTransactional;
-import faang.school.postservice.service.RedisUserService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -65,24 +63,18 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
     private final PostRepository postRepository;
     private final RedisPostDtoMapper redisPostDtoMapper;
     private final PostMapper postMapper;
-    private final RedisUserService redisUserService;
-    private final UserServiceClient userServiceClient;
 
     public RedisPostServiceImpl(
             @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
             ObjectMapper objectMapper,
             PostRepository postRepository,
             RedisPostDtoMapper redisPostDtoMapper,
-            PostMapper postMapper,
-            RedisUserService redisUserService,
-            UserServiceClient userServiceClient) {
+            PostMapper postMapper) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.postRepository = postRepository;
         this.redisPostDtoMapper = redisPostDtoMapper;
         this.postMapper = postMapper;
-        this.redisUserService = redisUserService;
-        this.userServiceClient = userServiceClient;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package faang.school.postservice.client;
 
 import faang.school.postservice.model.dto.UserDto;
-import faang.school.postservice.model.dto.UserWithFollowersDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,7 +22,4 @@ public interface UserServiceClient {
 
     @GetMapping("/users/maxId")
     Long getMaxUserId();
-
-    @GetMapping("/users/{userId}/with-followers")
-    UserWithFollowersDto getUserWithFollowers(@PathVariable long userId);
 }

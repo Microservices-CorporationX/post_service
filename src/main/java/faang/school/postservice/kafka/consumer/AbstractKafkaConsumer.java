@@ -1,17 +1,32 @@
 package faang.school.postservice.kafka.consumer;
 
-import lombok.extern.slf4j.Slf4j;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.support.Acknowledgment;
 
-@Slf4j
 public abstract class AbstractKafkaConsumer<T> {
+
+    private final ObjectMapper objectMapper;
+    private final Class<T> targetType;
+
+    protected AbstractKafkaConsumer(ObjectMapper objectMapper, Class<T> targetType) {
+        this.objectMapper = objectMapper;
+        this.targetType = targetType;
+    }
+
+    public void consume(ConsumerRecord<String, String> record, Acknowledgment acknowledgment) {
+        String eventJson = record.value();
+        try {
+            T event = objectMapper.readValue(eventJson, targetType);
+            processEvent(event);
+            acknowledgment.acknowledge();
+        } catch (Exception e) {
+            handleError(eventJson, e, acknowledgment);
+        }
+    }
 
     protected abstract void processEvent(T event);
 
-    public void consume(ConsumerRecord<String, T> record, Acknowledgment acknowledgment) {
-        T event = record.value();
-        log.info("Consumed event from topic {}: {}", record.topic(), event);
-        processEvent(event);
-    }
+    protected abstract void handleError(String eventJson, Exception e, Acknowledgment acknowledgment);
 }
+

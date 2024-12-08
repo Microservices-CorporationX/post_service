@@ -1,11 +1,13 @@
 package faang.school.postservice.app.listener;
 
 import faang.school.postservice.kafka.producer.CommentKafkaProducer;
+import faang.school.postservice.kafka.producer.AuthorCommentKafkaProducer;
 import faang.school.postservice.model.dto.CommentDto;
 import faang.school.postservice.model.entity.Post;
 import faang.school.postservice.model.event.CommentEvent;
 import faang.school.postservice.model.event.application.CommentCommittedEvent;
 import faang.school.postservice.model.event.kafka.CommentSentKafkaEvent;
+import faang.school.postservice.model.event.kafka.AuthorCommentKafkaEvent;
 import faang.school.postservice.redis.publisher.CommentEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,11 +25,16 @@ public class CommentCommitedEventListener {
     private final CommentEventPublisher commentEventPublisher;
     private final PostRepository postRepository;
     private final CommentKafkaProducer commentKafkaProducer;
+    private final AuthorCommentKafkaProducer authorCommentKafkaProducer;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleCommentCommittedEvent(CommentCommittedEvent event) {
         CommentDto savedCommentDto = event.getCommentDto();
         commentEventPublisher.publish(createCommentEvent(savedCommentDto));
+
+        authorCommentKafkaProducer.sendEvent(new AuthorCommentKafkaEvent(savedCommentDto.getAuthorId()));
+
+        //TODO а тут посмотреть, что там происходит, не шлется ли лишняя инфа
         CommentSentKafkaEvent commentSentKafkaEvent = new CommentSentKafkaEvent(
                 savedCommentDto.getPostId(),
                 savedCommentDto.getAuthorId(),
