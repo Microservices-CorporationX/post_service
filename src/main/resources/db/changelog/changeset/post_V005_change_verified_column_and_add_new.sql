@@ -1,0 +1,8 @@
+ALTER TABLE comment
+ALTER COLUMN verified DROP NOT NULL;
+
+ALTER TABLE comment
+ALTER COLUMN verified DROP DEFAULT;
+
+ALTER TABLE comment
+ADD COLUMN removed boolean NOT NULL DEFAULT false;

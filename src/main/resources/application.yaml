@@ -29,6 +29,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        ban_user_topic:
+          name: user_ban
 
 server:
   port: 8081
@@ -47,6 +49,9 @@ payment-service:
   host: localhost
   port: 9080
 
+schedule:
+  banUser:
+    cron: 0 0 * * * *
 services:
   s3:
     endpoint: http://127.0.0.1:9000

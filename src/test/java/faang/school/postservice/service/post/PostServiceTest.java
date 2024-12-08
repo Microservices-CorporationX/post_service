@@ -4,12 +4,16 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.filter.FilterDto;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.events.BanUserEvent;
 import faang.school.postservice.filter.post.DeletedFilter;
 import faang.school.postservice.filter.post.PostFilter;
 import faang.school.postservice.filter.post.PublishedFilter;
 import faang.school.postservice.mapper.PostMapperImpl;
+import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.RedisBanMessagePublisher;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.sort.PostField;
 import faang.school.postservice.sort.SortBy;
@@ -20,9 +24,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -31,8 +35,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,6 +52,10 @@ class PostServiceTest {
     private PostRepository postRepository;
     @Mock
     private UserServiceClient userServiceClient;
+    @Mock
+    private RedisBanMessagePublisher redisBanMessagePublisher;
+    @Mock
+    private CommentService commentService;
     @Spy
     private ProjectServiceClient projectServiceClient;
 
@@ -77,7 +89,9 @@ class PostServiceTest {
                 postFilters,
                 userServiceClient,
                 projectServiceClient,
-                sort
+                sort,
+                commentService,
+                redisBanMessagePublisher
         );
     }
 
@@ -116,8 +130,8 @@ class PostServiceTest {
         postDto.setAuthorId(1L);
 
         PostDto result = postService.createPost(postDto);
-        Mockito.verify(postMapper).toEntity(postDto);
-        Mockito.verify(postRepository).save(postCaptor.capture());
+        verify(postMapper).toEntity(postDto);
+        verify(postRepository).save(postCaptor.capture());
         Post savedPost = postCaptor.getValue();
 
         assertEquals(savedPost.getAuthorId(), postDto.getAuthorId());
@@ -160,7 +174,7 @@ class PostServiceTest {
         when(postRepository.findById(4L)).thenReturn(Optional.of(post));
 
         postService.publishPost(4L);
-        Mockito.verify(postRepository).save(postCaptor.capture());
+        verify(postRepository).save(postCaptor.capture());
 
         Post postToSave = postCaptor.getValue();
 
@@ -176,7 +190,7 @@ class PostServiceTest {
         when(postRepository.findById(4L)).thenReturn(Optional.of(post));
 
         PostDto result = postService.updatePost(4, postDto);
-        Mockito.verify(postRepository).save(postCaptor.capture());
+        verify(postRepository).save(postCaptor.capture());
 
         Post postResult = postCaptor.getValue();
         assertEquals(postResult.getContent(), postDto.getContent());
@@ -215,7 +229,7 @@ class PostServiceTest {
         when(postRepository.findById(4L)).thenReturn(Optional.of(post));
 
         postService.deletePost(4);
-        Mockito.verify(postRepository).save(postCaptor.capture());
+        verify(postRepository).save(postCaptor.capture());
 
         Post postResult = postCaptor.getValue();
         assertTrue(postResult.isDeleted());
@@ -302,6 +316,17 @@ class PostServiceTest {
         assertEquals(postsDto.get(2).getId(), 3);
     }
 
+    @Test
+    void testFindUserToBan() {
+        when(commentService.getAllNotVerifiedComments()).thenReturn(getTestCommentList());
+
+        postService.findUserToBan();
+
+        verify(redisBanMessagePublisher, times(2)).publish(any(BanUserEvent.class));
+
+        verify(commentService, times(1)).markAsRemovedUnVerifiedComments();
+    }
+
     private List<Post> getPosts(boolean published) {
         Post firstPost = new Post();
         Post secondPost = new Post();
@@ -323,5 +348,24 @@ class PostServiceTest {
         secondPost.setPublishedAt(LocalDateTime.of(2024, 10, 10, 10, 14));
 
         return new ArrayList<>(List.of(firstPost, secondPost, thirdPost));
+    }
+
+    private List<Comment> getTestCommentList() {
+        Comment comment1 = new Comment();
+        Comment comment2 = new Comment();
+        Comment comment3 = new Comment();
+        Comment comment4 = new Comment();
+        Comment comment5 = new Comment();
+        Comment comment6 = new Comment();
+
+        Stream.of(comment1, comment2, comment3, comment4, comment5, comment6).forEach(comment -> {
+            comment.setAuthorId(1);
+            comment.setVerified(false);
+        });
+        Comment comment7 = new Comment();
+        comment7.setAuthorId(2);
+        comment7.setVerified(false);
+
+        return new ArrayList<>(List.of(comment1, comment2, comment3, comment4, comment5, comment6, comment7));
     }
 }
