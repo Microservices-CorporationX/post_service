@@ -84,6 +84,10 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    public void checkPostsForErrors(){
+        List<Post> unpublishedPosts = postRepository.findByAuthorId(1); //Заглушка
+    }
+
     public List<PostDto> getAllDraftNotDeletedPostsByUserId(long userId) {
         List<Post> posts = postRepository.findByAuthorId(userId);
         log.info("Get all draft not deleted posts by user {}", userId);

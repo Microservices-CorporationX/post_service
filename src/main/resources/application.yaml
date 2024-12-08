@@ -83,4 +83,5 @@ resilience4j:
 
 daily:
   cron:
+   check-posts: 0 0 12 * * *
    comment-moderation: 0 0 10 * * *
