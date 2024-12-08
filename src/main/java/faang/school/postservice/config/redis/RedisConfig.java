@@ -11,22 +11,25 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
 public class RedisConfig {
+
     @Bean
     @Primary
-    public RedisTemplate<String, ?> redisTemplateWithJson(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, ?> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(connectionFactory);
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        return redisTemplate;
+    public RedisTemplate<String, Object> redisTemplateWithJson(RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory, new GenericJackson2JsonRedisSerializer());
     }
 
     @Bean
-    public RedisTemplate<String, ?> redisTemplateWithString(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, ?> redisTemplate = new RedisTemplate<>();
+    public RedisTemplate<String, Long> redisTemplateWithString(RedisConnectionFactory connectionFactory) {
+        return createRedisTemplate(connectionFactory, new GenericToStringSerializer<>(Long.class));
+    }
+
+    private <T> RedisTemplate<String, T> createRedisTemplate(
+            RedisConnectionFactory connectionFactory,
+            org.springframework.data.redis.serializer.RedisSerializer<T> valueSerializer) {
+        RedisTemplate<String, T> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(connectionFactory);
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericToStringSerializer<>(Long.class));
+        redisTemplate.setValueSerializer(valueSerializer);
         return redisTemplate;
     }
 }
