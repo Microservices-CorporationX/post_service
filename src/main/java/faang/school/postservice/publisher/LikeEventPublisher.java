@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class LikeEventPublisher {
-    private final RedisTemplate<String, LikeEvent> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${spring.data.redis.channels.events_channel.name}")
     private String channel;

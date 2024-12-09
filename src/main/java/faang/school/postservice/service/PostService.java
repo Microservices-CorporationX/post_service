@@ -35,7 +35,7 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
-    private final RedisTemplate<String, Long> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
