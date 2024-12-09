@@ -4,8 +4,9 @@ import faang.school.postservice.client.PostCorrecterClient;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.PostDto;
-import faang.school.postservice.dto.textGears.TextGearsRequest;
-import faang.school.postservice.dto.textGears.TextGearsResponse;
+import faang.school.postservice.dto.postCorrecter.PostCorrecterRequest;
+import faang.school.postservice.dto.postCorrecter.PostCorrecterResponse;
+import faang.school.postservice.dto.postCorrecter.textGears.TextGearsRequest;
 import faang.school.postservice.exception.ExternalServiceException;
 import faang.school.postservice.exception.PostValidationException;
 import faang.school.postservice.mapper.PostMapper;
@@ -204,12 +205,16 @@ public class PostService {
     public void sendPostToSpellingCheck() {
         List<Post> readyToPublishPosts = postRepository.findReadyToPublish();
         readyToPublishPosts.forEach(post -> {
-            TextGearsRequest request = TextGearsRequest.builder()
+            PostCorrecterRequest request = TextGearsRequest.builder()
                     .text(post.getContent())
                     .key(apiKey)
                     .build();
 
-            correctAndSavePost(post, request);
+            try {
+                correctAndSavePost(post, request);
+            } catch (ExternalServiceException e) {
+                log.error("Error while communicating with external service", e);
+            }
         });
     }
 
@@ -217,11 +222,12 @@ public class PostService {
             retryFor = {FeignException.class},
             backoff = @Backoff(delay = 500, multiplier = 2)
     )
-    private void correctAndSavePost(Post post, TextGearsRequest request) {
-        TextGearsResponse textGearsResponse = postCorrecterClient.checkPost(request);
-        if (textGearsResponse.isStatus()) {
-            post.setContent(textGearsResponse.getResponse().corrected());
+    private void correctAndSavePost(Post post, PostCorrecterRequest request) {
+        PostCorrecterResponse response = postCorrecterClient.checkPost(request);
+        if (response.isSuccess()) {
+            post.setContent(response.getCorrectedPost());
             postRepository.save(post);
         }
+        throw new ExternalServiceException("Failed to communicate with external service. Please try again later.");
     }
 }
