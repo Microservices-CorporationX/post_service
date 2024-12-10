@@ -13,6 +13,6 @@ public class AdBoughtEventPublisher {
     private final RedisConfigProperties redisConfigProperties;
 
     public void publish(AdBoughtEvent adBoughtEvent) {
-        redisTemplate.convertAndSend(redisConfigProperties.channels().ad_bought_channel().name(), adBoughtEvent);
+        redisTemplate.convertAndSend(redisConfigProperties.channel().ad_bought_channel(), adBoughtEvent);
     }
 }
