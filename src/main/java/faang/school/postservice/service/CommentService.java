@@ -15,7 +15,6 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,7 +42,8 @@ public class CommentService {
         log.info("Trying to add comment: {} to post: {}", commentDto, postId);
         validateUserExists(commentDto.authorId());
 
-        Post post = postService.findPostById(postId);
+        Post post = postService.findPostById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(postId)));
         Comment comment = commentMapper.toEntity(commentDto);
 
         postService.addCommentToPost(post, comment);
@@ -91,26 +91,26 @@ public class CommentService {
         usersBanPublisher.publish(new UsersBanEvent(userIdsToBan));
     }
 
-    @Async("customTaskExecutor")
-    public void moderationOfComments() {
-        List<Comment> allNotVerifiedComments = commentRepository.findByVerifiedIsNull();
-        log.info("Starting moderation of {} comments", allNotVerifiedComments.size());
 
-        Flux.fromIterable(allNotVerifiedComments)
+    public void verifyComments() {
+        List<Comment> notVerifiedComments = commentRepository.findByVerifiedIsNull();
+        log.info("Starting moderation of {} comments", notVerifiedComments.size());
+
+        Flux.fromIterable(notVerifiedComments)
                 .parallel()
                 .runOn(Schedulers.parallel())
                 .flatMap(comment -> textAnalysisService.analyzeText(comment.getContent())
                         .publishOn(Schedulers.boundedElastic())
                         .doOnNext(response -> {
-                            comment.setVerified(textAnalysisProcessing(response));
+                            comment.setVerified(textAnalysisService.textAnalysisProcessing(response));
                             comment.setVerifiedDate(LocalDateTime.now());
                             commentRepository.save(comment);
                         })
-                        .doOnError(e -> log.error("Error processing comment '{}': {}", comment, e.getMessage()))
+                        .doOnError(e -> log.error("Error processing comment '{}'", comment, e))
                         .onErrorResume(e -> Mono.empty())
                 ).sequential()
                 .doOnComplete(() -> log.info("The comment moderation process has been completed"))
-                .doOnError(e -> log.error("Error during overall comment processing: {}", e.getMessage()))
+                .doOnError(e -> log.error("Error during overall comment processing: ", e))
                 .subscribe();
     }
 

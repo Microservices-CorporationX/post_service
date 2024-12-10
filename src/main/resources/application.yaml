@@ -24,6 +24,8 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        users-ban-channel:
+          name: users_ban_event
 
   task:
     scheduling:
@@ -43,6 +45,12 @@ logging:
     io.github.resilience4j.retry: DEBUG
     io.github.resilience4j.circuitbreaker: DEBUG
 
+s3:
+  endpoint: http://localhost:9000
+  accessKey: user
+  secretKey: password
+  bucketName: corpbucket
+  isMocked: false
 user-service:
   host: localhost
   port: 8080
@@ -80,7 +88,3 @@ daily:
   cron:
    comment-moderation: 0 0 10 * * *
    user-ban: 0 0 0 * * ?
-
-redis:
-  topics:
-    users-ban-topic: users-ban-topic

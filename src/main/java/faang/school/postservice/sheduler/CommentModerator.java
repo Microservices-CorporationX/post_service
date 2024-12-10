@@ -12,6 +12,6 @@ public class CommentModerator {
 
     @Scheduled(cron = "${daily.cron.comment-moderation}")
     public void startModeration() {
-        commentService.moderationOfComments();
+        commentService.verifyComments();
     }
 }

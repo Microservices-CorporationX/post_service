@@ -12,9 +12,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    @Value("${redis.topics.users-ban-topic}")
-    private String usersBanTopicName;
-
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
@@ -22,10 +19,5 @@ public class RedisConfig {
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new Jackson2JsonRedisSerializer<>(Object.class));
         return template;
-    }
-
-    @Bean
-    public ChannelTopic usersBanTopic() {
-        return new ChannelTopic(usersBanTopicName);
     }
 }
