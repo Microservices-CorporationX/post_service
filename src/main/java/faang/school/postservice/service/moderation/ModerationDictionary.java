@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.model.DictionaryWrapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +15,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 @Component
-@RequiredArgsConstructor
 public class ModerationDictionary {
 
     @Value("${moderation.dictionary.path}")
@@ -24,6 +25,11 @@ public class ModerationDictionary {
 
     private final ObjectMapper mapper;
     private Set<String> moderationDictionary;
+
+    @Autowired
+    public ModerationDictionary(ObjectMapper mapper) {
+        this.mapper = mapper;
+    }
 
     @PostConstruct
     public void init() throws IOException {

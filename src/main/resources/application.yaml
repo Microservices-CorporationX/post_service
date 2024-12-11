@@ -26,6 +26,8 @@ spring:
           name: calculations_channel
         ban-user-channel:
           name: ban_user_channel
+        post-like-channel:
+          name: notification_like_channel
 
 server:
   port: 8081
@@ -55,7 +57,7 @@ api:
 resilience4j:
   circuitbreaker:
     instances:
-      sightengine-api-circuit-breaker:
+      default-circuit-breaker:
         failure-rate-threshold: 50
         wait-duration-in-open-state: 30s
         sliding-window-size: 10
@@ -64,7 +66,7 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3
   retry:
     instances:
-      sightengine-api-retry:
+      default-retry:
         max-attempts: 5
         wait-duration: 200ms
         exponential-backoff-multiplier: 2.0

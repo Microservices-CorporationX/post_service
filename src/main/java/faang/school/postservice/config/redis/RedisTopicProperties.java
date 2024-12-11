@@ -10,4 +10,7 @@ public class RedisTopicProperties {
 
     @Value("${spring.data.redis.channels.ban-user-channel.name}")
     private String banUserTopic;
+
+    @Value("${spring.data.redis.channels.post-like-channel.name}")
+    private String postLikeTopic;
 }

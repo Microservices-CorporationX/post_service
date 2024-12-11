@@ -147,7 +147,7 @@ public class PostService {
             if (postDto.projectId() != null) {
                 projectServiceClient.getProject(postDto.projectId());
             } else {
-                userServiceClient.getUser(postDto.authorId());
+                userServiceClient.getUserById(postDto.authorId());
             }
         } catch (FeignException e) {
             log.error("Error checking the existence of a user or project {}", postDto, e);

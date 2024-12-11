@@ -74,7 +74,7 @@ public class CommentService {
 
     private void validateUserExists(long userId) {
         try {
-            userServiceClient.getUser(userId);
+            userServiceClient.getUserById(userId);
         } catch (FeignException ex) {
             throw new EntityNotFoundException("User does not exist");
         }
