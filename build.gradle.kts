@@ -24,6 +24,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+//    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.1")
+    compileOnly("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.7.3")
 
     /**
      * Database
@@ -40,6 +42,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.4.6")
     implementation("org.projectlombok:lombok:1.18.26")
     annotationProcessor("org.projectlombok:lombok:1.18.26")
+    implementation("org.modelmapper:modelmapper:3.2.1")
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
 

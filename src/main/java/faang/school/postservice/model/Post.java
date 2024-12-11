@@ -2,22 +2,19 @@ package faang.school.postservice.model;
 
 import faang.school.postservice.model.ad.Ad;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Entity
 @Table(name = "post")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Post {
 
     @Id
@@ -27,7 +24,7 @@ public class Post {
     @Column(name = "content", nullable = false, length = 4096)
     private String content;
 
-    @Column(name = "author_id")
+    @Column(name = "author_id", nullable = false)
     private Long authorId;
 
     @Column(name = "project_id")
@@ -36,6 +33,7 @@ public class Post {
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Like> likes;
 
+    @ToString.Exclude
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Comment> comments;
 
