@@ -1,4 +1,7 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -29,6 +32,11 @@ spring:
         post-like-channel:
           name: notification_like_channel
 
+  task:
+    scheduling:
+      pool:
+        size: 5
+
 server:
   port: 8081
 
@@ -38,6 +46,12 @@ logging:
     io.github.resilience4j.retry: DEBUG
     io.github.resilience4j.circuitbreaker: DEBUG
 
+s3:
+  endpoint: http://localhost:9000
+  accessKey: user
+  secretKey: password
+  bucketName: corpbucket
+  isMocked: false
 user-service:
   host: localhost
   port: 8080
@@ -91,3 +105,7 @@ moderation:
     INSULTING: 0.7
     VIOLENT: 0.7
     TOXIC: 0.7
+
+daily:
+  cron:
+   comment-moderation: 0 0 10 * * *
