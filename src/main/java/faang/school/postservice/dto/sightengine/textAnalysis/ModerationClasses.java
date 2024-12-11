@@ -27,7 +27,6 @@ public class ModerationClasses {
 
     @JsonProperty("toxic")
     private Double toxic;
-    private double toxic;
 
     public List<Double> collectingTextAnalysisResult() {
         List<Double> results = new ArrayList<>();
