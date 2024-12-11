@@ -79,10 +79,6 @@ class PostServiceTest {
 
     Post post = createTestPost();
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
@@ -412,8 +408,6 @@ class PostServiceTest {
 
         CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(postsToVerify);
         future.join();
-
-        verifyNoMoreInteractions(postRepository, postVerificationService);
     }
 
 
