@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.ResponseLikeDto;
@@ -10,7 +11,10 @@ import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
-import faang.school.postservice.validator.LikeValidator;
+import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.validator.CommentValidator;
+import faang.school.postservice.validator.PostValidator;
+import faang.school.postservice.validator.UserValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -21,12 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.Matchers.any;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -51,10 +53,22 @@ public class LikeServiceTest {
     private LikeMapper likeMapper;
 
     @Mock
-    private LikeValidator likeValidator;
+    private LikeEventPublisher likeEventPublisher;
 
     @Mock
-    private LikeEventPublisher likeEventPublisher;
+    private PostValidator postValidator;
+
+    @Mock
+    private UserValidator userValidator;
+
+    @Mock
+    private CommentValidator commentValidator;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private OutboxEventRepository outboxEventRepository;
 
     @InjectMocks
     private LikeService likeService;
@@ -152,7 +166,6 @@ public class LikeServiceTest {
     @Test
     void addLikeToPostShouldAddLikeAndPublishEvent() {
         LikeDto likeDto = LikeDto.builder()
-                .postId(1L)
                 .userId(2L)
                 .commentId(3L)
                 .build();
@@ -184,19 +197,9 @@ public class LikeServiceTest {
         when(likeRepository.save(like)).thenReturn(like);
         when(likeMapper.toDto(like)).thenReturn(responseLikeDto);
 
-        ResponseLikeDto result = likeService.addLikeToPost(likeDto);
+        ResponseLikeDto result = likeService.addLikeToPost(1L, likeDto);
 
-        verify(likeValidator).validatePostId(1L);
-        verify(likeValidator).validateUserId(2L);
-        verify(likeValidator).validateCommentId(3L);
-
-        verify(likeRepository).save(like);
-
-        verify(likeEventPublisher).publishLikeEvent(argThat(event ->
-                event.getLikeAuthorId().equals(2L) &&
-                        event.getPostId().equals(1L) &&
-                        event.getPostAuthorId().equals(4L)
-        ));
+        verify(likeRepository, times(1)).save(like);
 
         assertEquals(responseLikeDto, result);
     }

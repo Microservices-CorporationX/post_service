@@ -44,7 +44,7 @@ public class AlbumService {
 
 
     public AlbumDto createAlbum(AlbumDto albumDto) {
-        userValidator.checkUserExistence(albumDto);
+        userValidator.checkUserExistence(albumDto.getAuthorId());
 
         Album album = albumMapper.toEntity(albumValidator.albumExistsByTitleAndAuthorId(albumDto));
         Album saveAlbum = albumRepository.save(album);

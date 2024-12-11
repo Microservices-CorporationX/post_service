@@ -28,16 +28,17 @@ import java.util.List;
 public class LikeController {
     private final LikeService likeService;
 
-    @GetMapping("/posts/{postId}/likes")
+    @GetMapping("/posts/{postId}/likers")
     public ResponseEntity<List<UserDto>> getUsersWhoLikePostByPostId(
             @PathVariable
             @Positive(message = "Post id must be positive")
-            Long postId) {
+            Long postId
+    ) {
         log.info("Request for users by post id: {}", postId);
         return ResponseEntity.ok(likeService.getUsersWhoLikePostByPostId(postId));
     }
 
-    @GetMapping("/comments/{commentId}/likes")
+    @GetMapping("/comments/{commentId}/likers")
     public ResponseEntity<List<UserDto>> getUsersWhoLikeComments(
             @PathVariable
             @Positive(message = "Comment id must be positive")
@@ -47,10 +48,15 @@ public class LikeController {
         return ResponseEntity.ok(likeService.getUsersWhoLikeComments(commentId));
     }
 
-    @PostMapping("/posts/like")
-    public ResponseEntity<ResponseLikeDto> addLikeToPost(@Valid @RequestBody LikeDto likeDto) {
-        log.info("Request for add like to post: {} by user: {}", likeDto.getPostId(), likeDto.getUserId());
-        ResponseLikeDto responseLikeDto = likeService.addLikeToPost(likeDto);
+    @PostMapping("/posts/{postId}/likes")
+    public ResponseEntity<ResponseLikeDto> addLikeToPost(
+            @PathVariable
+            @Positive(message = "Post id must be positive")
+            Long postId,
+            @Valid @RequestBody LikeDto likeDto
+    ) {
+        log.info("Request for add like to post: {} by user: {}", postId, likeDto.getUserId());
+        ResponseLikeDto responseLikeDto = likeService.addLikeToPost(postId, likeDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseLikeDto);
     }
 }

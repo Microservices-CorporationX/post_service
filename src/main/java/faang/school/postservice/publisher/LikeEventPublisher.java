@@ -10,14 +10,20 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class LikeEventPublisher {
+public class LikeEventPublisher implements Publisher<LikeEvent> {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${spring.data.redis.channels.events_channel.name}")
     private String channel;
 
-    public void publishLikeEvent(LikeEvent event) {
+    @Override
+    public void publish(Object event) {
         log.info("Publishing like event: {} to channel: {}", event, channel);
         redisTemplate.convertAndSend(channel, event);
+    }
+
+    @Override
+    public Class<LikeEvent> getEventClass() {
+        return LikeEvent.class;
     }
 }

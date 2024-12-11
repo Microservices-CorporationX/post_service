@@ -1,12 +1,10 @@
 package faang.school.postservice.controller;
+
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.ResponseLikeDto;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.LikeService;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -18,7 +16,6 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -32,9 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 @ContextConfiguration(classes = {LikeController.class, LikeService.class})
 public class LikeControllerTest {
-    private final static String POST_URL = "/posts/{postId}/likes";
+    private final static String POST_URL = "/posts/{postId}/likers";
 
-    private final static String COMMENT_URL = "/comments/{commentId}/likes";
+    private final static String COMMENT_URL = "/comments/{commentId}/likers";
 
     private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -98,10 +95,15 @@ public class LikeControllerTest {
                 .commentId(3L)
                 .build();
 
-        when(likeService.addLikeToPost(any(LikeDto.class)))
+        LikeDto likeDto = LikeDto.builder()
+                .userId(2L)
+                .commentId(3L)
+                .build();
+
+        when(likeService.addLikeToPost(1L, likeDto))
                 .thenReturn(responseLikeDto);
 
-        mockMvc.perform(post("/posts/like")
+        mockMvc.perform(post("/posts/1/likes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -117,6 +119,6 @@ public class LikeControllerTest {
                 .andExpect(jsonPath("$.postId").value(1))
                 .andExpect(jsonPath("$.commentId").value(3));
 
-        verify(likeService).addLikeToPost(any(LikeDto.class));
+        verify(likeService, times(1)).addLikeToPost(1L, likeDto);
     }
 }

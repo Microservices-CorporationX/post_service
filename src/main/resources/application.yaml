@@ -54,6 +54,9 @@ post:
   ban-authors:
     scheduler:
       cron: "0 0 0 * * *" # every day at midnight
+  clean-outbox:
+    scheduler:
+      cron: "0 0 0 * * *" # every day at midnight
 
 user-service:
   host: localhost

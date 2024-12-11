@@ -32,14 +32,14 @@ class LikeEventPublisherTest {
     }
 
     @Test
-    void publishLikeEvent_ShouldSendEventToChannel() {
+    void publishToChannel() {
         LikeEvent likeEvent = LikeEvent.builder()
                 .likeAuthorId(1L)
                 .postId(2L)
                 .postAuthorId(3L)
                 .build();
 
-        likeEventPublisher.publishLikeEvent(likeEvent);
+        likeEventPublisher.publish(likeEvent);
 
         verify(redisTemplate, times(1))
                 .convertAndSend("testChannel", likeEvent);
