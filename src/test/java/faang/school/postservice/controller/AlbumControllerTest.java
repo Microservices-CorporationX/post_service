@@ -101,9 +101,7 @@ public class AlbumControllerTest {
     void testAddPostToAlbumSuccess() throws Exception {
         when(albumService.addPostToAlbum(userId, albumId, postId)).thenReturn(albumDto);
 
-        mockMvc.perform(post("/albums/{albumId}/posts", albumId)
-                        .param("userId", String.valueOf(userId))
-                        .param("postId", String.valueOf(postId)))
+        mockMvc.perform(post("/albums/{albumId}/userId/{userId}/posts/{postId}", albumId, userId, postId))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(albumDto.getId()));
 
@@ -115,9 +113,7 @@ public class AlbumControllerTest {
     void testRemovePostFromAlbumSuccess() throws Exception {
         when(albumService.removePostFromAlbum(userId, albumId, postId)).thenReturn(albumDto);
 
-        mockMvc.perform(delete("/albums/{albumId}/posts", albumId)
-                        .param("userId", String.valueOf(userId))
-                        .param("postId", String.valueOf(postId)))
+        mockMvc.perform(delete("/albums/{albumId}/userId/{userId}/posts/{postId}", albumId, userId, postId))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(albumDto.getId()))
                 .andExpect(jsonPath("$.title").value(albumDto.getTitle()))
@@ -131,8 +127,7 @@ public class AlbumControllerTest {
     void testAddAlbumToFavoritesSuccess() throws Exception {
         when(albumService.addAlbumToFavorites(userId, albumId)).thenReturn(albumDto);
 
-        mockMvc.perform(post("/albums/{albumId}/favorites", albumId)
-                        .param("userId", String.valueOf(userId)))
+        mockMvc.perform(post("/albums/{albumId}/userId/{userId}/favorites", albumId, userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(albumDto.getId()))
                 .andExpect(jsonPath("$.title").value(albumDto.getTitle()));
@@ -145,8 +140,7 @@ public class AlbumControllerTest {
     void testDeleteAlbumFromFavoritesSuccess() throws Exception {
         doNothing().when(albumService).deleteAlbumFromFavorites(userId, albumId);
 
-        mockMvc.perform(delete("/albums/{albumId}/favorites", albumId)
-                        .param("userId", String.valueOf(userId)))
+        mockMvc.perform(delete("/albums/{albumId}/userId/{userId}/favorites", albumId, userId))
                 .andExpect(status().isNoContent());
 
         verify(albumService, times(1)).deleteAlbumFromFavorites(userId, albumId);
@@ -302,8 +296,7 @@ public class AlbumControllerTest {
     void testDeleteAlbumSuccess() throws Exception {
         doNothing().when(albumService).deleteAlbum(userId, albumId);
 
-        mockMvc.perform(delete("/albums/{albumId}", albumId)
-                        .param("userId", String.valueOf(userId)))
+        mockMvc.perform(delete("/albums/{albumId}/userId/{userId}", albumId, userId))
                 .andExpect(status().isNoContent());
 
         verify(albumService, times(1)).deleteAlbum(userId, albumId);

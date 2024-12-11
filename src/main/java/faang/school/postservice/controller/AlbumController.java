@@ -7,6 +7,7 @@ import faang.school.postservice.service.AlbumService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,54 +44,64 @@ public class AlbumController {
         return ResponseEntity.status(HttpStatus.CREATED).body(albumService.createAlbum(albumDto));
     }
 
-    @PostMapping("/{albumId}/posts")
+    @PostMapping("/{albumId}/userId/{userId}/posts/{postId}")
     @Operation(summary = "Add post to album.")
     public ResponseEntity<AlbumDto> addPostToAlbum(
-            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
             long albumId,
-            @RequestParam(name = "userId") @Positive(message = "UserId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
             long userId,
-            @RequestParam(name = "postId") @Positive(message = "PostId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "PostId must be greater than 0.") @NotNull(message = "PostId must be greater than 0.")
             long postId) {
-        log.info("Adding post to album. UserId: {}, AlbumId: {}", userId, albumId);
+        log.info("Adding post #{} to album. UserId #{}, AlbumId #{}", postId, userId, albumId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(albumService.addPostToAlbum(userId, albumId, postId));
     }
 
-    @DeleteMapping("/{albumId}/posts")
+    @DeleteMapping("/{albumId}/userId/{userId}/posts/{postId}")
     @Operation(summary = "Remove post from album.")
     public ResponseEntity<AlbumDto> removePostFromAlbum(
-            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
             long albumId,
-            @RequestParam(name = "userId") @Positive(message = "UserId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
             long userId,
-            @RequestParam(name = "postId") @Positive(message = "PostId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "PostId must be greater than 0.") @NotNull(message = "PostId must be greater than 0.")
             long postId) {
-        log.info("Post removed from album. UserId: {}, AlbumId: {}", userId, albumId);
+        log.info("Removing post #{} from album. UserId #{}, AlbumId #{}", postId, userId, albumId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(albumService.removePostFromAlbum(userId, albumId, postId));
     }
 
-    @PostMapping("/{albumId}/favorites")
+    @PostMapping("/{albumId}/userId/{userId}/favorites")
     @Operation(summary = "Add album to user's favorites.")
     public ResponseEntity<AlbumDto> addAlbumToFavorites(
-            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
             long albumId,
-            @RequestParam(name = "userId") @Positive(message = "UserId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
             long userId) {
-        log.info("Adding album to favorites. UserId: {}, AlbumId: {}", userId, albumId);
+        log.info("Adding album to favorites. UserId #{}, AlbumId #{}", userId, albumId);
 
         return ResponseEntity.ok(albumService.addAlbumToFavorites(userId, albumId));
     }
 
-    @DeleteMapping("/{albumId}/favorites")
+    @DeleteMapping("/{albumId}/userId/{userId}/favorites")
     @Operation(summary = "Remove album from favorites.")
     public ResponseEntity<Void> deleteAlbumFromFavorites(
-            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
             long albumId,
-            @RequestParam(name = "userId") @Positive(message = "UserId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
             long userId) {
-        log.info("Removing album from favorites. UserId: {}, AlbumId: {}", userId, albumId);
+        log.info("Removing album from favorites. UserId #{}, AlbumId #{}", userId, albumId);
         albumService.deleteAlbumFromFavorites(userId, albumId);
 
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
@@ -99,9 +110,10 @@ public class AlbumController {
     @GetMapping("/{albumId}")
     @Operation(summary = "Get album by id.")
     public ResponseEntity<AlbumDto> getAlbumById(
-            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
             long albumId) {
-        log.info("Fetching album by id: {}", albumId);
+        log.info("Fetching album by id #{}", albumId);
 
         return ResponseEntity.ok(albumService.findByAlbumId(albumId));
     }
@@ -120,7 +132,7 @@ public class AlbumController {
                 .descriptionPattern(descriptionPattern)
                 .month(Month.valueOf(month))
                 .build();
-        log.info("Fetching albums for user: {} with filters {}", userId, filterDto);
+        log.info("Fetching albums for user #{} with filters {}", userId, filterDto);
 
         return ResponseEntity.ok(albumService.getAlbumsForUserByFilter(userId, filterDto));
     }
@@ -156,7 +168,7 @@ public class AlbumController {
                 .descriptionPattern(descriptionPattern)
                 .month(Month.valueOf(month))
                 .build();
-        log.info("Fetching all user's {} favorite albums with filters {}.", userId, filterDto);
+        log.info("Fetching all user's #{} favorite albums with filters {}.", userId, filterDto);
 
         return ResponseEntity.ok(albumService.getFavoriteAlbumsForUserByFilter(userId, filterDto));
     }
@@ -164,19 +176,21 @@ public class AlbumController {
     @PutMapping
     @Operation(summary = "Update album.")
     public ResponseEntity<AlbumDto> updateAlbum(@Valid @RequestBody AlbumUpdateDto albumDto) {
-        log.info("Updating album with id: {}", albumDto.getId());
+        log.info("Updating album with id #{}", albumDto.getId());
 
         return ResponseEntity.ok(albumService.updateAlbum(albumDto));
     }
 
-    @DeleteMapping("/{albumId}")
+    @DeleteMapping("/{albumId}/userId/{userId}")
     @Operation(summary = "Delete album.")
     public ResponseEntity<Void> deleteAlbum(
-            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
             long albumId,
-            @RequestParam(name = "userId") @Positive(message = "UserId must be greater than 0.")
+            @PathVariable
+            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
             long userId) {
-        log.info("Deleting album. UserId: {}, AlbumId: {}", userId, albumId);
+        log.info("Deleting album. UserId #{}, AlbumId #{}", userId, albumId);
 
         albumService.deleteAlbum(userId, albumId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
