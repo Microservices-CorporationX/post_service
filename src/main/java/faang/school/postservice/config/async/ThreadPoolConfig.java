@@ -21,23 +21,15 @@ public class ThreadPoolConfig {
     @Value("${async.thread-name-prefix}")
     private String threadNamePrefix;
 
-    private ThreadPoolTaskExecutor executor;
 
-    @Bean(name = "doniyorTaskExecutor")
+    @Bean(name = "threadPoolTaskExecutor")
     public TaskExecutor taskExecutor() {
-        executor = new ThreadPoolTaskExecutor();
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(maxPoolSize);
         executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix(threadNamePrefix);
         executor.initialize();
         return executor;
-    }
-
-    @PreDestroy
-    public void shutdownExecutor() {
-        if (executor != null) {
-            executor.shutdown();
-        }
     }
 }

@@ -8,9 +8,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -25,23 +25,24 @@ public class ModerationDictionary {
 
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream("moderation-words/bad-words.txt")) {
             if (inputStream == null) {
-                log.error("Resource 'moderation-words/moderation-words.txt' not found in the classpath");
-                return;
+                throw new IllegalStateException("Resource 'moderation-words/bad-words.txt' not found in the classpath");
             }
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-                forbiddenWords = reader.lines().collect(toSet());
+                forbiddenWords = Collections.unmodifiableSet(reader.lines() .map(String::toLowerCase).collect(toSet()));
                 log.info("Loaded forbidden words: {}", forbiddenWords);
             }
 
         } catch (IOException e) {
             log.error("Error reading file", e);
+            throw new IllegalStateException("Failed to initialize forbidden words", e);
         }
     }
 
     public boolean containsForbiddenWord(String text) {
+        String normalizedText = text.toLowerCase();
         for (String word : forbiddenWords) {
-            if (text.toLowerCase().contains(word.toLowerCase())) {
+            if (normalizedText.contains(word)) {
                 return true;
             }
         }

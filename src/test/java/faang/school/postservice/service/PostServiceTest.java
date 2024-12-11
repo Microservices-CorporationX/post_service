@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dictionary.ModerationDictionary;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -12,11 +11,13 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -31,17 +32,18 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -65,7 +67,7 @@ class PostServiceTest {
     private RedisTemplate<String, Long> redisTemplate;
 
     @Mock
-    private ModerationDictionary moderationDictionary;
+    private PostVerificationService postVerificationService;
 
     @InjectMocks
     private PostService postService;
@@ -76,6 +78,11 @@ class PostServiceTest {
     Post secondPost = new Post();
 
     Post post = createTestPost();
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
@@ -385,32 +392,33 @@ class PostServiceTest {
     }
 
     @Test
-    public void testCheckAndVerifyPostsInBatch() {
-        Post post1 = new Post();
-        post1.setContent("Clean post");
-        post1.setVerifiedDate(null);
+    void testCheckAndVerifyPosts() {
+        Post post1 = Post.builder().id(1L).verifiedDate(null).build();
+        Post post2 = Post.builder().id(2L).verifiedDate(null).build();
+        Post post3 = Post.builder().id(3L).verifiedDate(null).build();
+        List<Post> postsToVerify = Arrays.asList(post1, post2, post3);
 
-        Post post2 = new Post();
-        post2.setContent("Bad post with forbidden word");
-        post2.setVerifiedDate(null);
 
-        List<Post> postsToVerify = Arrays.asList(post1, post2);
+        when(postVerificationService.checkAndVerifyPostsInBatch(anyList()))
+                .thenReturn(CompletableFuture.runAsync(() -> {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                }));
 
-        when(moderationDictionary.containsForbiddenWord("Clean post")).thenReturn(false);
-        when(moderationDictionary.containsForbiddenWord("Bad post with forbidden word")).thenReturn(true);
+        postService.checkAndVerifyPosts();
 
-        CompletableFuture<Void> future = postService.checkAndVerifyPostsInBatch(postsToVerify);
-
+        CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(postsToVerify);
         future.join();
 
-        verify(postRepository, times(2)).save(any(Post.class));
-
-        assertTrue(post1.isVerified());
-        assertFalse(post2.isVerified());
+        verifyNoMoreInteractions(postRepository, postVerificationService);
     }
 
 
     @DisplayName("Get post with valid id")
+    @Test
     void testGetPostByIdValidId() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 

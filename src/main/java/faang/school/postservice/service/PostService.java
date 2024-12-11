@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dictionary.ModerationDictionary;
 import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
@@ -17,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -41,7 +39,7 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Long> redisTemplate;
-    private final ModerationDictionary moderationDictionary;
+    private final PostVerificationService postVerificationService;
 
     @Value("${ad.batch.size}")
     private int batchSize;
@@ -220,32 +218,16 @@ public class PostService {
     @Transactional
     public void checkAndVerifyPosts() {
         List<Post> postsToVerify = postRepository.findAllByVerifiedDateIsNull();
-
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         for (int i = 0; i < postsToVerify.size(); i += batchSize) {
             int end = Math.min(i + batchSize, postsToVerify.size());
             List<Post> batch = postsToVerify.subList(i, end);
 
-            CompletableFuture<Void> future = checkAndVerifyPostsInBatch(batch);
+            CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(batch);
             futures.add(future);
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-    }
-
-    @Transactional
-    @Async("doniyorTaskExecutor")
-    public CompletableFuture<Void> checkAndVerifyPostsInBatch(List<Post> postsToVerify) {
-        for (Post post : postsToVerify) {
-            if (moderationDictionary.containsForbiddenWord(post.getContent())) {
-                post.setVerified(false);
-            } else {
-                post.setVerified(true);
-                post.setVerifiedDate(LocalDateTime.now());
-            }
-            postRepository.save(post);
-        }
-        return CompletableFuture.completedFuture(null);
     }
 }
