@@ -27,6 +27,7 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        like-event-topic: likeEventTopic
 
 server:
   port: 8081
