@@ -19,7 +19,7 @@ public class CommentKafkaConsumer extends AbstractKafkaConsumer<CommentSentKafka
 
     @Override
     protected void processEvent(CommentSentKafkaEvent event) {
-        redisPostService.addComment(event.getPostId(), event.getCommentId(), event.getCommentContent());
+        redisPostService.addComment(event.getPostId(), event.getCommentId(), event.getCommentAuthorId(), event.getCommentContent());
     }
 
     @KafkaListener(

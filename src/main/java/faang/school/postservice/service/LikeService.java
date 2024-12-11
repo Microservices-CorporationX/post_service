@@ -4,6 +4,7 @@ import faang.school.postservice.model.dto.LikeDto;
 import faang.school.postservice.model.dto.UserDto;
 
 import java.util.List;
+import java.util.Map;
 
 public interface LikeService {
     List<UserDto> getAllUsersLikedPost(long postId);
@@ -23,4 +24,6 @@ public interface LikeService {
     List<Long> getLikesFromComment(Long commentId);
 
     int getLikeCount(Long postId);
+
+    Map<Long, Integer> getPostIdLikeCountMap(List<Long> postIds);
 }

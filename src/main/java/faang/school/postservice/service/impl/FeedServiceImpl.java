@@ -6,15 +6,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.kafka.producer.AuthorPostByHeatKafkaProducer;
-import faang.school.postservice.mapper.PostMapper;
-import faang.school.postservice.mapper.RedisPostDtoMapper;
+import faang.school.postservice.model.dto.CommentDto;
 import faang.school.postservice.model.dto.redis.cache.PostFields;
+import faang.school.postservice.model.dto.redis.cache.RedisCommentDto;
 import faang.school.postservice.model.dto.redis.cache.RedisPostDto;
 import faang.school.postservice.model.entity.Post;
-import faang.school.postservice.model.event.kafka.AuthorPostKafkaEvent;
+import faang.school.postservice.model.event.kafka.AuthorPostByHeatKafkaEvent;
 import faang.school.postservice.model.event.kafka.PostPublishedKafkaEvent;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.FeedService;
+import faang.school.postservice.service.LikeService;
 import faang.school.postservice.service.RedisPostService;
 import faang.school.postservice.service.RedisTransactional;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -56,9 +61,10 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
     private final UserContext userContext;
     private final PostRepository postRepository;
     private final RedisPostService redisPostService;
-    private final PostMapper postMapper;
-    private final RedisPostDtoMapper redisPostDtoMapper;
     private final AuthorPostByHeatKafkaProducer authorPostByHeatKafkaProducer;
+    private final CommentService commentService;
+    private final ExecutorService singleThreadExecutor;
+    private final LikeService likeService;
 
     public FeedServiceImpl(
             @Qualifier("cacheRedisTemplate") RedisTemplate<String, Object> redisTemplate,
@@ -66,17 +72,19 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
             UserContext userContext,
             PostRepository postRepository,
             RedisPostService redisPostService,
-            PostMapper postMapper,
-            RedisPostDtoMapper redisPostDtoMapper,
-            AuthorPostByHeatKafkaProducer authorPostByHeatKafkaProducer) {
+            AuthorPostByHeatKafkaProducer authorPostByHeatKafkaProducer,
+            CommentService commentService,
+            ExecutorService singleThreadExecutor,
+            LikeService likeService) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.userContext = userContext;
         this.postRepository = postRepository;
         this.redisPostService = redisPostService;
-        this.postMapper = postMapper;
-        this.redisPostDtoMapper = redisPostDtoMapper;
         this.authorPostByHeatKafkaProducer = authorPostByHeatKafkaProducer;
+        this.commentService = commentService;
+        this.singleThreadExecutor = singleThreadExecutor;
+        this.likeService = likeService;
     }
 
     @Override
@@ -134,9 +142,12 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
         return posts;
     }
 
-    //TODO пусть это выполняется ассинхронно, чтобы не держать порт открытым
     @Override
-    public void startHeating() {
+    public void startHeatingInBackground() {
+        CompletableFuture.runAsync(this::startHeating, singleThreadExecutor);
+    }
+
+    private void startHeating() {
         LocalDateTime fromDate = LocalDateTime.now().minusDays(timeRangeDays);
         LocalDateTime toDate = LocalDateTime.now();
 
@@ -146,20 +157,49 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
         do {
             page = postRepository.findPostsByDateRange(fromDate, toDate, pageable);
             List<Post> posts = page.getContent();
+            List<Long> postIds = posts.stream()
+                    .map(Post::getId)
+                    .toList();
             List<RedisPostDto> redisPostDtoList = getRedisPostDtoList(posts);
             redisPostService.savePosts(redisPostDtoList);
 
-            posts.forEach(post -> authorPostByHeatKafkaProducer.sendEvent(
-                    new AuthorPostKafkaEvent(post.getId(), post.getAuthorId(), post.getPublishedAt())));
+            Map<Long, List<Long>> top3CommentsAuthorIdsForPostsMap = commentService.getTop3CommentsAuthorIds(postIds);
 
+            posts.forEach(post -> {
+                try {
+                    List<Long> commentAuthorIds = top3CommentsAuthorIdsForPostsMap.get(post.getId());
+                    authorPostByHeatKafkaProducer.sendEvent(
+                            new AuthorPostByHeatKafkaEvent(post.getId(), post.getAuthorId(), commentAuthorIds, post.getPublishedAt()));
+                } catch (Exception e) {
+                    log.error("Failed to process post {}: {}", post.getId(), e.getMessage(), e);
+                }
+            });
             pageable = pageable.next();
         } while (!page.isLast());
     }
 
     private List<RedisPostDto> getRedisPostDtoList(List<Post> posts) {
+        List<Long> postIds = posts.stream()
+                .map(Post::getId)
+                .toList();
+        Map<Long, List<CommentDto>> top3CommentsForPosts = commentService.getTop3CommentsForPosts(postIds);
+        Map<Long, Integer> postIdCommentCountMap = commentService.getPostIdCommentCountMap(postIds);
+        Map<Long, Integer> postIdLikeCountMap = likeService.getPostIdLikeCountMap(postIds);
+        Map<Long, Integer> postIdViewCountMap = posts.stream()
+                .collect(Collectors.toMap(Post::getId, Post::getViewCount));
         return posts.stream()
-                .map(postMapper::toPostDto)
-                .map(redisPostDtoMapper::mapToRedisPostDto)
+                .map(post -> RedisPostDto.builder()
+                        .postId(post.getId())
+                        .authorId(post.getAuthorId())
+                        .content(post.getContent())
+                        .createdAt(post.getCreatedAt())
+                        .commentCount(postIdCommentCountMap.get(post.getId()))
+                        .likeCount(postIdLikeCountMap.get(post.getId()))
+                        .recentComments(top3CommentsForPosts.get(post.getId()).stream()
+                                .map(commentDto -> new RedisCommentDto(commentDto.getAuthorId(), commentDto.getContent()))
+                                .toList())
+                        .viewCount(postIdViewCountMap.get(post.getId()))
+                        .build())
                 .toList();
     }
 
@@ -176,13 +216,13 @@ public class FeedServiceImpl implements FeedService, RedisTransactional {
         return postDto;
     }
 
-    private List<String> getComments(Map<Object, Object> postMap) {
+    private List<RedisCommentDto> getComments(Map<Object, Object> postMap) {
         Object commentsObj = postMap.get(PostFields.RECENT_COMMENTS);
         if (commentsObj == null) {
             return new ArrayList<>();
         }
         try {
-            return objectMapper.readValue(commentsObj.toString(), new TypeReference<List<String>>() {
+            return objectMapper.readValue(commentsObj.toString(), new TypeReference<List<RedisCommentDto>>() {
             });
         } catch (JsonProcessingException e) {
             log.error("Failed to deserialize comments", e);

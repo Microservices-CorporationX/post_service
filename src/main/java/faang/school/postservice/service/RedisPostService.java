@@ -10,7 +10,7 @@ public interface RedisPostService {
 
     RedisPostDto getPost(Long postId);
 
-    void addComment(Long postId, Long commentId, String commentContent);
+    void addComment(Long postId, Long commentId, Long  commentAuthorId, String commentContent);
 
     void incrementLikesWithTransaction(Long postId, Long likeId);
 

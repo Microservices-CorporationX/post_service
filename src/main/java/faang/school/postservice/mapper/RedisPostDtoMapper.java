@@ -2,6 +2,7 @@ package faang.school.postservice.mapper;
 
 import faang.school.postservice.model.dto.CommentDto;
 import faang.school.postservice.model.dto.PostDto;
+import faang.school.postservice.model.dto.redis.cache.RedisCommentDto;
 import faang.school.postservice.model.dto.redis.cache.RedisPostDto;
 import faang.school.postservice.service.PostService;
 import org.mapstruct.Mapper;
@@ -32,11 +33,9 @@ public abstract class RedisPostDtoMapper {
 
     @AfterMapping
     protected void fillAdditionalFields(@MappingTarget RedisPostDto redisPostDto, PostDto postDto) {
-        redisPostDto.setCommentCount(commentService.getCommentCount(postDto.getId()));
-
         redisPostDto.setRecentComments(
                 commentService.getRecentComments(postDto.getId(), RECENT_COMMENTS_LIMIT).stream()
-                        .map(CommentDto::getContent)
+                        .map(commentDto -> new RedisCommentDto(commentDto.getAuthorId(), commentDto.getContent()))
                         .toList()
         );
 

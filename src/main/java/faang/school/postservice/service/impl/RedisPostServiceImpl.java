@@ -7,6 +7,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.RedisPostDtoMapper;
 import faang.school.postservice.model.dto.PostDto;
 import faang.school.postservice.model.dto.redis.cache.PostFields;
+import faang.school.postservice.model.dto.redis.cache.RedisCommentDto;
 import faang.school.postservice.model.dto.redis.cache.RedisPostDto;
 import faang.school.postservice.model.entity.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -166,7 +167,7 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
 
     @Retryable(retryFor = RuntimeException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     @Override
-    public void addComment(Long postId, Long commentId, String commentContent) {
+    public void addComment(Long postId, Long commentId, Long commentAuthorId, String commentContent) {
         String commentKey = createCommentKey(commentId);
         String postKey = createPostKey(postId);
         executeRedisTransaction(() -> {
@@ -181,8 +182,8 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
             }
 
             Map<String, Object> postMap = fetchAndCachePostIfAbsent(postId, postKey);
-            List<String> recentComments = getComments(postMap);
-            recentComments.add(0, commentContent);
+            List<RedisCommentDto> recentComments = getComments(postMap);
+            recentComments.add(0, new RedisCommentDto(commentAuthorId, commentContent));
             if (recentComments.size() > maxRecentComments) {
                 recentComments = recentComments.subList(0, maxRecentComments);
             }
@@ -230,13 +231,13 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
         return postMap;
     }
 
-    private List<String> getComments(Map<String, Object> postMap) {
+    private List<RedisCommentDto> getComments(Map<String, Object> postMap) {
         Object commentsObj = postMap.get(PostFields.RECENT_COMMENTS);
         if (commentsObj == null) {
             return new ArrayList<>();
         }
         try {
-            return objectMapper.readValue(commentsObj.toString(), new TypeReference<List<String>>() {
+            return objectMapper.readValue(commentsObj.toString(), new TypeReference<List<RedisCommentDto>>() {
             });
         } catch (JsonProcessingException e) {
             log.error("Failed to deserialize comments", e);
@@ -244,7 +245,7 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
         }
     }
 
-    private String serializeComments(List<String> comments) {
+    private String serializeComments(List<RedisCommentDto> comments) {
         try {
             return objectMapper.writeValueAsString(comments);
         } catch (JsonProcessingException e) {
@@ -277,7 +278,6 @@ public class RedisPostServiceImpl implements RedisPostService, RedisTransactiona
         if (postMap.isEmpty()) {
             log.warn("Post with ID {} not found in Redis, fetching from database", postId);
             RedisPostDto postFromDb = fetchPostFromDatabase(postId);
-            //TODO savePost может вернуть postMap и мы можем обойтись без convertPostDtoToMap
             savePost(postFromDb);
             return convertPostDtoToMap(postFromDb);
         }

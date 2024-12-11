@@ -2,6 +2,7 @@ package faang.school.postservice.service.impl;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.mapper.LikeMapper;
+import faang.school.postservice.model.dto.LikeCount;
 import faang.school.postservice.model.dto.LikeDto;
 import faang.school.postservice.model.dto.UserDto;
 import faang.school.postservice.model.entity.Like;
@@ -24,6 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -181,6 +185,16 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public int getLikeCount(Long postId) {
         return likeRepository.countByPostId(postId);
+    }
+
+    @Override
+    public Map<Long, Integer> getPostIdLikeCountMap(List<Long> postIds) {
+        Map<Long, Integer> postIdLikeCountMap = postIds.stream()
+                .collect(Collectors.toMap(Function.identity(), id -> 0));
+
+        likeRepository.findLikeCountsByPostIds(postIds).forEach(likeCount ->
+                postIdLikeCountMap.put(likeCount.getPostId(), likeCount.getCount().intValue()));
+        return postIdLikeCountMap;
     }
 
     private Post getPostById(Long id) {

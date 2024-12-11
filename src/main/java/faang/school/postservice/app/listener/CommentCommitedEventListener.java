@@ -34,7 +34,6 @@ public class CommentCommitedEventListener {
 
         authorCommentKafkaProducer.sendEvent(new AuthorCommentKafkaEvent(savedCommentDto.getAuthorId()));
 
-        //TODO а тут посмотреть, что там происходит, не шлется ли лишняя инфа
         CommentSentKafkaEvent commentSentKafkaEvent = new CommentSentKafkaEvent(
                 savedCommentDto.getPostId(),
                 savedCommentDto.getAuthorId(),

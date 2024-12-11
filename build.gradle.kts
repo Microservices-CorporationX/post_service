@@ -135,8 +135,7 @@ tasks.jacocoTestCoverageVerification {
             limit {
                 counter = "INSTRUCTION"
                 value = "COVEREDRATIO"
-                //TODO вернуть 0,7, написать тесты
-                minimum = "0.10".toBigDecimal()
+                minimum = "0.70".toBigDecimal()
             }
         }
     }

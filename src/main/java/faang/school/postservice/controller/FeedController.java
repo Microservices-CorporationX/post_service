@@ -36,7 +36,7 @@ public class FeedController {
 
     @PostMapping("/heat")
     public ResponseEntity<String> heatCache() {
-        feedService.startHeating();
+        feedService.startHeatingInBackground();
         return ResponseEntity.ok("Cache heating started");
     }
 
