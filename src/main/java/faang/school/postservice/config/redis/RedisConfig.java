@@ -18,14 +18,17 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 public class RedisConfig {
 
-    private final RedisSerializer<Object> redisSerializer;
-
-    @Value("${spring.data.redis.channel.like-event-topic}")
+    @Value("${spring.data.redis.channels.like-event-topic}")
     private String likeEventTopic;
 
     @Bean
     public ChannelTopic likeTopic() {
         return new ChannelTopic(likeEventTopic);
+    }
+
+    @Bean
+    public JedisConnectionFactory jedisConnectionFactory() {
+        return new JedisConnectionFactory();
     }
 
     @Bean
@@ -43,9 +46,9 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(redisSerializer);
+        template.setValueSerializer(jackson2JsonRedisSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(redisSerializer);
+        template.setHashValueSerializer(jackson2JsonRedisSerializer());
         return template;
     }
 }
