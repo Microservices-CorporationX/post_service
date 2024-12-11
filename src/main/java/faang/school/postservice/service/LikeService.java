@@ -1,7 +1,5 @@
 package faang.school.postservice.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.LikeEvent;
@@ -13,6 +11,7 @@ import faang.school.postservice.model.OutboxEvent;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.utils.Helper;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
@@ -41,7 +40,7 @@ public class LikeService {
     private final PostValidator postValidator;
     private final UserValidator userValidator;
     private final OutboxEventRepository outboxEventRepository;
-    private final ObjectMapper objectMapper;
+    private final Helper helper;
 
     public List<UserDto> getUsersWhoLikePostByPostId(long Id) {
         List<Like> usersWhoLikedPost = likeRepository.findByPostId(Id);
@@ -75,7 +74,7 @@ public class LikeService {
                 .aggregateId(postId)
                 .aggregateType("Post")
                 .eventType(LikeEvent.class.getSimpleName())
-                .payload(serializeToJson(createEvent(likeDto, post.getAuthorId(), postId)))
+                .payload(helper.serializeToJson(createEvent(likeDto, post.getAuthorId(), postId)))
                 .createdAt(LocalDateTime.now())
                 .processed(false)
                 .build();
@@ -116,13 +115,5 @@ public class LikeService {
                 .postId(postId)
                 .postAuthorId(authorId)
                 .build();
-    }
-
-    private String serializeToJson(Object object) {
-        try {
-            return objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error serializing object to JSON", e);
-        }
     }
 }
