@@ -394,7 +394,6 @@ class PostServiceTest {
         Post post3 = Post.builder().id(3L).verifiedDate(null).build();
         List<Post> postsToVerify = Arrays.asList(post1, post2, post3);
 
-
         when(postVerificationService.checkAndVerifyPostsInBatch(anyList()))
                 .thenReturn(CompletableFuture.runAsync(() -> {
                     try {
