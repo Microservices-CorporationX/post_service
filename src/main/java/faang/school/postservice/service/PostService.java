@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -55,7 +56,8 @@ public class PostService {
 
     @Transactional
     public PostDto publishPost(long id) {
-        Post post = findPostById(id);
+        Post post = findPostById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id)));
         log.info("Request to publish a post: {}", post);
         if (post.isPublished()) {
             return postMapper.toDto(post);
@@ -70,7 +72,8 @@ public class PostService {
 
     @Transactional
     public PostDto updatePost(long id, UpdatePostDto updatePostDto) {
-        Post post = findPostById(id);
+        Post post = findPostById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id)));
         log.info("Request to update a post: {}", post);
         validateThatPostDeleted(post);
 
@@ -81,7 +84,8 @@ public class PostService {
 
     @Transactional
     public PostDto deletePost(long id) {
-        Post post = findPostById(id);
+        Post post = findPostById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id)));
         log.info("Request to delete a post: {}", post);
         validateThatPostDeleted(post);
 
@@ -147,13 +151,13 @@ public class PostService {
         }
     }
 
-    public Post findPostById(long id) {
-        return postRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id)));
+    public Optional<Post> findPostById(long id) {
+        return postRepository.findById(id);
     }
 
     public PostDto getPostDtoById(long id) {
-        return postMapper.toDto(findPostById(id));
+        return postMapper.toDto(findPostById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(id))));
     }
 
     public Post getPostById(long postId) {

@@ -244,28 +244,17 @@ public class PostServiceTest {
     public void testGetById() {
         // arrange
         long postId = 5L;
-        Post post = Post.builder()
+        Optional<Post> post = Optional.ofNullable(Post.builder()
                 .id(postId)
-                .build();
+                .build());
 
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postRepository.findById(postId)).thenReturn(post);
 
         // act
-        Post returnedPost = postService.findPostById(postId);
+        Optional<Post> returnedPost = postService.findPostById(postId);
 
         // assert
         assertEquals(post, returnedPost);
-    }
-
-    @Test
-    public void testGetByIdPostNotFound() {
-        // arrange
-        long postId = 5L;
-        when(postRepository.findById(postId)).thenReturn(Optional.empty());
-
-        // act and assert
-        assertThrows(EntityNotFoundException.class,
-                () -> postService.findPostById(postId));
     }
 
     @Test

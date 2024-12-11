@@ -15,6 +15,8 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -54,5 +56,11 @@ public class SightEngineReactiveClient {
         body.add("api-key", apiKey);
         body.add("api-secret", apiSecret);
         return body;
+    }
+
+    public boolean textAnalysisProcessing(TextAnalysisResponse response) {
+        List<Double> analysisResults = response.getModerationClasses().collectingTextAnalysisResult();
+        return analysisResults.stream()
+                .allMatch(assessmentResult -> assessmentResult < 0.6);
     }
 }
