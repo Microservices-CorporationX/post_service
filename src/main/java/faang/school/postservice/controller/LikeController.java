@@ -1,7 +1,7 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.dto.like.ResponseLikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.service.LikeService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,14 +49,14 @@ public class LikeController {
     }
 
     @PostMapping("/posts/{postId}/likes")
-    public ResponseEntity<ResponseLikeDto> addLikeToPost(
+    public ResponseEntity<LikeResponseDto> addLikeToPost(
             @PathVariable
             @Positive(message = "Post id must be positive")
             Long postId,
             @Valid @RequestBody LikeDto likeDto
     ) {
         log.info("Request for add like to post: {} by user: {}", postId, likeDto.getUserId());
-        ResponseLikeDto responseLikeDto = likeService.addLikeToPost(postId, likeDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseLikeDto);
+        LikeResponseDto likeResponseDto = likeService.addLikeToPost(postId, likeDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(likeResponseDto);
     }
 }

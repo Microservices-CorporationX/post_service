@@ -1,7 +1,7 @@
 package faang.school.postservice.mapper;
 
 import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.dto.like.ResponseLikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.model.Like;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public interface LikeMapper {
     @Mapping(source = "post.id", target = "postId")
     @Mapping(source = "comment.id", target = "commentId")
-    ResponseLikeDto toDto(Like like);
+    LikeResponseDto toDto(Like like);
 
     Like toEntity(LikeDto likeDto);
 }

@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 @AllArgsConstructor
-public class ResponseLikeDto {
+public class LikeResponseDto {
     private long id;
     private long userId;
     private long postId;

@@ -1,7 +1,7 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.dto.like.ResponseLikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.service.LikeService;
 import org.junit.jupiter.api.Test;
@@ -88,7 +88,7 @@ public class LikeControllerTest {
 
     @Test
     void addLikeToPostShouldReturnCreatedResponse() throws Exception {
-        ResponseLikeDto responseLikeDto = ResponseLikeDto.builder()
+        LikeResponseDto likeResponseDto = LikeResponseDto.builder()
                 .id(10L)
                 .userId(2L)
                 .postId(1L)
@@ -101,7 +101,7 @@ public class LikeControllerTest {
                 .build();
 
         when(likeService.addLikeToPost(1L, likeDto))
-                .thenReturn(responseLikeDto);
+                .thenReturn(likeResponseDto);
 
         mockMvc.perform(post("/posts/1/likes")
                         .contentType(MediaType.APPLICATION_JSON)

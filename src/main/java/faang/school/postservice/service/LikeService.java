@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.LikeEvent;
-import faang.school.postservice.dto.like.ResponseLikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
@@ -54,7 +54,7 @@ public class LikeService {
     }
 
     @Transactional
-    public ResponseLikeDto addLikeToPost(Long postId, LikeDto likeDto) {
+    public LikeResponseDto addLikeToPost(Long postId, LikeDto likeDto) {
         postValidator.validatePostExistsById(postId);
         userValidator.checkUserExistence(likeDto.getUserId());
         commentValidator.validateCommentExistsById(likeDto.getCommentId());

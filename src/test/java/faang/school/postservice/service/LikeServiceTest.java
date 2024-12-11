@@ -3,7 +3,7 @@ package faang.school.postservice.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.dto.like.ResponseLikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
@@ -185,7 +185,7 @@ public class LikeServiceTest {
                 .comment(comment)
                 .build();
 
-        ResponseLikeDto responseLikeDto = ResponseLikeDto.builder()
+        LikeResponseDto likeResponseDto = LikeResponseDto.builder()
                 .id(10L)
                 .userId(2L)
                 .postId(1L)
@@ -195,12 +195,12 @@ public class LikeServiceTest {
         when(postService.getPostById(1L)).thenReturn(post);
         when(commentService.getCommentById(3L)).thenReturn(comment);
         when(likeRepository.save(like)).thenReturn(like);
-        when(likeMapper.toDto(like)).thenReturn(responseLikeDto);
+        when(likeMapper.toDto(like)).thenReturn(likeResponseDto);
 
-        ResponseLikeDto result = likeService.addLikeToPost(1L, likeDto);
+        LikeResponseDto result = likeService.addLikeToPost(1L, likeDto);
 
         verify(likeRepository, times(1)).save(like);
 
-        assertEquals(responseLikeDto, result);
+        assertEquals(likeResponseDto, result);
     }
 }
