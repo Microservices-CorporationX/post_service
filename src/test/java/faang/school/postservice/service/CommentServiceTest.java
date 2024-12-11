@@ -89,7 +89,7 @@ public class CommentServiceTest {
         // arrange
         doThrow(new EntityNotFoundException())
                 .when(userServiceClient)
-                .getUser(authorId);
+                .getUserById(authorId);
 
         // act and assert
         assertThrows(EntityNotFoundException.class,

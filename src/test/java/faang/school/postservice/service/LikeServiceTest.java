@@ -123,7 +123,7 @@ class LikeServiceTest {
 
     @Test
     public void testCreateLikePostWhenCreateLikeSaveSuccessful() {
-        when(userServiceClient.getUser(userId)).thenReturn(UserDto.builder().build());
+        when(userServiceClient.getUserById(userId)).thenReturn(UserDto.builder().build());
         when(postService.isPostNotExist(postId)).thenReturn(false);
         when(likeRepository.findByPostIdAndUserId(postId, userId)).thenReturn(Optional.empty());
         when(postService.getPostById(postId)).thenReturn(post);
@@ -133,7 +133,7 @@ class LikeServiceTest {
 
         LikePostDto result = likeService.createLikePost(postId, userId);
 
-        verify(userServiceClient).getUser(userId);
+        verify(userServiceClient).getUserById(userId);
         verify(postService).isPostNotExist(postId);
         verify(likeRepository).findByPostIdAndUserId(postId, userId);
         verify(postService, times(2)).getPostById(postId);
@@ -173,7 +173,7 @@ class LikeServiceTest {
 
     @Test
     public void testCreateLikeCommentWhenCreateLikeSaveSuccessful() {
-        when(userServiceClient.getUser(userId)).thenReturn(UserDto.builder().build());
+        when(userServiceClient.getUserById(userId)).thenReturn(UserDto.builder().build());
         when(commentService.isCommentNotExist(commentId)).thenReturn(false);
         when(likeRepository.findByCommentIdAndUserId(commentId, userId)).thenReturn(Optional.empty());
         when(commentService.getCommentById(commentId)).thenReturn(comment);
@@ -181,7 +181,7 @@ class LikeServiceTest {
 
         LikeCommentDto result = likeService.createLikeComment(commentId, userId);
 
-        verify(userServiceClient).getUser(userId);
+        verify(userServiceClient).getUserById(userId);
         verify(commentService).isCommentNotExist(commentId);
         verify(likeRepository).findByCommentIdAndUserId(commentId, userId);
         verify(commentService).getCommentById(commentId);

@@ -141,7 +141,7 @@ public class PostServiceTest {
     public void testCreatePost() {
         when(postMapper.toEntity(postDto)).thenReturn(post);
         when(postMapper.toDto(post)).thenReturn(postDto);
-        when(userServiceClient.getUser(userDto.getId())).thenReturn(userDto);
+        when(userServiceClient.getUserById(userDto.getId())).thenReturn(userDto);
         when(postRepository.save(post)).thenReturn(post);
 
         postService.createPost(postDto);
@@ -149,7 +149,7 @@ public class PostServiceTest {
         verify(postMapper, times(1)).toEntity(postDto);
         verify(postMapper, times(1)).toDto(post);
         verify(postRepository, times(1)).save(post);
-        verify(userServiceClient, times(1)).getUser(userDto.getId());
+        verify(userServiceClient, times(1)).getUserById(userDto.getId());
     }
 
     @Test
