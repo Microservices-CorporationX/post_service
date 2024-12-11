@@ -1,4 +1,4 @@
-package faang.school.postservice.dto;
+package faang.school.postservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class AdBoughtEvent {
     private Long postId;
     private Long actorId;
+    private Long receiverId;
     private BigDecimal paymentAmount;
     private Long adDuration;
     private LocalDateTime receivedAt;

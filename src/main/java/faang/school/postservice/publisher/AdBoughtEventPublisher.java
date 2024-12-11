@@ -1,7 +1,7 @@
 package faang.school.postservice.publisher;
 
 import faang.school.postservice.config.redis.RedisConfigProperties;
-import faang.school.postservice.dto.AdBoughtEvent;
+import faang.school.postservice.event.AdBoughtEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;

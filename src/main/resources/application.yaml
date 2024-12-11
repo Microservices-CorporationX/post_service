@@ -22,9 +22,9 @@ spring:
       port: 6379
       host: localhost
       channel:
-        ad_bought_channel: ad_bought_channel
-        calculations_channel: calculations_channel
-        user_bans_channel: user_ban
+        ad-bought-channel: ad-bought-channel
+        calculations-channel: calculations-channel
+        user-bans-channel: user-ban
 
   springdoc:
     api-docs:
