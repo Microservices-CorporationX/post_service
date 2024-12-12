@@ -4,9 +4,11 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.event.NewCommentEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.NewCommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
@@ -32,6 +34,9 @@ class CommentServiceTest {
 
     @Mock
     CommentRepository commentRepository;
+
+    @Mock
+    NewCommentEventPublisher newCommentEventPublisher;
 
     @Mock
     PostService postService;
@@ -80,6 +85,7 @@ class CommentServiceTest {
         verify(postValidator, times(1)).validatePostExistsById(postId);
         verify(userServiceClient, times(1)).getUser(dto.getAuthorId());
         verify(commentRepository, times(1)).save(any(Comment.class));
+        verify(newCommentEventPublisher, times(1)).publish(any(NewCommentEvent.class));
 
         assertNotNull(result);
         assertEquals(responseDto, result);

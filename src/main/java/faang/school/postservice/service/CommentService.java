@@ -4,9 +4,11 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.event.NewCommentEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.NewCommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
@@ -24,6 +26,7 @@ import java.util.List;
 @Slf4j
 public class CommentService {
     private final CommentRepository commentRepository;
+    private final NewCommentEventPublisher newCommentEventPublisher;
     private final PostService postService;
     private final CommentMapper commentMapper;
     private final PostValidator postValidator;
@@ -37,7 +40,10 @@ public class CommentService {
         Comment comment = commentMapper.toEntity(dto);
         comment.setPost(postService.getPostById(postId));
         commentRepository.save(comment);
-        log.info("New comment: {} post: {} has been created", comment.getId(), comment.getPost().getId());
+        log.info("New comment: {} to post: {} has been created", comment.getId(), comment.getPost().getId());
+
+        newCommentEventPublisher.publish(createNewCommentEvent(comment));
+        log.info("New comment: {} to post: {} event has been sent to Redis", comment.getId(), comment.getPost().getId());
 
         return commentMapper.toDto(comment);
     }
@@ -78,5 +84,13 @@ public class CommentService {
     public Comment getCommentById(Long id) {
         return commentRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Comment with id: %s doesn't exist", id)));
+    }
+
+    private NewCommentEvent createNewCommentEvent(Comment comment) {
+        return new NewCommentEvent(
+                comment.getPost().getId(),
+                comment.getAuthorId(),
+                comment.getId(),
+                comment.getCreatedAt());
     }
 }
