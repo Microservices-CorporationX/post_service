@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +37,9 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${spring.data.redis.channel.user_bans}")
+    private String userBansChannelName;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -195,7 +199,7 @@ public class PostService {
 
         offensiveAuthors.forEach(entry -> {
             Long authorId = entry.getAuthorId();
-            redisTemplate.convertAndSend("user_ban", authorId);
+            redisTemplate.convertAndSend(userBansChannelName, authorId);
         });
     }
 
