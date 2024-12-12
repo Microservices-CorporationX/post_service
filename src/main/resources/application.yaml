@@ -27,6 +27,7 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        comment: comment_channel
 
   task:
     scheduling:
