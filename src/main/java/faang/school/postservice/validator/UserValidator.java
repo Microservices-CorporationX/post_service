@@ -20,7 +20,7 @@ public class UserValidator {
     public void checkUserExistence(Long authorId) {
         try {
             userServiceClient.getUser(authorId);
-        } catch (FeignException.NotFound e) {
+        } catch (FeignException e) {
             log.error("Feign exception occurred: ", e);
             throw new EntityNotFoundException("User not found with id: " + authorId);
         }

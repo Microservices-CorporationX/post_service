@@ -1,7 +1,7 @@
 package faang.school.postservice.utils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import faang.school.postservice.exception.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,9 +15,8 @@ public class Helper {
     public String serializeToJson(Object object) {
         try {
             return objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            log.error("Error serializing object to JSON", e);
-            throw new RuntimeException("Error serializing object to JSON", e);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new JsonProcessingException("Error serializing object to JSON");
         }
     }
 }

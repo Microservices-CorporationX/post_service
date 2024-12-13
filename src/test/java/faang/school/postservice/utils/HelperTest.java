@@ -47,8 +47,6 @@ class HelperTest {
         RuntimeException exception = assertThrows(RuntimeException.class, () -> helper.serializeToJson(testObject));
 
         assertEquals("Error serializing object to JSON", exception.getMessage());
-        assertNotNull(exception.getCause());
-        assertTrue(exception.getCause() instanceof JsonProcessingException);
         verify(objectMapper, times(1)).writeValueAsString(testObject);
     }
 }

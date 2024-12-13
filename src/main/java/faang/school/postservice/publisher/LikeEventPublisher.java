@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class LikeEventPublisher implements Publisher<LikeEvent> {
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Value("${spring.data.redis.channel.like_events}")
+    @Value("${spring.data.redis.channel.like-events}")
     private String channel;
 
     @Override

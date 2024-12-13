@@ -5,6 +5,8 @@ import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.LikeEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.OutboxEvent;
@@ -36,7 +38,9 @@ public class CommentService {
     private final UserServiceClient userServiceClient;
     private final Helper helper;
     private final OutboxEventRepository outboxEventRepository;
+    private final String AGGREGATE_TYPE = "Post";
 
+    @Transactional
     public CommentResponseDto createComment(long postId, CreateCommentDto dto) {
         postValidator.validatePostExistsById(postId);
         userServiceClient.getUser(dto.getAuthorId());
@@ -46,18 +50,11 @@ public class CommentService {
         commentRepository.save(comment);
         log.info("New comment: {} post: {} has been created", comment.getId(), comment.getPost().getId());
 
-        CommentEvent event = CommentEvent.builder()
-                .commentAuthorId(comment.getAuthorId())
-                .postAuthorId(comment.getPost().getAuthorId())
-                .postId(comment.getPost().getId())
-                .commentId(comment.getId())
-                .build();
-
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateId(postId)
-                .aggregateType("Post")
+                .aggregateType(AGGREGATE_TYPE)
                 .eventType(CommentEvent.class.getSimpleName())
-                .payload(helper.serializeToJson(event))
+                .payload(createAndSerializeCommentEvent(comment))
                 .createdAt(LocalDateTime.now())
                 .processed(false)
                 .build();
@@ -103,5 +100,16 @@ public class CommentService {
     public Comment getCommentById(Long id) {
         return commentRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Comment with id: %s doesn't exist", id)));
+    }
+
+    private String createAndSerializeCommentEvent(Comment comment) {
+        return helper.serializeToJson(
+                CommentEvent.builder()
+                        .commentAuthorId(comment.getAuthorId())
+                        .postAuthorId(comment.getPost().getAuthorId())
+                        .postId(comment.getPost().getId())
+                        .commentId(comment.getId())
+                        .build()
+        );
     }
 }
