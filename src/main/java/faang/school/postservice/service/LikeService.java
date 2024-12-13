@@ -31,8 +31,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LikeService {
     private static final int BATCH_SIZE = 100;
-
-    private final String AGGREGATE_TYPE = "Post";
     private final LikeRepository likeRepository;
     private final UserServiceClient userServiceClient;
     private final LikeMapper likeMapper;
@@ -74,9 +72,9 @@ public class LikeService {
 
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateId(postId)
-                .aggregateType(AGGREGATE_TYPE)
+                .aggregateType("Post")
                 .eventType(LikeEvent.class.getSimpleName())
-                .payload(createAndSerializeLikeEvent(likeDto, post.getAuthorId(), postId))
+                .payload(helper.serializeToJson(createEvent(likeDto, post.getAuthorId(), postId)))
                 .createdAt(LocalDateTime.now())
                 .processed(false)
                 .build();
@@ -117,10 +115,5 @@ public class LikeService {
                 .postId(postId)
                 .postAuthorId(authorId)
                 .build();
-    }
-
-    private String createAndSerializeLikeEvent(LikeDto likeDto, Long authorId, Long postId) {
-        LikeEvent event = createEvent(likeDto, authorId, postId);
-        return helper.serializeToJson(event);
     }
 }

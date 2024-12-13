@@ -38,7 +38,7 @@ public class PostService {
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Value("${spring.data.redis.channel.user-bans}")
+    @Value("${spring.data.redis.channel.user_bans}")
     private String userBansChannelName;
 
     @Transactional

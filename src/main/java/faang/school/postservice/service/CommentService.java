@@ -28,8 +28,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentService {
-    private final String AGGREGATE_TYPE = "Post";
-
     private final CommentRepository commentRepository;
     private final PostService postService;
     private final CommentMapper commentMapper;
@@ -57,7 +55,7 @@ public class CommentService {
 
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateId(postId)
-                .aggregateType(AGGREGATE_TYPE)
+                .aggregateType("Post")
                 .eventType(CommentEvent.class.getSimpleName())
                 .payload(helper.serializeToJson(event))
                 .createdAt(LocalDateTime.now())
