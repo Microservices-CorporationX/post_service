@@ -1,7 +1,6 @@
 package faang.school.postservice.validator;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.AlbumDto;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +17,12 @@ public class UserValidator {
         this.userServiceClient = userServiceClient;
     }
 
-    public void checkUserExistence(AlbumDto albumDto) {
+    public void checkUserExistence(Long authorId) {
         try {
-            userServiceClient.getUser(albumDto.getAuthorId());
+            userServiceClient.getUser(authorId);
         } catch (FeignException.NotFound e) {
             log.error("Feign exception occurred: ", e);
-            throw new EntityNotFoundException("User not found with id: " + albumDto.getAuthorId());
+            throw new EntityNotFoundException("User not found with id: " + authorId);
         }
     }
 }

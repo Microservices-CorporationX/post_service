@@ -57,7 +57,7 @@ class PostServiceTest {
     private HashtagService hashtagService;
 
     @Mock
-    private RedisTemplate<String, Long> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
     private PostService postService;

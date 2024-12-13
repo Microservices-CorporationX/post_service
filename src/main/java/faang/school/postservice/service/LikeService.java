@@ -1,13 +1,27 @@
 package faang.school.postservice.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.LikeEvent;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.model.OutboxEvent;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
+import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.validator.CommentValidator;
+import faang.school.postservice.validator.PostValidator;
+import faang.school.postservice.validator.UserValidator;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,6 +34,14 @@ public class LikeService {
     private static final int BATCH_SIZE = 100;
     private final LikeRepository likeRepository;
     private final UserServiceClient userServiceClient;
+    private final LikeMapper likeMapper;
+    private final PostService postService;
+    private final CommentService commentService;
+    private final CommentValidator commentValidator;
+    private final PostValidator postValidator;
+    private final UserValidator userValidator;
+    private final OutboxEventRepository outboxEventRepository;
+    private final ObjectMapper objectMapper;
 
     public List<UserDto> getUsersWhoLikePostByPostId(long Id) {
         List<Like> usersWhoLikedPost = likeRepository.findByPostId(Id);
@@ -31,6 +53,37 @@ public class LikeService {
         return mapLikesToUserDtos(usersWhoLikedComment);
     }
 
+    @Transactional
+    public LikeResponseDto addLikeToPost(Long postId, LikeDto likeDto) {
+        postValidator.validatePostExistsById(postId);
+        userValidator.checkUserExistence(likeDto.getUserId());
+        commentValidator.validateCommentExistsById(likeDto.getCommentId());
+
+        log.info("Adding like to post: {} by user: {}", postId, likeDto.getUserId());
+
+        Post post = postService.getPostById(postId);
+
+        Like like = Like.builder()
+                .userId(likeDto.getUserId())
+                .post(post)
+                .comment(commentService.getCommentById(likeDto.getCommentId()))
+                .build();
+
+        likeRepository.save(like);
+
+        OutboxEvent outboxEvent = OutboxEvent.builder()
+                .aggregateId(postId)
+                .aggregateType("Post")
+                .eventType(LikeEvent.class.getSimpleName())
+                .payload(serializeToJson(createEvent(likeDto, post.getAuthorId(), postId)))
+                .createdAt(LocalDateTime.now())
+                .processed(false)
+                .build();
+
+        outboxEventRepository.save(outboxEvent);
+
+        return likeMapper.toDto(like);
+    }
 
     private List<UserDto> mapLikesToUserDtos(List<Like> usersWhoLiked) {
         List<Long> userIds = usersWhoLiked.stream()
@@ -54,6 +107,22 @@ public class LikeService {
         } catch (Exception ex) {
             log.error("Error fetching users for batch {}: {}", batch, ex.getMessage(), ex);
             return Collections.emptyList();
+        }
+    }
+
+    private LikeEvent createEvent(LikeDto likeDto, Long authorId, Long postId) {
+        return LikeEvent.builder()
+                .likeAuthorId(likeDto.getUserId())
+                .postId(postId)
+                .postAuthorId(authorId)
+                .build();
+    }
+
+    private String serializeToJson(Object object) {
+        try {
+            return objectMapper.writeValueAsString(object);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error serializing object to JSON", e);
         }
     }
 }
