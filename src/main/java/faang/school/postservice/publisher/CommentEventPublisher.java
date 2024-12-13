@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 public class CommentEventPublisher implements Publisher<CommentEvent> {
     private final RedisTemplate<String, Object> redisTemplate;
 
-    @Value("${spring.data.redis.channel.comments_events}")
+    @Value("${spring.data.redis.channel.comments-events}")
     private String channel;
 
     @Override
