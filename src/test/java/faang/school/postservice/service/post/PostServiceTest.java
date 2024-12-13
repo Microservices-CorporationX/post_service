@@ -1,9 +1,13 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.post.PostValidator;
 import org.junit.jupiter.api.Test;
@@ -17,10 +21,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -30,6 +40,12 @@ class PostServiceTest {
     private PostRepository postRepository;
     @Mock
     private PostMapper postMapper;
+    @Mock
+    private PostViewEventPublisher postViewEventPublisher;
+    @Mock
+    private UserContext userContext;
+    @Mock
+    private PostViewEventMapper postViewEventMapper;
     @InjectMocks
     private PostService postService;
 
@@ -167,6 +183,22 @@ class PostServiceTest {
         assertEquals(2, result.size());
     }
 
+    @Test
+    void testPublishPostViewEventAfterGetAllPosts() {
+        long userId = 1L;
+        int numberOfInvocations = 3;
+        when(postRepository.findByAuthorIdWithLikes(anyLong())).thenReturn(getPosts());
+        when(postMapper.toDto(any())).thenReturn(PostDto.builder().build());
+        when(userContext.getUserId()).thenReturn(userId);
+        when(postViewEventMapper.toAnalyticsEventDto(any(), eq(userId))).thenReturn(new AnalyticsEventDto());
+
+        postService.getAllPublishedByAuthorId(userId);
+
+        verify(userContext).getUserId();
+        verify(postViewEventMapper, times(numberOfInvocations)).toAnalyticsEventDto(any(), eq(userId));
+        verify(postViewEventPublisher, times(numberOfInvocations)).publish(any());
+    }
+
     private List<Post> getPosts() {
         return List.of(
                 Post.builder().published(true).createdAt(LocalDateTime.now()).deleted(true).build(),
@@ -179,5 +211,4 @@ class PostServiceTest {
                 Post.builder().published(false).createdAt(LocalDateTime.now().minusDays(2)).deleted(false).build()
         );
     }
-
 }

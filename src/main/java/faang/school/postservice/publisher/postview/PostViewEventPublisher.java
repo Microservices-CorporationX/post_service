@@ -2,10 +2,12 @@ package faang.school.postservice.publisher.postview;
 
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PostViewEventPublisher {
@@ -15,6 +17,7 @@ public class PostViewEventPublisher {
     private String topic;
 
     public void publish(AnalyticsEventDto postViewEvent) {
+        log.info("event publication: {}", postViewEvent);
         redisTemplate.convertAndSend(topic, postViewEvent);
     }
 }
