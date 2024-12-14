@@ -1,8 +1,9 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
-import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
+import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
@@ -21,12 +22,15 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -64,7 +68,7 @@ class PostServiceTest {
     private HashtagService hashtagService;
 
     @Mock
-    private RedisTemplate<String, Long> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Mock
     private PostVerificationService postVerificationService;
@@ -82,7 +86,6 @@ class PostServiceTest {
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
-
 
     @Test
     void createShouldCreatePostSuccessfully() {
@@ -411,7 +414,6 @@ class PostServiceTest {
 
 
     @DisplayName("Get post with valid id")
-    @Test
     void testGetPostByIdValidId() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
@@ -449,10 +451,10 @@ class PostServiceTest {
 
         postService.banOffensiveAuthors();
 
-        verify(redisTemplate).convertAndSend("user_ban", 2L);
-        verify(redisTemplate).convertAndSend("user_ban", 3L);
+        verify(redisTemplate).convertAndSend(userBansChannel, 2L);
+        verify(redisTemplate).convertAndSend(userBansChannel, 3L);
 
-        verify(redisTemplate, never()).convertAndSend("user_ban", 1L);
+        verify(redisTemplate, never()).convertAndSend(userBansChannel, 1L);
         verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
     }
 }
