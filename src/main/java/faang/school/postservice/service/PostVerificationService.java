@@ -19,7 +19,6 @@ public class PostVerificationService {
     private final ModerationDictionary moderationDictionary;
 
     @Transactional
-    @Async("threadPoolTaskExecutor")
     public CompletableFuture<Void> checkAndVerifyPostsInBatch(List<Post> postsToVerify) {
         for (Post post : postsToVerify) {
             if (moderationDictionary.containsForbiddenWord(post.getContent())) {
