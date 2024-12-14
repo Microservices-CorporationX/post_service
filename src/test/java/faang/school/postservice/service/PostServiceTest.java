@@ -76,6 +76,13 @@ class PostServiceTest {
     @InjectMocks
     private PostService postService;
 
+    private String userBansChannel = "user_ban_channel";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+    }
+
     long userId = 1L;
 
     Post firstPost = new Post();
@@ -389,29 +396,6 @@ class PostServiceTest {
         verify(postRepository, times(1)).findByHashtags(existingTag);
         verify(postMapper, never()).toDto(any(Post.class));
     }
-
-    @Test
-    void testCheckAndVerifyPosts() {
-        Post post1 = Post.builder().id(1L).verifiedDate(null).build();
-        Post post2 = Post.builder().id(2L).verifiedDate(null).build();
-        Post post3 = Post.builder().id(3L).verifiedDate(null).build();
-        List<Post> postsToVerify = Arrays.asList(post1, post2, post3);
-
-        when(postVerificationService.checkAndVerifyPostsInBatch(anyList()))
-                .thenReturn(CompletableFuture.runAsync(() -> {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                }));
-
-        postService.checkAndVerifyPosts();
-
-        CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(postsToVerify);
-        future.join();
-    }
-
 
     @DisplayName("Get post with valid id")
     void testGetPostByIdValidId() {

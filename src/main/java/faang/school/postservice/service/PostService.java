@@ -42,7 +42,6 @@ public class PostService {
 
     @Value("${spring.data.redis.channel.user-bans}")
     private String userBansChannelName;
-    private final RedisTemplate<String, Long> redisTemplate;
     private final PostVerificationService postVerificationService;
 
     @Value("${ad.batch.size}")
