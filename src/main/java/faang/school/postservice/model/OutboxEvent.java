@@ -1,7 +1,9 @@
 package faang.school.postservice.model;
 
+import faang.school.postservice.service.OutboxEventEntityListener;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,6 +23,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "outbox_event")
+@EntityListeners(OutboxEventEntityListener.class)
 public class OutboxEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

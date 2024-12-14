@@ -11,6 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 @Slf4j
@@ -21,25 +24,42 @@ public class OutboxEventProcessor {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
     private final List<Publisher<?>> publishers;
+    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
-    @Scheduled(fixedRate = 60000)
-    public void processOutboxEvents() {
-        List<OutboxEvent> events = outboxEventRepository.findByProcessedFalse();
+    private void processOutboxEvents() {
+        try {
+            while (true) {
+                List<OutboxEvent> events = outboxEventRepository.findByProcessedFalse();
 
-        for (OutboxEvent event : events) {
-            try {
-                Publisher<?> sender = publishers.stream()
-                        .filter(publisher -> publisher.getEventClass().getSimpleName().equals(event.getEventType()))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("No publisher found for event type: " + event.getEventType()));
+                if (events.isEmpty()) {
+                    break;
+                }
 
-                sender.publish(objectMapper.readValue(event.getPayload(), sender.getEventClass()));
+                for (OutboxEvent event : events) {
+                    try {
+                        Publisher<?> sender = publishers.stream()
+                                .filter(publisher -> publisher.getEventClass().getSimpleName().equals(event.getEventType()))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalArgumentException("No publisher found for event type: " + event.getEventType()));
 
-                event.setProcessed(true);
-                outboxEventRepository.save(event);
-            } catch (Exception e) {
-                log.error("Error processing event: {}", event.getId(), e);
+                        sender.publish(objectMapper.readValue(event.getPayload(), sender.getEventClass()));
+
+                        event.setProcessed(true);
+                        outboxEventRepository.save(event);
+                    } catch (Exception e) {
+                        log.error("Error processing event: {}", event.getId(), e);
+                    }
+                }
             }
+        } finally {
+            isProcessing.set(false);
+        }
+    }
+
+    public void triggerProcessing() {
+        if (isProcessing.compareAndSet(false, true)) {
+            executorService.submit(this::processOutboxEvents);
         }
     }
 

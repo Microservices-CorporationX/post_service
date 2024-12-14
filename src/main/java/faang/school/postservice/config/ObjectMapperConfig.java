@@ -11,7 +11,6 @@ public class ObjectMapperConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.findAndRegisterModules();
         return objectMapper;
     }
 }

@@ -12,6 +12,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.utils.Helper;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
@@ -69,6 +70,9 @@ public class LikeServiceTest {
 
     @Mock
     private OutboxEventRepository outboxEventRepository;
+
+    @Mock
+    private Helper helper;
 
     @InjectMocks
     private LikeService likeService;

@@ -1,5 +1,8 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.docs.like.CreateLikeDoc;
+import faang.school.postservice.docs.like.GetLikersByCommentIdDoc;
+import faang.school.postservice.docs.like.GetLikersByPostIdDoc;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
@@ -28,6 +31,7 @@ import java.util.List;
 public class LikeController {
     private final LikeService likeService;
 
+    @GetLikersByPostIdDoc
     @GetMapping("/posts/{postId}/likers")
     public ResponseEntity<List<UserDto>> getUsersWhoLikePostByPostId(
             @PathVariable
@@ -38,6 +42,7 @@ public class LikeController {
         return ResponseEntity.ok(likeService.getUsersWhoLikePostByPostId(postId));
     }
 
+    @GetLikersByCommentIdDoc
     @GetMapping("/comments/{commentId}/likers")
     public ResponseEntity<List<UserDto>> getUsersWhoLikeComments(
             @PathVariable
@@ -48,6 +53,7 @@ public class LikeController {
         return ResponseEntity.ok(likeService.getUsersWhoLikeComments(commentId));
     }
 
+    @CreateLikeDoc
     @PostMapping("/posts/{postId}/likes")
     public ResponseEntity<LikeResponseDto> addLikeToPost(
             @PathVariable

@@ -1,7 +1,5 @@
 package faang.school.postservice.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.like.LikeEvent;
@@ -13,6 +11,7 @@ import faang.school.postservice.model.OutboxEvent;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.utils.Helper;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
@@ -32,6 +31,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class LikeService {
     private static final int BATCH_SIZE = 100;
+    private final String AGGREGATE_TYPE = "Post";
+
     private final LikeRepository likeRepository;
     private final UserServiceClient userServiceClient;
     private final LikeMapper likeMapper;
@@ -41,7 +42,7 @@ public class LikeService {
     private final PostValidator postValidator;
     private final UserValidator userValidator;
     private final OutboxEventRepository outboxEventRepository;
-    private final ObjectMapper objectMapper;
+    private final Helper helper;
 
     public List<UserDto> getUsersWhoLikePostByPostId(long Id) {
         List<Like> usersWhoLikedPost = likeRepository.findByPostId(Id);
@@ -73,9 +74,9 @@ public class LikeService {
 
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateId(postId)
-                .aggregateType("Post")
+                .aggregateType(AGGREGATE_TYPE)
                 .eventType(LikeEvent.class.getSimpleName())
-                .payload(serializeToJson(createEvent(likeDto, post.getAuthorId(), postId)))
+                .payload(createAndSerializeLikeEvent(likeDto, post.getAuthorId(), postId))
                 .createdAt(LocalDateTime.now())
                 .processed(false)
                 .build();
@@ -110,19 +111,13 @@ public class LikeService {
         }
     }
 
-    private LikeEvent createEvent(LikeDto likeDto, Long authorId, Long postId) {
-        return LikeEvent.builder()
+    private String createAndSerializeLikeEvent(LikeDto likeDto, Long authorId, Long postId) {
+        return helper.serializeToJson(
+                LikeEvent.builder()
                 .likeAuthorId(likeDto.getUserId())
                 .postId(postId)
                 .postAuthorId(authorId)
-                .build();
-    }
-
-    private String serializeToJson(Object object) {
-        try {
-            return objectMapper.writeValueAsString(object);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error serializing object to JSON", e);
-        }
+                .build()
+        );
     }
 }
