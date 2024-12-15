@@ -44,4 +44,6 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     @Query("SELECT p.authorId, COUNT(p) FROM Post p WHERE p.verified = false and p.authorId IS NOT NULL GROUP BY p.authorId")
     List<Object[]> findUnverifiedPostsGroupedByAuthor();
+
+    List<Post> findAllByVerifiedDateIsNull();
 }

@@ -33,6 +33,15 @@ spring:
     swagger-ui:
       path=/swagger-ui.html
 
+moderation:
+  batch-size: 100
+
+async:
+  core-pool-size: 4
+  max-pool-size: 10
+  queue-capacity: 100
+  thread-name-prefix: PostService-Async-
+
 server:
   port: 8081
   servlet:
