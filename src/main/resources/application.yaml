@@ -27,12 +27,33 @@ spring:
         comment-channel:
           name: comment_channel
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 50MB
+
 server:
   port: 8081
 
 logging:
   level:
-    root: debug
+    root: info
+
+app:
+  posts:
+    files:
+      max-file-size: 5242880
+      max-post-files-count: 10
+      picture-max-width: 1080
+      picture-max-height: 566
+
+services:
+  s3:
+    endpoint: http://localhost:9000
+    region: us-east-1
+    accessKey: user
+    accessSecret: password
+    postBucketName: corpbucket
 
 user-service:
   host: localhost
