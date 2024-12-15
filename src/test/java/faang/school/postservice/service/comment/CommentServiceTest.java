@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
@@ -45,7 +46,9 @@ class CommentServiceTest {
     void testCreate() {
         CommentDto commentDto = CommentDto.builder().authorId(1L).id(1L).content("1234").createdAt(LocalDateTime.now()).postId(1L).build();
         Mockito.when(postService.findEntityById(anyLong())).thenReturn(new Post());
-        Mockito.when(commentMapper.toEntity(any())).thenReturn(new Comment());
+        Comment comment = Comment.builder().id(1L).build();
+        Mockito.when(commentMapper.toEntity(any())).thenReturn(comment);
+        when(commentRepository.save(any())).thenReturn(comment);
 
         commentService.createComment(commentDto);
 
