@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changeset/post_V004_hashtag.sql
   - include:
       file: db/changelog/changeset/post_V005_verified.sql
+  - include:
+      file: db/changelog/changeset/post_v006__outbox.sql

@@ -1,20 +1,26 @@
 package faang.school.postservice.controller;
+
+import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.service.LikeService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -23,9 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 @ContextConfiguration(classes = {LikeController.class, LikeService.class})
 public class LikeControllerTest {
-    private final static String POST_URL = "/post/{postId}/likes";
+    private final static String POST_URL = "/posts/{postId}/likers";
 
-    private final static String COMMENT_URL = "/comment/{commentId}/likes";
+    private final static String COMMENT_URL = "/comments/{commentId}/likers";
 
     private final static ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -38,7 +44,6 @@ public class LikeControllerTest {
     @Test
     void testGetUsersWhoLikePostByPostId() throws Exception {
         long postId = 1L;
-
 
         List<UserDto> userDtos = List.of(
                 UserDto.builder().id(1L).username("Name1").email("test1@gmail.com").build(),
@@ -79,5 +84,41 @@ public class LikeControllerTest {
                 .andExpect(content().json(OBJECT_MAPPER.writeValueAsString(userDtos)));
 
         verify(likeService, times(1)).getUsersWhoLikeComments(commentId);
+    }
+
+    @Test
+    void addLikeToPostShouldReturnCreatedResponse() throws Exception {
+        LikeResponseDto likeResponseDto = LikeResponseDto.builder()
+                .id(10L)
+                .userId(2L)
+                .postId(1L)
+                .commentId(3L)
+                .build();
+
+        LikeDto likeDto = LikeDto.builder()
+                .userId(2L)
+                .commentId(3L)
+                .build();
+
+        when(likeService.addLikeToPost(1L, likeDto))
+                .thenReturn(likeResponseDto);
+
+        mockMvc.perform(post("/posts/1/likes")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "postId": 1,
+                                  "userId": 2,
+                                  "commentId": 3
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(10))
+                .andExpect(jsonPath("$.userId").value(2))
+                .andExpect(jsonPath("$.postId").value(1))
+                .andExpect(jsonPath("$.commentId").value(3));
+
+        verify(likeService, times(1)).addLikeToPost(1L, likeDto);
     }
 }

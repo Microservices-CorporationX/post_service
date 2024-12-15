@@ -86,6 +86,14 @@ public class GlobalExceptionHandler {
                 .body(new ErrorResponse(errorMessage, "External service returned a 404 error"));
     }
 
+    @ExceptionHandler(JsonProcessingException.class)
+    public ResponseEntity<ErrorResponse> handleJsonProcessingException(JsonProcessingException ex) {
+        log.error("Json processing exception: {}", ex.getMessage(), ex);
+        String errorMessage = extractMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(errorMessage, "Json processing error"));
+    }
+
     @ExceptionHandler(NetworkException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleNetworkException(NetworkException ex) {

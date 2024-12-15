@@ -1,13 +1,19 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.LikeEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.OutboxEvent;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.utils.Helper;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -16,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -29,7 +36,11 @@ public class CommentService {
     private final PostValidator postValidator;
     private final CommentValidator commentValidator;
     private final UserServiceClient userServiceClient;
+    private final Helper helper;
+    private final OutboxEventRepository outboxEventRepository;
+    private final String AGGREGATE_TYPE = "Post";
 
+    @Transactional
     public CommentResponseDto createComment(long postId, CreateCommentDto dto) {
         postValidator.validatePostExistsById(postId);
         userServiceClient.getUser(dto.getAuthorId());
@@ -38,6 +49,17 @@ public class CommentService {
         comment.setPost(postService.getPostById(postId));
         commentRepository.save(comment);
         log.info("New comment: {} post: {} has been created", comment.getId(), comment.getPost().getId());
+
+        OutboxEvent outboxEvent = OutboxEvent.builder()
+                .aggregateId(postId)
+                .aggregateType(AGGREGATE_TYPE)
+                .eventType(CommentEvent.class.getSimpleName())
+                .payload(createAndSerializeCommentEvent(comment))
+                .createdAt(LocalDateTime.now())
+                .processed(false)
+                .build();
+
+        outboxEventRepository.save(outboxEvent);
 
         return commentMapper.toDto(comment);
     }
@@ -78,5 +100,16 @@ public class CommentService {
     public Comment getCommentById(Long id) {
         return commentRepository.findById(id).orElseThrow(() ->
                 new EntityNotFoundException(String.format("Comment with id: %s doesn't exist", id)));
+    }
+
+    private String createAndSerializeCommentEvent(Comment comment) {
+        return helper.serializeToJson(
+                CommentEvent.builder()
+                        .commentAuthorId(comment.getAuthorId())
+                        .postAuthorId(comment.getPost().getAuthorId())
+                        .postId(comment.getPost().getId())
+                        .commentId(comment.getId())
+                        .build()
+        );
     }
 }

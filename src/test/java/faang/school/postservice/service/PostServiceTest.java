@@ -12,6 +12,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -57,7 +59,7 @@ class PostServiceTest {
     private HashtagService hashtagService;
 
     @Mock
-    private RedisTemplate<String, Long> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
     private PostService postService;
@@ -71,6 +73,13 @@ class PostServiceTest {
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
+
+    private String userBansChannel = "user_ban_channel";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+    }
 
     @Test
     void createShouldCreatePostSuccessfully() {
@@ -413,10 +422,10 @@ class PostServiceTest {
 
         postService.banOffensiveAuthors();
 
-        verify(redisTemplate).convertAndSend("user_ban", 2L);
-        verify(redisTemplate).convertAndSend("user_ban", 3L);
+        verify(redisTemplate).convertAndSend(userBansChannel, 2L);
+        verify(redisTemplate).convertAndSend(userBansChannel, 3L);
 
-        verify(redisTemplate, never()).convertAndSend("user_ban", 1L);
+        verify(redisTemplate, never()).convertAndSend(userBansChannel, 1L);
         verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
     }
 }
