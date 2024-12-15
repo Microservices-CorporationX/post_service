@@ -10,7 +10,8 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-public class PostController {
+@RequestMapping("/api/v1")
+public class PostController implements PostControllerOas {
     private final PostService postService;
 
     @PostMapping("/posts")

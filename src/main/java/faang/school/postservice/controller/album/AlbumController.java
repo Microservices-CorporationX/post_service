@@ -19,9 +19,9 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/albums")
+@RequestMapping("/api/v1/albums")
 @RequiredArgsConstructor
-public class AlbumController {
+public class AlbumController implements AlbumControllerOas {
 
     private final AlbumService albumService;
 
@@ -42,13 +42,13 @@ public class AlbumController {
 
     @PostMapping("/toFavorites")
     public void addAlbumToFavorites(@RequestParam("album") Long albumId,
-                                        @RequestParam("user") Long userId) {
+                                    @RequestParam("user") Long userId) {
         albumService.addAlbumToFavorites(albumId, userId);
     }
 
     @PostMapping("/fromFavorites")
     public void removeAlbumFromFavorites(@RequestParam("album") Long albumId,
-                                             @RequestParam("user") Long userId) {
+                                         @RequestParam("user") Long userId) {
         albumService.removeAlbumFromFavorites(albumId, userId);
     }
 
@@ -59,7 +59,7 @@ public class AlbumController {
 
     @GetMapping("/all")
     public List<AlbumDto> getAll(@RequestParam("user") Long userId,
-                                    @RequestBody AlbumFilterDto filter) {
+                                 @RequestBody AlbumFilterDto filter) {
         return albumService.getAlbums(userId, filter);
     }
 

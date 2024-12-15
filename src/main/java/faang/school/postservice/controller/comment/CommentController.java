@@ -12,7 +12,8 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-public class CommentController {
+@RequestMapping("/api/v1")
+public class CommentController implements CommentControllerOas {
     private final CommentService commentService;
 
     @PostMapping("/post/{postId}/comment")
