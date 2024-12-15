@@ -64,10 +64,15 @@ class PostServiceTest {
     private HashtagService hashtagService;
 
     @Mock
+    private ExecutorService executorService;
+
+    @Mock
     private RedisTemplate<String, Long> redisTemplate;
 
     @InjectMocks
     private PostService postService;
+
+    private CountDownLatch latch;
 
     long userId = 1L;
 
@@ -425,5 +430,36 @@ class PostServiceTest {
 
         verify(redisTemplate, never()).convertAndSend("user_ban", 1L);
         verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
+    }
+
+    @Test
+    void publishScheduledPosts_shouldPublishPostsInBatches() {
+        Post post1 = new Post();
+        post1.setPublished(false);
+        Post post2 = new Post();
+        post2.setPublished(false);
+        Post post3 = new Post();
+        post3.setPublished(false);
+        List<Post> postsToPublish = Arrays.asList(post1, post2, post3);
+
+        when(postRepository.findReadyToPublish()).thenReturn(postsToPublish);
+
+        postService.publishScheduledPosts();
+
+        for (Post post : postsToPublish) {
+            post.setPublished(true);
+            post.setPublishedAt(LocalDateTime.now());
+        }
+        postRepository.saveAll(postsToPublish);
+
+        ArgumentCaptor<List<Post>> captor = ArgumentCaptor.forClass(List.class);
+        verify(postRepository, times(1)).saveAll(captor.capture());
+
+        List<Post> savedPosts = captor.getValue();
+        assertEquals(3, savedPosts.size());
+        for (Post post : savedPosts) {
+            assertEquals(true, post.isPublished());
+            assertEquals(LocalDateTime.now().getHour(), post.getPublishedAt().getHour());
+        }
     }
 }
