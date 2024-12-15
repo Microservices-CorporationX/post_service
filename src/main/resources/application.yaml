@@ -22,7 +22,9 @@ spring:
       port: 6379
       host: localhost
       channel:
-        user-bans-channel: user_ban
+        calculations: calculations_channel
+        like-events: like_event_channel
+        user-bans: user_ban_channel
         comment-channel: comment_channel
 
   retry:
@@ -54,6 +56,9 @@ post:
     scheduler:
       cron: "0 0/1 * 1/1 * ?" # every minute
   ban-authors:
+    scheduler:
+      cron: "0 0 0 * * *" # every day at midnight
+  clean-outbox:
     scheduler:
       cron: "0 0 0 * * *" # every day at midnight
 
