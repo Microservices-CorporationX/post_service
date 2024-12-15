@@ -22,7 +22,7 @@ public class LikeControllerAdvice {
                 exceptions.put(error.getField(), error.getDefaultMessage())
         );
 
-        log.error("Validation errors occurred: {}", exceptions);
+        log.error("Validation errors occurred: {}", exceptions, ex);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptions);
     }
