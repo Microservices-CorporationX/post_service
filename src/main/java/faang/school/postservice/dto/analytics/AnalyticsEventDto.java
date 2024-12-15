@@ -22,6 +22,7 @@ public class AnalyticsEventDto {
 
     @JsonProperty(defaultValue = "-1")
     private int eventType;
+    // написать EventTypeNumber
 
     private LocalDateTime receivedAt;
 }
