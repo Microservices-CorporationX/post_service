@@ -62,3 +62,12 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+moderation:
+  batch-size: 50
+  cron: 0 0 0 * * *
+  zone: Europe/Moscow
+  thread-pool-size: 1
+
+api:
+  version: "/api/v1"
