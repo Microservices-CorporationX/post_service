@@ -34,6 +34,7 @@ spring:
         user_ban: user_ban
         comment: comment_channel
         files-uploaded: files_uploaded_channel
+        like-post: like_post_channel
 
 server:
   port: 8081

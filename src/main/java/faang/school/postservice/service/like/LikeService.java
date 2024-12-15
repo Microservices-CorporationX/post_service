@@ -2,11 +2,13 @@ package faang.school.postservice.service.like;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.LikePostResponseDto;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.redis.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.service.comment.CommentService;
 import faang.school.postservice.service.post.PostService;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -30,6 +33,7 @@ public class LikeService {
     private final CommentService commentService;
     private final LikeValidator likeValidator;
     private final LikeMapper likeMapper;
+    private final LikeEventPublisher likeEventPublisher;
 
     public void addLikeToPost(LikeDto likeDto) {
         validateUserExistence(likeDto.getUserId());
@@ -48,6 +52,15 @@ public class LikeService {
         log.info("Save new Like for Post with ID: {}", likeDto.getPostId());
         likeRepository.save(likeToSave);
         postService.addLikeToPost(likeDto.getPostId(), likeToSave);
+
+        likeEventPublisher.publish(LikePostResponseDto.builder()
+                .authorPostId(postOfLike.getAuthorId())
+                .likedUserId(likeDto.getUserId())
+                .postId(likeDto.getPostId())
+                .likeTime(LocalDateTime.now())
+                .build()
+        );
+        log.info("Like event published for post ID: {}", likeDto.getPostId());
     }
 
     public void addLikeToComment(LikeDto likeDto) {
