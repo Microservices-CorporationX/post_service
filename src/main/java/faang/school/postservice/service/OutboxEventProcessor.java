@@ -50,6 +50,7 @@ public class OutboxEventProcessor {
                     } catch (Exception e) {
                         log.error("Error processing event: {}", event.getId(), e);
                     }
+                    log.info("New {} event with id: {} has been sent to Redis", event.getEventType(), event.getId());
                 }
             }
         } finally {
