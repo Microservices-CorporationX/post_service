@@ -14,6 +14,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -172,7 +173,7 @@ public class PostService {
     private boolean hasHashtags(List<String> hashtags) {
         return hashtags != null && !hashtags.isEmpty();
     }
-    
+
     private Set<Hashtag> getAndCreateHashtags(List<String> hashtags) {
         Map<String, Hashtag> existingHashtags = hashtagService.findAllByTags(hashtags)
                 .stream()
