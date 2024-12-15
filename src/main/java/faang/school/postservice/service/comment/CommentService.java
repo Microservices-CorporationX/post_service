@@ -41,8 +41,10 @@ public class CommentService {
         Comment comment = commentMapper.toEntity(commentDto);
         comment.setPost(post);
 
+        comment = commentRepository.save(comment);
+
         CommentEvent event = CommentEvent.builder()
-                .commentId(commentDto.getId())
+                .commentId(comment.getId())
                 .authorId(commentDto.getAuthorId())
                 .postId(commentDto.getPostId())
                 .date(LocalDateTime.now())
@@ -50,7 +52,7 @@ public class CommentService {
 
         commentEventPublisher.publish(event);
 
-        return commentMapper.toDto(commentRepository.save(comment));
+        return commentMapper.toDto(comment);
     }
 
     public CommentDto updateComment(CommentDto commentDto) {
