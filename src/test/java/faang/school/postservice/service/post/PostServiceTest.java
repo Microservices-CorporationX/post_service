@@ -181,16 +181,16 @@ class PostServiceTest {
     }
 
     @Test
-    void testAddMediaOk() {
+    void testAddPicturesOk() {
         Mockito.when(postRepository.findById(anyLong())).thenReturn(Optional.of(new Post()));
-        Mockito.doNothing().when(postValidator).validateAddedMedia(any(), any());
+        Mockito.doNothing().when(postValidator).validateMedia(any(), any());
         Mockito.when(imageResizeService.resizeAndConvert(any(), anyInt(), anyInt())).thenReturn(new byte[1]);
         Mockito.when(resourceService.uploadResources(any(), any())).thenReturn(List.of(
                 ResourceDto.builder().build(),
                 ResourceDto.builder().build()
         ));
 
-        List<ResourceDto> result = postService.addMedia(1, new MultipartFile[]{
+        List<ResourceDto> result = postService.addPictures(1, new MultipartFile[]{
                 new MockMultipartFile("file1", new byte[0]),
                 new MockMultipartFile("file2", new byte[0])}
         );

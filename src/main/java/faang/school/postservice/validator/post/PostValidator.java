@@ -2,6 +2,7 @@ package faang.school.postservice.validator.post;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
@@ -62,7 +63,16 @@ public class PostValidator {
         }
     }
 
-    public void validateAddedMedia(Post post, MultipartFile[] files) {
+    public void validateFilter(PostAuthorFilterDto filter) {
+        if (filter.getProjectId() == null && filter.getAuthorId() == null) {
+            throw new DataValidationException("AuthorId or projectId are required");
+        }
+        if (filter.getProjectId() != null && filter.getAuthorId() != null) {
+            throw new DataValidationException("Only authorId or only projectId are required");
+        }
+    }
+
+    public void validateMedia(Post post, MultipartFile[] files) {
         if (post.getResources().size() + files.length >= maxPostFiles) {
             throw new DataValidationException(String.format("Result count media is more then %s", maxPostFiles));
         }

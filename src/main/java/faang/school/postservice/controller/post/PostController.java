@@ -1,9 +1,11 @@
 package faang.school.postservice.controller.post;
 
+import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.service.post.PostService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,29 +44,14 @@ public class PostController {
         return postService.deletePost(postId);
     }
 
-    @GetMapping("/author/{authorId}/published")
-    public List<PostDto> getPublishedPostByAuthorId(@PathVariable long authorId) {
-        return postService.getAllPublishedByAuthorId(authorId);
+    @GetMapping
+    public List<PostDto> getPostBy(@ModelAttribute @Valid PostAuthorFilterDto filter) {
+        return postService.getPostsBy(filter);
     }
 
-    @GetMapping("/author/{authorId}/unpublished")
-    public List<PostDto> getNonPublishedPostByAuthorId(@PathVariable long authorId) {
-        return postService.getAllNonPublishedByAuthorId(authorId);
-    }
-
-    @GetMapping("/project/{projectId}/published")
-    public List<PostDto> getPublishedPostByProjectId(@PathVariable long projectId) {
-        return postService.getAllPublishedByProjectId(projectId);
-    }
-
-    @GetMapping("/project/{projectId}/unpublished")
-    public List<PostDto> getNonPublishedPostByProjectId(@PathVariable long projectId) {
-        return postService.getAllNonPublishedByProjectId(projectId);
-    }
-
-    @PostMapping("/{postId}/media")
-    public List<ResourceDto> addMedia(@PathVariable long postId, @RequestParam MultipartFile[] files) {
-        return postService.addMedia(postId, files);
+    @PutMapping("/{postId}/pictures")
+    public List<ResourceDto> addPictures(@PathVariable long postId, @RequestParam MultipartFile[] files) {
+        return postService.addPictures(postId, files);
     }
 
 }

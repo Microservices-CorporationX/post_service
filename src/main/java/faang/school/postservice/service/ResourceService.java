@@ -26,7 +26,9 @@ public class ResourceService {
             throw new DataValidationException("Post id is required");
         }
 
-        List<Resource> resources = resourcesDto.stream().map(r -> upload(post, r)).toList();
+        List<Resource> resources = resourcesDto.stream()
+                .map(r -> upload(post, r))
+                .toList();
         resources = resourceRepository.saveAll(resources);
         return resources.stream().map(resourceMapper::toDto).toList();
     }

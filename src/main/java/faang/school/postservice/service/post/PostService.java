@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
@@ -17,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -87,6 +87,21 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
+    public List<PostDto> getPostsBy(PostAuthorFilterDto filter) {
+        postValidator.validateFilter(filter);
+
+        if (filter.isPublished() && filter.getAuthorId() != null) {
+            return getAllPublishedByAuthorId(filter.getAuthorId());
+        } else if (filter.isPublished() && filter.getProjectId() != null) {
+            return getAllPublishedByProjectId(filter.getProjectId());
+        } else if (!filter.isPublished() && filter.getAuthorId() != null) {
+            return getAllNonPublishedByAuthorId(filter.getAuthorId());
+        } else if (!filter.isPublished() && filter.getProjectId() != null) {
+            return getAllNonPublishedByProjectId(filter.getProjectId());
+        }
+        return List.of();
+    }
+
     public List<PostDto> getAllNonPublishedByAuthorId(long id) {
         postValidator.validateUser(id);
         return filterNonPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
@@ -125,26 +140,23 @@ public class PostService {
     }
 
     @Transactional
-    public List<ResourceDto> addMedia(long postId, MultipartFile[] files) {
+    public List<ResourceDto> addPictures(long postId, MultipartFile[] files) {
         Post post = findEntityById(postId);
-        postValidator.validateAddedMedia(post, files);
-        List<ResourceInfoDto> resourcesInfo = Arrays.stream(files).map(f -> preprocessFiles(postId, f)).toList();
+        postValidator.validateMedia(post, files);
+        List<ResourceInfoDto> resourcesInfo = Arrays.stream(files)
+                .map(f -> preprocessFiles(postId, f))
+                .toList();
         return resourceService.uploadResources(post, resourcesInfo);
     }
 
     private ResourceInfoDto preprocessFiles(long postId, MultipartFile file) {
-        try {
-            byte[] bytes = imageResizeService.resizeAndConvert(ImageIO.read(file.getInputStream()), maxImageWidth, maxImageHeight);
-            return ResourceInfoDto.builder()
-                    .key(String.format("%s_%s_%s", postId, file.getOriginalFilename(), LocalDateTime.now()))
-                    .name(file.getOriginalFilename())
-                    .type("image/jpeg")
-                    .bytes(bytes)
-                    .build();
-        } catch (Exception e) {
-            log.error("Image read error", e);
-            throw new IllegalStateException("Image read error", e);
-        }
+        byte[] bytes = imageResizeService.resizeAndConvert(file, maxImageWidth, maxImageHeight);
+        return ResourceInfoDto.builder()
+                .key(String.format("%s_%s_%s", postId, file.getOriginalFilename(), LocalDateTime.now()))
+                .name(file.getOriginalFilename())
+                .type("image/jpeg")
+                .bytes(bytes)
+                .build();
     }
 
 }
