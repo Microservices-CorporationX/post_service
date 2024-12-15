@@ -2,9 +2,10 @@ package faang.school.postservice.service.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.comment.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
@@ -23,9 +24,12 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceTest {
+    @Mock
+    CommentEventPublisher commentEventPublisher;
     @Mock
     CommentValidator commentValidator;
     @Mock
@@ -33,17 +37,19 @@ class CommentServiceTest {
     @Mock
     CommentRepository commentRepository;
     @Mock
-    CommentMapper commentMapper;
+    CommentMapperImpl commentMapper;
     @InjectMocks
     CommentService commentService;
 
     @Test
     void testCreate() {
-        CommentDto commentDto = CommentDto.builder().content("1234").postId(1L).build();
+        CommentDto commentDto = CommentDto.builder().authorId(1L).id(1L).content("1234").createdAt(LocalDateTime.now()).postId(1L).build();
         Mockito.when(postService.findEntityById(anyLong())).thenReturn(new Post());
         Mockito.when(commentMapper.toEntity(any())).thenReturn(new Comment());
 
         commentService.createComment(commentDto);
+
+        verify(commentEventPublisher, times(1)).publish(any());
         Mockito.verify(commentRepository, times(1)).save(any());
     }
 
