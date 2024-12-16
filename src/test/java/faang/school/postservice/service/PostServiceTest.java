@@ -76,8 +76,6 @@ class PostServiceTest {
     @InjectMocks
     private PostService postService;
 
-    private String userBansChannel = "user_ban_channel";
-
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
@@ -435,6 +433,7 @@ class PostServiceTest {
 
         postService.banOffensiveAuthors();
 
+        String userBansChannel = "user_ban";
         verify(redisTemplate).convertAndSend(userBansChannel, 2L);
         verify(redisTemplate).convertAndSend(userBansChannel, 3L);
 
