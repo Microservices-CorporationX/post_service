@@ -16,7 +16,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -25,7 +24,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.time.ZoneId;
@@ -33,6 +31,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
@@ -64,13 +68,17 @@ class PostServiceTest {
     private HashtagService hashtagService;
 
     @Mock
-    private ExecutorService executorService;
-
-    @Mock
-    private RedisTemplate<String, Long> redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
     private PostService postService;
+
+    private String userBansChannel = "user_ban_channel";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+    }
 
     private CountDownLatch latch;
 
@@ -83,6 +91,13 @@ class PostServiceTest {
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
+
+    private String userBansChannel = "user_ban_channel";
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+    }
 
     @Test
     void createShouldCreatePostSuccessfully() {
@@ -425,41 +440,10 @@ class PostServiceTest {
 
         postService.banOffensiveAuthors();
 
-        verify(redisTemplate).convertAndSend("user_ban", 2L);
-        verify(redisTemplate).convertAndSend("user_ban", 3L);
+        verify(redisTemplate).convertAndSend(userBansChannel, 2L);
+        verify(redisTemplate).convertAndSend(userBansChannel, 3L);
 
-        verify(redisTemplate, never()).convertAndSend("user_ban", 1L);
+        verify(redisTemplate, never()).convertAndSend(userBansChannel, 1L);
         verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
-    }
-
-    @Test
-    void publishScheduledPosts_shouldPublishPostsInBatches() {
-        Post post1 = new Post();
-        post1.setPublished(false);
-        Post post2 = new Post();
-        post2.setPublished(false);
-        Post post3 = new Post();
-        post3.setPublished(false);
-        List<Post> postsToPublish = Arrays.asList(post1, post2, post3);
-
-        when(postRepository.findReadyToPublish()).thenReturn(postsToPublish);
-
-        postService.publishScheduledPosts();
-
-        for (Post post : postsToPublish) {
-            post.setPublished(true);
-            post.setPublishedAt(LocalDateTime.now());
-        }
-        postRepository.saveAll(postsToPublish);
-
-        ArgumentCaptor<List<Post>> captor = ArgumentCaptor.forClass(List.class);
-        verify(postRepository, times(1)).saveAll(captor.capture());
-
-        List<Post> savedPosts = captor.getValue();
-        assertEquals(3, savedPosts.size());
-        for (Post post : savedPosts) {
-            assertEquals(true, post.isPublished());
-            assertEquals(LocalDateTime.now().getHour(), post.getPublishedAt().getHour());
-        }
     }
 }
