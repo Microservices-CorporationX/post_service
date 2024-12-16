@@ -23,14 +23,25 @@ spring:
       host: localhost
       channel:
         ad-bought-channel: ad-bought-channel
-        calculations-channel: calculations-channel
-        user-bans-channel: user-ban
+        calculations: calculations_channel
+        like-events: like_event_channel
+        user-bans: user_ban_channel
+        comments-events: comment_channel
 
   springdoc:
     api-docs:
       path=/api-docs
     swagger-ui:
       path=/swagger-ui.html
+
+moderation:
+  batch-size: 100
+
+async:
+  core-pool-size: 4
+  max-pool-size: 10
+  queue-capacity: 100
+  thread-name-prefix: PostService-Async-
 
 server:
   port: 8081
@@ -49,6 +60,9 @@ post:
     scheduler:
       cron: "0 0/1 * 1/1 * ?" # every minute
   ban-authors:
+    scheduler:
+      cron: "0 0 0 * * *" # every day at midnight
+  clean-outbox:
     scheduler:
       cron: "0 0 0 * * *" # every day at midnight
 

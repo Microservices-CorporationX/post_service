@@ -1,9 +1,21 @@
 package faang.school.postservice.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.LikeResponseDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.mapper.LikeMapper;
+import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.LikeRepository;
+import faang.school.postservice.repository.OutboxEventRepository;
+import faang.school.postservice.utils.Helper;
+import faang.school.postservice.validator.CommentValidator;
+import faang.school.postservice.validator.PostValidator;
+import faang.school.postservice.validator.UserValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -31,6 +43,36 @@ public class LikeServiceTest {
 
     @Mock
     private UserServiceClient userServiceClient;
+
+    @Mock
+    private PostService postService;
+
+    @Mock
+    private CommentService commentService;
+
+    @Mock
+    private LikeMapper likeMapper;
+
+    @Mock
+    private LikeEventPublisher likeEventPublisher;
+
+    @Mock
+    private PostValidator postValidator;
+
+    @Mock
+    private UserValidator userValidator;
+
+    @Mock
+    private CommentValidator commentValidator;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
+    private OutboxEventRepository outboxEventRepository;
+
+    @Mock
+    private Helper helper;
 
     @InjectMocks
     private LikeService likeService;
@@ -123,5 +165,46 @@ public class LikeServiceTest {
                     return like;
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Test
+    void addLikeToPostShouldAddLikeAndPublishEvent() {
+        LikeDto likeDto = LikeDto.builder()
+                .userId(2L)
+                .commentId(3L)
+                .build();
+
+        Post post = Post.builder()
+                .id(1L)
+                .authorId(4L)
+                .build();
+
+        Comment comment = Comment.builder()
+                .id(3L)
+                .build();
+
+        Like like = Like.builder()
+                .userId(2L)
+                .post(post)
+                .comment(comment)
+                .build();
+
+        LikeResponseDto likeResponseDto = LikeResponseDto.builder()
+                .id(10L)
+                .userId(2L)
+                .postId(1L)
+                .commentId(3L)
+                .build();
+
+        when(postService.getPostById(1L)).thenReturn(post);
+        when(commentService.getCommentById(3L)).thenReturn(comment);
+        when(likeRepository.save(like)).thenReturn(like);
+        when(likeMapper.toDto(like)).thenReturn(likeResponseDto);
+
+        LikeResponseDto result = likeService.addLikeToPost(1L, likeDto);
+
+        verify(likeRepository, times(1)).save(like);
+
+        assertEquals(likeResponseDto, result);
     }
 }
