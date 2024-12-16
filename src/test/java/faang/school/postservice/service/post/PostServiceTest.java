@@ -3,12 +3,15 @@ package faang.school.postservice.service.post;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.ResourceService;
+import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.validator.post.PostValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,6 +19,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
@@ -46,6 +52,10 @@ class PostServiceTest {
     private UserContext userContext;
     @Mock
     private PostViewEventMapper postViewEventMapper;
+    @Mock
+    private ResourceService resourceService;
+    @Mock
+    private ImageResizeService imageResizeService;
     @InjectMocks
     private PostService postService;
 
@@ -197,6 +207,27 @@ class PostServiceTest {
         verify(userContext).getUserId();
         verify(postViewEventMapper, times(numberOfInvocations)).toAnalyticsEventDto(any(), eq(userId));
         verify(postViewEventPublisher, times(numberOfInvocations)).publish(any());
+    }
+
+    @Test
+    void testAddPicturesOk() {
+        Mockito.when(postRepository.findById(anyLong())).thenReturn(Optional.of(new Post()));
+        Mockito.doNothing().when(postValidator).validateMedia(any(), any());
+        Mockito.when(imageResizeService.resizeAndConvert(any(), anyInt(), anyInt())).thenReturn(new byte[1]);
+        Mockito.when(resourceService.uploadResources(any(), any())).thenReturn(List.of(
+                ResourceDto.builder().build(),
+                ResourceDto.builder().build()
+        ));
+
+        List<ResourceDto> result = postService.addPictures(1, new MultipartFile[]{
+                new MockMultipartFile("file1", new byte[0]),
+                new MockMultipartFile("file2", new byte[0])}
+        );
+
+        assertEquals(2, result.size());
+        Mockito.verify(imageResizeService, times(2)).resizeAndConvert(any(), anyInt(), anyInt());
+        Mockito.verify(resourceService, times(1)).uploadResources(any(), any());
+
     }
 
     private List<Post> getPosts() {
