@@ -21,8 +21,7 @@ public class AnalyticsEventDto {
     private Long actorId;
 
     @JsonProperty(defaultValue = "-1")
-    private int eventType;
-    // написать EventTypeNumber
+    private int eventTypeNumber;
 
     private LocalDateTime receivedAt;
 }

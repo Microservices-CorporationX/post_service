@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
@@ -13,8 +14,6 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.ResourceService;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.validator.post.PostValidator;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

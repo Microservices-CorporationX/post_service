@@ -10,7 +10,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostViewEventMapper {
     @Mapping(target = "receiverId", source = "postDto.id")
-    @Mapping(target = "eventType", expression = "java(getPostViewNumber())")
+    @Mapping(target = "eventTypeNumber", expression = "java(getPostViewNumber())")
     @Mapping(target = "receivedAt", expression = "java(java.time.LocalDateTime.now())")
     AnalyticsEventDto toAnalyticsEventDto(PostDto postDto, Long actorId);
 
