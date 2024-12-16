@@ -1,0 +1,4 @@
+ALTER TABLE post_ad
+ADD COLUMN receiver_id BIGINT NOT NULL,
+ADD COLUMN payment_amount DECIMAL(19, 2) NOT NULL,
+ADD COLUMN ad_duration BIGINT NOT NULL;

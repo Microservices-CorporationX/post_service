@@ -137,4 +137,10 @@ public class GlobalExceptionHandler {
         log.error("NotUniqueAlbumException access exception: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
     }
+
+    @ExceptionHandler(AdNotFoundException.class)
+    public ResponseEntity<String> handleAdNotFoundException(AdNotFoundException ex) {
+        log.error("AdNotFoundException access exception: {}", ex.getMessage(), ex);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+    }
 }

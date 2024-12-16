@@ -1,11 +1,10 @@
 package faang.school.postservice.config.async;
 
-import jakarta.annotation.PreDestroy;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.beans.factory.annotation.Value;
 
 @Configuration
 public class ThreadPoolConfig {
