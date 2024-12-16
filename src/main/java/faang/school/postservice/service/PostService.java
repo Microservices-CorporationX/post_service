@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,9 +41,14 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ExecutorService executorService;
 
     @Value("${spring.data.redis.channel.user-bans}")
     private String userBansChannelName;
+    private final PostVerificationService postVerificationService;
+
+    @Value("${ad.batch.size}")
+    private int batchSize;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -176,7 +182,7 @@ public class PostService {
     private boolean hasHashtags(List<String> hashtags) {
         return hashtags != null && !hashtags.isEmpty();
     }
-    
+
     private Set<Hashtag> getAndCreateHashtags(List<String> hashtags) {
         Map<String, Hashtag> existingHashtags = hashtagService.findAllByTags(hashtags)
                 .stream()
@@ -213,7 +219,6 @@ public class PostService {
                 .map(result -> new AuthorPostCount((Long) result[0], (Long) result[1]))
                 .collect(Collectors.toList());
     }
-
 
     @Transactional
     public void checkAndVerifyPosts() {

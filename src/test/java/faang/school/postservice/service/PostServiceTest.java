@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
@@ -26,21 +25,17 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
-import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.concurrent.CountDownLatch;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -91,13 +86,6 @@ class PostServiceTest {
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
-
-    private String userBansChannel = "user_ban_channel";
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
-    }
 
     @Test
     void createShouldCreatePostSuccessfully() {
