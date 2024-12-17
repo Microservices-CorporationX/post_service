@@ -47,15 +47,12 @@ public class AlbumController {
     @PostMapping("/{albumId}/userId/{userId}/posts/{postId}")
     @Operation(summary = "Add post to album.")
     public ResponseEntity<AlbumDto> addPostToAlbum(
-            @PathVariable
-            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
-            long albumId,
-            @PathVariable
-            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
-            long userId,
-            @PathVariable
-            @Positive(message = "PostId must be greater than 0.") @NotNull(message = "PostId must be greater than 0.")
-            long postId) {
+            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @NotNull(message = "AlbumId must not be null.") long albumId,
+            @PathVariable @Positive(message = "UserId must be greater than 0.")
+            @NotNull(message = "UserId must not be null.") long userId,
+            @PathVariable @Positive(message = "PostId must be greater than 0.")
+            @NotNull(message = "PostId must be greater than 0.") long postId) {
         log.info("Adding post #{} to album. UserId #{}, AlbumId #{}", postId, userId, albumId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(albumService.addPostToAlbum(userId, albumId, postId));
@@ -64,15 +61,12 @@ public class AlbumController {
     @DeleteMapping("/{albumId}/userId/{userId}/posts/{postId}")
     @Operation(summary = "Remove post from album.")
     public ResponseEntity<AlbumDto> removePostFromAlbum(
-            @PathVariable
-            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
-            long albumId,
-            @PathVariable
-            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
-            long userId,
-            @PathVariable
-            @Positive(message = "PostId must be greater than 0.") @NotNull(message = "PostId must be greater than 0.")
-            long postId) {
+            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @NotNull(message = "AlbumId must not be null.") long albumId,
+            @PathVariable @Positive(message = "UserId must be greater than 0.")
+            @NotNull(message = "UserId must not be null.") long userId,
+            @PathVariable @Positive(message = "PostId must be greater than 0.")
+            @NotNull(message = "PostId must be greater than 0.") long postId) {
         log.info("Removing post #{} from album. UserId #{}, AlbumId #{}", postId, userId, albumId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(albumService.removePostFromAlbum(userId, albumId, postId));
@@ -81,12 +75,10 @@ public class AlbumController {
     @PostMapping("/{albumId}/userId/{userId}/favorites")
     @Operation(summary = "Add album to user's favorites.")
     public ResponseEntity<AlbumDto> addAlbumToFavorites(
-            @PathVariable
-            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
-            long albumId,
-            @PathVariable
-            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
-            long userId) {
+            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @NotNull(message = "AlbumId must not be null.") long albumId,
+            @PathVariable @Positive(message = "UserId must be greater than 0.")
+            @NotNull(message = "UserId must not be null.") long userId) {
         log.info("Adding album to favorites. UserId #{}, AlbumId #{}", userId, albumId);
 
         return ResponseEntity.ok(albumService.addAlbumToFavorites(userId, albumId));
@@ -95,12 +87,10 @@ public class AlbumController {
     @DeleteMapping("/{albumId}/userId/{userId}/favorites")
     @Operation(summary = "Remove album from favorites.")
     public ResponseEntity<Void> deleteAlbumFromFavorites(
-            @PathVariable
-            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
-            long albumId,
-            @PathVariable
-            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
-            long userId) {
+            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @NotNull(message = "AlbumId must not be null.") long albumId,
+            @PathVariable @Positive(message = "UserId must be greater than 0.")
+            @NotNull(message = "UserId must not be null.") long userId) {
         log.info("Removing album from favorites. UserId #{}, AlbumId #{}", userId, albumId);
         albumService.deleteAlbumFromFavorites(userId, albumId);
 
@@ -110,9 +100,8 @@ public class AlbumController {
     @GetMapping("/{albumId}")
     @Operation(summary = "Get album by id.")
     public ResponseEntity<AlbumDto> getAlbumById(
-            @PathVariable
-            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
-            long albumId) {
+            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @NotNull(message = "AlbumId must not be null.") long albumId) {
         log.info("Fetching album by id #{}", albumId);
 
         return ResponseEntity.ok(albumService.findByAlbumId(albumId));
@@ -121,8 +110,7 @@ public class AlbumController {
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get user's albums filtered by title, description and month.")
     public ResponseEntity<List<AlbumDto>> getUserAlbumsWithFilters(
-            @PathVariable @Positive(message = "CurrentUserId must be greater than 0.")
-            long userId,
+            @PathVariable @Positive(message = "CurrentUserId must be greater than 0.") long userId,
             @RequestParam(required = false) String titlePattern,
             @RequestParam(required = false) String descriptionPattern,
             @RequestParam(required = false) String month) {
@@ -157,8 +145,7 @@ public class AlbumController {
     @GetMapping("user/{userId}/favorites")
     @Operation(summary = "Get user's favorite albums filtered by title, description and month.")
     public ResponseEntity<List<AlbumDto>> getUserFavoriteAlbumsWithFilters(
-            @PathVariable @Positive(message = "CurrentUserId must be greater than 0.")
-            long userId,
+            @PathVariable @Positive(message = "CurrentUserId must be greater than 0.") long userId,
             @RequestParam(required = false) String titlePattern,
             @RequestParam(required = false) String descriptionPattern,
             @RequestParam(required = false) String month) {
@@ -184,12 +171,10 @@ public class AlbumController {
     @DeleteMapping("/{albumId}/userId/{userId}")
     @Operation(summary = "Delete album.")
     public ResponseEntity<Void> deleteAlbum(
-            @PathVariable
-            @Positive(message = "AlbumId must be greater than 0.") @NotNull(message = "AlbumId must not be null.")
-            long albumId,
-            @PathVariable
-            @Positive(message = "UserId must be greater than 0.") @NotNull(message = "UserId must not be null.")
-            long userId) {
+            @PathVariable @Positive(message = "AlbumId must be greater than 0.")
+            @NotNull(message = "AlbumId must not be null.") long albumId,
+            @PathVariable @Positive(message = "UserId must be greater than 0.")
+            @NotNull(message = "UserId must not be null.") long userId) {
         log.info("Deleting album. UserId #{}, AlbumId #{}", userId, albumId);
 
         albumService.deleteAlbum(userId, albumId);
