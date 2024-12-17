@@ -27,7 +27,7 @@ public class PostServiceValidator {
     public static void checkThatUserOrProjectIsExist(
             PostDto postDto, UserServiceClient userServiceClient, ProjectServiceClient projectServiceClient) {
         if (postDto.getAuthorId() != null) {
-            UserDto userDto = userServiceClient.getUser(postDto.getAuthorId());
+            UserDto userDto = userServiceClient.getUserById(postDto.getAuthorId());
             int a =23;
         }
         if (postDto.getProjectId() != null) {

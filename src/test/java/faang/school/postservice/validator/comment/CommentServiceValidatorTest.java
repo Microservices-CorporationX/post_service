@@ -38,13 +38,13 @@ class CommentServiceValidatorTest {
 
     @Test
     void validateCreateCommentSuccess() {
-        Mockito.lenient().when(userServiceClient.getUser(Mockito.anyLong())).thenReturn(null);
+        Mockito.lenient().when(userServiceClient.getUserById(Mockito.anyLong())).thenReturn(null);
         assertDoesNotThrow(() -> validator.validateCreateComment(getCommentDto()));
     }
 
     @Test
     void validateCreateCommentFailure() {
-        Mockito.lenient().when(userServiceClient.getUser(Mockito.anyLong())).thenThrow(FeignException.class);
+        Mockito.lenient().when(userServiceClient.getUserById(Mockito.anyLong())).thenThrow(FeignException.class);
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> validator.validateCreateComment(getCommentDto()));
         assertEquals("User with id %s not found".formatted(getCommentDto().getAuthorId()), exception.getMessage());
     }

@@ -21,7 +21,7 @@ public class CommentServiceValidator {
 
     public void validateCreateComment(CommentDto commentDto) {
         try {
-            userServiceClient.getUser(commentDto.getAuthorId());
+            userServiceClient.getUserById(commentDto.getAuthorId());
         } catch (FeignException e) {
             throw new EntityNotFoundException("User with id %s not found".formatted(commentDto.getAuthorId()));
         }

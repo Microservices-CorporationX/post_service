@@ -1,6 +1,6 @@
 package faang.school.postservice.sort;
 
-import faang.school.postservice.model.Album;
+import faang.school.postservice.model.album.Album;
 import faang.school.postservice.model.Post;
 import org.junit.jupiter.api.Test;
 

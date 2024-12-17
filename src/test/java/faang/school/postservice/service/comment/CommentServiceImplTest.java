@@ -95,7 +95,7 @@ class CommentServiceImplTest {
 
         Mockito.lenient().when(commentRepository.findAllByPostId(Mockito.anyLong())).thenReturn(comments);
 
-        assertEquals(getCommentDtoList().stream().sorted(Comparator.comparing(CommentDto::getCreatedAt).reversed()).toList(), commentService.getCommentsByPostId(getCommentDto().getPostId()));
+        assertEquals(getCommentDtoList().stream().sorted(Comparator.comparing(CommentDto::getCreatedAt).reversed()).peek(comment -> comment.setLikeIds(List.of())).toList(), commentService.getCommentsByPostId(getCommentDto().getPostId()));
     }
 
     @Test

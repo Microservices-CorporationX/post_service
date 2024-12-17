@@ -1,7 +1,9 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.LikeDto;
+import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.repository.LikeRepository;
@@ -11,11 +13,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class LikeService {
+    private static final int BATCH_SIZE = 100;
+
+    private final UserServiceClient userServiceClient;
     private final LikeValidator likeValidator;
     private final LikeRepository likeRepository;
     private final UserContext userContext;
@@ -56,6 +62,39 @@ public class LikeService {
     public void deleteLike(LikeDto likeDto) {
         likeValidator.validateDeleted(existsLikeById(likeDto.getId()));
         likeRepository.deleteById(likeDto.getId());
+    }
+
+    public List<UserDto> getAllLikedByPostId(Long id) {
+        return getAllLikedById(id, true);
+    }
+
+    public List<UserDto> getAllLikedByCommentId(Long id) {
+        return getAllLikedById(id, false);
+    }
+
+    private List<UserDto> getAllLikedById(Long id, boolean isPost) {
+        List<Like> likes = isPost ? likeRepository.findByPostId(id) : likeRepository.findByCommentId(id);
+        List<Long> likeIds = likes.stream()
+                .map(Like::getUserId)
+                .toList();
+
+        List<List<Long>> batches = splitIntoBatches(likeIds, BATCH_SIZE);
+        List<UserDto> users = new ArrayList<>();
+
+        for (List<Long> batch: batches) {
+            List<UserDto> batchUsers = userServiceClient.getUsersByIds(batch);
+            users.addAll(batchUsers);
+        }
+        return users;
+    }
+
+    private List<List<Long>> splitIntoBatches(List<Long> list, int batchSize) {
+        List<List<Long>> batches = new ArrayList<>();
+        for (int i = 0; i < list.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, list.size());
+            batches.add(new ArrayList<>(list.subList(i, end)));
+        }
+        return batches;
     }
 
     private boolean existsLikeById(long id) {

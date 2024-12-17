@@ -16,7 +16,7 @@ public class LikeValidator {
 
     public void validateAdded(LikeDto dto, long userId, boolean existsPost, boolean existsComment, boolean existsLikeByPostIdAndUserId, boolean existsLikeByCommentIdAndUserId) {
         try {
-            userServiceClient.getUser(userId);
+            userServiceClient.getUserById(userId);
         } catch (FeignException e) {
             log.error(e.getMessage(), e);
             throw new EntityNotFoundException(String.format("User with id %d not found", userId));

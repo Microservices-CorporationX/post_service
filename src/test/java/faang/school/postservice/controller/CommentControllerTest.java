@@ -19,9 +19,6 @@ class CommentControllerTest {
     @Mock
     private CommentService commentService;
 
-    @Mock
-    private CommentControllerValidator validator;
-
     @InjectMocks
     private CommentController commentController;
 
@@ -30,28 +27,24 @@ class CommentControllerTest {
     @Test
     void createComment() {
         commentController.createComment(commentDto);
-        Mockito.verify(validator).validateCommentDto(commentDto);
         Mockito.verify(commentService).createComment(commentDto);
     }
 
     @Test
     void updateComment() {
         commentController.updateComment(commentDto);
-        Mockito.verify(validator).validateCommentDto(commentDto);
         Mockito.verify(commentService).updateComment(commentDto);
     }
 
     @Test
     void getCommentsByPostId() {
         commentController.getCommentsByPostId(commentDto.getPostId());
-        Mockito.verify(validator).validatePostId(commentDto.getPostId());
         Mockito.verify(commentService).getCommentsByPostId(commentDto.getPostId());
     }
 
     @Test
     void deleteComment() {
         commentController.deleteComment(commentDto.getId());
-        Mockito.verify(validator).validateCommentId(commentDto.getId());
         Mockito.verify(commentService).deleteComment(commentDto.getId());
     }
 

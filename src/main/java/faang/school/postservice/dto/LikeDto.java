@@ -11,9 +11,11 @@ import java.time.LocalDateTime;
 public class LikeDto {
     @NotNull
     @Schema(description = "Unique identifier of the like", example = "1")
+    @NotNull(message = "Id cannot be null")
     private Long id;
     @NotNull
     @Schema(description = "ID of the user who liked the post or comment", example = "123")
+    @NotNull(message = "User id cannot be null")
     private Long userId;
     @Schema(description = "ID of the comment that was liked", example = "456")
     private Long commentId;

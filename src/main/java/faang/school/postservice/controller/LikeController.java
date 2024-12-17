@@ -1,6 +1,7 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.LikeDto;
+import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -75,4 +76,15 @@ public class LikeController {
     public void deleteLike(@RequestBody @Valid LikeDto likeDto) {
         likeService.deleteLike(likeDto);
     }
+
+    @GetMapping("/users/{id}/post")
+    public List<UserDto> getAllLikedByPostId(@PathVariable Long id) {
+        return likeService.getAllLikedByPostId(id);
+    }
+
+    @GetMapping("/users/{id}/comment")
+    public List<UserDto> getAllLikedByCommentId(@PathVariable Long id) {
+        return likeService.getAllLikedByCommentId(id);
+    }
+
 }
