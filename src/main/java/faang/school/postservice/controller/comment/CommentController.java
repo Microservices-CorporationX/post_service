@@ -12,11 +12,11 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/comments")
 public class CommentController implements CommentControllerOas {
     private final CommentService commentService;
 
-    @PostMapping("/post/{postId}/comment")
+    @PostMapping("/{postId}")
     public CommentDto createComment(@PathVariable @Positive long postId, @RequestBody @Valid CommentDto comment) {
         if (comment.getId() != null) {
             throw new DataValidationException("The comment must not contain an ID for creation");
@@ -28,7 +28,7 @@ public class CommentController implements CommentControllerOas {
         return commentService.createComment(comment);
     }
 
-    @PutMapping("/comment/{commentId}")
+    @PutMapping("/{commentId}")
     public CommentDto updateComment(@PathVariable @Positive long commentId,@RequestBody @Valid CommentDto comment) {
         if (commentId != comment.getId()) {
             throw new DataValidationException("Path commentId and body commentId are different");
@@ -36,12 +36,12 @@ public class CommentController implements CommentControllerOas {
         return commentService.updateComment(comment);
     }
 
-    @GetMapping("/post/{postId}/comments")
+    @GetMapping("/{postId}")
     public List<CommentDto> getComments(@PathVariable @Positive long postId) {
         return commentService.getComments(postId);
     }
 
-    @DeleteMapping("/comment/{commentId}")
+    @DeleteMapping("/{commentId}")
     public void deleteComment(@PathVariable @Positive long commentId) {
         commentService.deleteComment(commentId);
     }

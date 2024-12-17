@@ -10,11 +10,11 @@ import java.util.List;
 
 @RestController
 @AllArgsConstructor
-@RequestMapping("/api/v1")
+@RequestMapping("/posts")
 public class PostController implements PostControllerOas {
     private final PostService postService;
 
-    @PostMapping("/posts")
+    @PostMapping
     public PostDto createPost(@RequestBody PostDto post) {
         if (post.getAuthorId() == null && post.getProjectId() == null) {
             throw new DataValidationException("Post must be have user or project");
@@ -22,12 +22,12 @@ public class PostController implements PostControllerOas {
         return postService.create(post);
     }
 
-    @PutMapping("/posts/{postId}/publish")
+    @PutMapping("/{postId}/publish")
     public PostDto publishPost(@PathVariable long postId) {
         return postService.publish(postId);
     }
 
-    @PutMapping("/posts/{postId}")
+    @PutMapping("/{postId}")
     public PostDto updatePost(@PathVariable long postId, @RequestBody PostDto postDto) {
         if (postId != postDto.getId()) {
             throw new DataValidationException("Path postId and body postId are different");
@@ -35,27 +35,27 @@ public class PostController implements PostControllerOas {
         return postService.update(postDto);
     }
 
-    @DeleteMapping("/posts/{postId}")
+    @DeleteMapping("/{postId}")
     public PostDto deletePost(@PathVariable long postId) {
         return postService.deletePost(postId);
     }
 
-    @GetMapping("/posts/author/{authorId}/published")
+    @GetMapping("/author/{authorId}/published")
     public List<PostDto> getPublishedPostByAuthorId(@PathVariable long authorId) {
         return postService.getAllPublishedByAuthorId(authorId);
     }
 
-    @GetMapping("/posts/author/{authorId}/unpublished")
+    @GetMapping("/author/{authorId}/unpublished")
     public List<PostDto> getNonPublishedPostByAuthorId(@PathVariable long authorId) {
         return postService.getAllNonPublishedByAuthorId(authorId);
     }
 
-    @GetMapping("/posts/project/{projectId}/published")
+    @GetMapping("/project/{projectId}/published")
     public List<PostDto> getPublishedPostByProjectId(@PathVariable long projectId) {
         return postService.getAllPublishedByProjectId(projectId);
     }
 
-    @GetMapping("/posts/project/{projectId}/unpublished")
+    @GetMapping("/project/{projectId}/unpublished")
     public List<PostDto> getNonPublishedPostByProjectId(@PathVariable long projectId) {
         return postService.getAllNonPublishedByProjectId(projectId);
     }

@@ -19,7 +19,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping("/api/v1/albums")
+@RequestMapping("/albums")
 @RequiredArgsConstructor
 public class AlbumController implements AlbumControllerOas {
 
@@ -40,13 +40,13 @@ public class AlbumController implements AlbumControllerOas {
         return albumService.deletePost(albumId, postId);
     }
 
-    @PostMapping("/toFavorites")
+    @PostMapping("/favorites")
     public void addAlbumToFavorites(@RequestParam("album") Long albumId,
                                     @RequestParam("user") Long userId) {
         albumService.addAlbumToFavorites(albumId, userId);
     }
 
-    @PostMapping("/fromFavorites")
+    @DeleteMapping("/favorites")
     public void removeAlbumFromFavorites(@RequestParam("album") Long albumId,
                                          @RequestParam("user") Long userId) {
         albumService.removeAlbumFromFavorites(albumId, userId);
