@@ -26,7 +26,7 @@ public class AlbumCreatedEventPublisher {
             redisTemplate.convertAndSend(albumCreatedTopic, json);
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize album creating event: {}", albumCreatedEvent, e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to serialize album creating event: " + albumCreatedEvent);
         }
     }
 
