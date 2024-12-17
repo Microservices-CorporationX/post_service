@@ -14,15 +14,18 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,7 +38,14 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
-    private final RedisTemplate<String, Long> redisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    @Value("${spring.data.redis.channel.user-bans}")
+    private String userBansChannelName;
+    private final PostVerificationService postVerificationService;
+
+    @Value("${ad.batch.size}")
+    private int batchSize;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -195,7 +205,7 @@ public class PostService {
 
         offensiveAuthors.forEach(entry -> {
             Long authorId = entry.getAuthorId();
-            redisTemplate.convertAndSend("user_ban", authorId);
+            redisTemplate.convertAndSend(userBansChannelName, authorId);
         });
     }
 
@@ -205,5 +215,22 @@ public class PostService {
         return rawResults.stream()
                 .map(result -> new AuthorPostCount((Long) result[0], (Long) result[1]))
                 .collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    public void checkAndVerifyPosts() {
+        List<Post> postsToVerify = postRepository.findAllByVerifiedDateIsNull();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (int i = 0; i < postsToVerify.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToVerify.size());
+            List<Post> batch = postsToVerify.subList(i, end);
+
+            CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(batch);
+            futures.add(future);
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 }

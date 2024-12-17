@@ -18,12 +18,12 @@ public class UserValidator {
         this.userServiceClient = userServiceClient;
     }
 
-    public void checkUserExistence(AlbumDto albumDto) {
+    public void checkUserExistence(Long authorId) {
         try {
-            userServiceClient.getUser(albumDto.getAuthorId());
-        } catch (FeignException.NotFound e) {
+            userServiceClient.getUser(authorId);
+        } catch (FeignException e) {
             log.error("Feign exception occurred: ", e);
-            throw new EntityNotFoundException("User not found with id: " + albumDto.getAuthorId());
+            throw new EntityNotFoundException("User not found with id: " + authorId);
         }
     }
 }

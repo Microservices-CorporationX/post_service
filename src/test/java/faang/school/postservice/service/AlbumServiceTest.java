@@ -153,7 +153,7 @@ public class AlbumServiceTest {
 
     @Test
     void testCreateAlbumSuccessfully() {
-        doNothing().when(userValidator).checkUserExistence(albumDto);
+        doNothing().when(userValidator).checkUserExistence(albumDto.getAuthorId());
         when(albumValidator.albumExistsByTitleAndAuthorId(albumDto)).thenReturn(albumDto);
         when(albumMapper.toEntity(albumDto)).thenReturn(album);
         when(albumMapper.toDto(album)).thenReturn(albumDto);
@@ -162,7 +162,7 @@ public class AlbumServiceTest {
         AlbumDto result = albumService.createAlbum(albumDto);
 
         assertEquals(result, albumDto);
-        verify(userValidator, times(1)).checkUserExistence(albumDto);
+        verify(userValidator, times(1)).checkUserExistence(albumDto.getAuthorId());
         verify(albumMapper, times(1)).toDto(album);
         verify(albumValidator, times(1)).albumExistsByTitleAndAuthorId(albumDto);
         verify(albumMapper, times(1)).toEntity(albumDto);
@@ -171,13 +171,13 @@ public class AlbumServiceTest {
 
     @Test
     void testCreateAlbumWhenAlbumExist() {
-        doNothing().when(userValidator).checkUserExistence(albumDto);
+        doNothing().when(userValidator).checkUserExistence(albumDto.getAuthorId());
         when(albumValidator.albumExistsByTitleAndAuthorId(albumDto))
                 .thenThrow(new NotUniqueAlbumException("Album with the same title and author already exists."));
 
         assertThrows(NotUniqueAlbumException.class, () -> albumService.createAlbum(albumDto));
 
-        verify(userValidator, times(1)).checkUserExistence(albumDto);
+        verify(userValidator, times(1)).checkUserExistence(albumDto.getAuthorId());
         verify(albumValidator, times(1)).albumExistsByTitleAndAuthorId(albumDto);
         verify(albumRepository, times(0)).save(album);
     }
@@ -185,12 +185,12 @@ public class AlbumServiceTest {
     @Test
     void testCreateAlbumWhenUserNotFound() {
         doThrow(new EntityNotFoundException("User not found with id: " + albumDto.getAuthorId()))
-                .when(userValidator).checkUserExistence(albumDto);
+                .when(userValidator).checkUserExistence(albumDto.getAuthorId());
 
         assertThrows(EntityNotFoundException.class, () -> albumService.createAlbum(albumDto),
                 String.format("User not found with id: " + albumDto.getAuthorId()));
 
-        verify(userValidator, times(1)).checkUserExistence(albumDto);
+        verify(userValidator, times(1)).checkUserExistence(albumDto.getAuthorId());
         verify(albumRepository, times(0)).save(album);
     }
 
