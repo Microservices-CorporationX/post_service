@@ -107,7 +107,7 @@ class LikeControllerTest {
     }
 
     @Test
-    public void testDeleteLikeFromPost() throws Exception {
+    public void testRemoveLikeFromPost() throws Exception {
         when(userContext.getUserId()).thenReturn(userId);
         doNothing().when(likeService).deleteLikeFromPost(postId, userId);
 
@@ -123,11 +123,11 @@ class LikeControllerTest {
         when(userContext.getUserId()).thenReturn(nonExistentUser);
 
         assertThrows(IllegalArgumentException.class,
-                () -> likeController.deleteLikeFromPost(postId));
+                () -> likeController.removeLikeFromPost(postId));
     }
 
     @Test
-    public void testDeleteLikeFromComment() throws Exception {
+    public void testRemoveLikeFromComment() throws Exception {
         when(userContext.getUserId()).thenReturn(userId);
         doNothing().when(likeService).deleteLikeFromComment(commentId, userId);
 
@@ -143,6 +143,6 @@ class LikeControllerTest {
         when(userContext.getUserId()).thenReturn(nonExistentUser);
 
         assertThrows(IllegalArgumentException.class,
-                () -> likeController.deleteLikeFromComment(commentId));
+                () -> likeController.removeLikeFromComment(commentId));
     }
 }
