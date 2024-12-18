@@ -19,7 +19,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,54 +65,49 @@ class AdServiceTest {
     }
 
     @Test
-    @DisplayName("Get user who buy ad success")
+    @DisplayName("Get user who buys ad successfully")
     void testGetUserWhoBuyAdSuccess() {
-        UserDto userDto = UserDto.builder()
-                .id(1L)
-                .username("testUser")
-                .email("test@example.com")
-                .build();
+        long postId = 1L;
+        Long userId = 1L;
+        BigDecimal paymentAmount = new BigDecimal("100.00");
+        long adDuration = 30L;
 
         Post post = new Post();
-        post.setId(1L);
+        post.setId(postId);
 
         Ad ad = new Ad();
         ad.setId(1L);
         ad.setPost(post);
         ad.setReceiverId(2L);
-        ad.setPaymentAmount(new BigDecimal("100.00"));
-        ad.setAdDuration(30);
+        ad.setPaymentAmount(paymentAmount);
+        ad.setAdDuration(adDuration);
 
+        when(adRepository.findByPostId(postId)).thenReturn(Optional.of(ad));
 
-        when(adRepository.findAllByBuyerId(userDto.getId())).thenReturn(List.of(ad));
+        assertDoesNotThrow(() -> adService.getUserWhoBuyAd(postId, userId, paymentAmount, adDuration));
 
-        UserDto result = adService.getUserWhoBuyAd(userDto, 1L);
-
-        assertEquals(userDto.getId(), result.getId());
-        assertEquals(userDto.getUsername(), result.getUsername());
-        assertEquals(userDto.getEmail(), result.getEmail());
-
+        verify(adRepository, times(1)).findByPostId(postId);
         verify(adBoughtEventPublisher, times(1)).publish(any(AdBoughtEvent.class));
     }
 
     @Test
-    @DisplayName("Get user who buy ad fail")
-    void testGetUserWhoBuyAd_AdNotFound() {
-        UserDto userDto = UserDto.builder()
-                .id(1L)
-                .username("testUser")
-                .email("test@example.com")
-                .build();
+    @DisplayName("Throw AdNotFoundException when ad does not exist")
+    void testGetUserWhoBuyAdAdNotFound() {
+        long postId = 1L;
+        Long userId = 1L;
+        BigDecimal paymentAmount = new BigDecimal("100.00");
+        Long adDuration = 30L;
 
-        String expectedMessage = "Ad with postId: 1 not found";
-
-        when(adRepository.findAllByBuyerId(userDto.getId())).thenReturn(List.of());
+        when(adRepository.findByPostId(postId)).thenReturn(Optional.empty());
 
         AdNotFoundException exception = assertThrows(AdNotFoundException.class, () -> {
-            adService.getUserWhoBuyAd(userDto, 1L);
+            adService.getUserWhoBuyAd(postId, userId, paymentAmount, adDuration);
         });
 
-        assertEquals(expectedMessage, exception.getMessage());
+        assertEquals("Ad with postId: 1 not found", exception.getMessage());
+
+        verify(adRepository, times(1)).findByPostId(postId);
+        verifyNoInteractions(adBoughtEventPublisher);
     }
 
     private List<Ad> setUpExpiredAds() {

@@ -10,6 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -21,33 +23,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest
 @ContextConfiguration(classes = {AdController.class, AdController.class})
 public class AdControllerTest {
-    private static final String AD_BUY_URL = "/ad/buy/{postId}";
-    private static final String USER_DTO_JSON = "{\"id\": 1, \"username\": \"Name1\", \"email\": \"test1@gmail.com\"}";
-
     @Autowired
     private MockMvc mockMvc;
 
     @MockBean
     private AdService adService;
 
+    private static final String AD_BUY_URL = "/ad/buy";
+
     @Test
-    void testBuyAd() throws Exception {
-        UserDto userDto = UserDto.builder()
-                .id(1L)
-                .username("Name1")
-                .email("test1@gmail.com")
-                .build();
+    void testBuyAdSuccess() throws Exception {
+        Long postId = 1L;
+        Long userId = 2L;
+        BigDecimal paymentAmount = new BigDecimal("100.00");
+        Long adDuration = 30L;
 
-        when(adService.getUserWhoBuyAd(userDto, 1L)).thenReturn(userDto);
-        
-        mockMvc.perform(post(AD_BUY_URL, 1L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(USER_DTO_JSON))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(userDto.getId()))
-                .andExpect(jsonPath("$.username").value(userDto.getUsername()))
-                .andExpect(jsonPath("$.email").value(userDto.getEmail()));
+        mockMvc.perform(post(AD_BUY_URL)
+                        .param("postId", postId.toString())
+                        .param("userId", userId.toString())
+                        .param("paymentAmount", paymentAmount.toString())
+                        .param("adDuration", adDuration.toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
 
-        verify(adService, times(1)).getUserWhoBuyAd(userDto, 1L);
+        verify(adService, times(1))
+                .getUserWhoBuyAd(postId, userId, paymentAmount, adDuration);
     }
 }

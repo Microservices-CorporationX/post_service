@@ -140,7 +140,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AdNotFoundException.class)
     public ResponseEntity<String> handleAdNotFoundException(AdNotFoundException ex) {
-        log.error("AdNotFoundException access exception: {}", ex.getMessage(), ex);
+        log.error("AdNotFoundException occurred while accessing ad: {}", ex.getMessage(), ex);
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
     }
 }

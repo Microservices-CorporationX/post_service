@@ -13,7 +13,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
 
 @Slf4j
 @Validated
@@ -24,8 +27,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdController {
    private final AdService adService;
 
-    @PostMapping("/buy/{postId}")
-    public ResponseEntity<UserDto> buyAd(@RequestBody @Valid UserDto userDto, @PathVariable long postId) {
-       return ResponseEntity.status(HttpStatus.CREATED).body(adService.getUserWhoBuyAd(userDto, postId));
+    @PostMapping("/buy")
+    public ResponseEntity<String> buyAd(@RequestParam Long postId,
+                                        @RequestParam Long userId,
+                                        @RequestParam BigDecimal paymentAmount,
+                                        @RequestParam Long adDuration) {
+        adService.getUserWhoBuyAd(postId, userId, paymentAmount, adDuration);
+        return ResponseEntity.ok("Advertisement purchased successfully");
     }
 }

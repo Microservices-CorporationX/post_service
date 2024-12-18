@@ -25,7 +25,7 @@ public class AdBoughtEventPublisher implements Publisher<AdBoughtEvent> {
             )
     )
     public void publish(Object event) {
-        String channel = redisConfigProperties.channel().ad_bought_channel();
+        String channel = redisConfigProperties.channel().ad_bought();
         redisTemplate.convertAndSend(channel, event);
     }
 

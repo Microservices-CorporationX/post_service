@@ -12,9 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,32 +30,24 @@ public class AdService {
     private final AdBoughtEventPublisher adBoughtEventPublisher;
 
 
-    public UserDto getUserWhoBuyAd(UserDto userDto, long postId) {
-        List<Ad> ads = adRepository.findAllByBuyerId(userDto.getId());
+    public void getUserWhoBuyAd(Long postId, Long userId, BigDecimal paymentAmount, Long adDuration) {
+        Optional<Ad> existingAd = adRepository.findByPostId(postId);
 
-        return ads.stream()
-                .filter(ad -> ad.getPost().getId() == postId)
-                .findFirst()
-                .map(ad -> {
-                    AdBoughtEvent event = AdBoughtEvent.builder()
-                            .postId(ad.getId())
-                            .actorId(userDto.getId())
-                            .receiverId(ad.getReceiverId())
-                            .paymentAmount(ad.getPaymentAmount())
-                            .adDuration(ad.getAdDuration())
-                            .receivedAt(LocalDateTime.now())
-                            .build();
+        existingAd.ifPresentOrElse(ad -> {
+            AdBoughtEvent event = AdBoughtEvent.builder()
+                    .postId(ad.getId())
+                    .actorId(userId)
+                    .receiverId(ad.getReceiverId())
+                    .paymentAmount(paymentAmount)
+                    .adDuration(adDuration)
+                    .receivedAt(LocalDateTime.now())
+                    .build();
 
-                    adBoughtEventPublisher.publish(event);
+            adBoughtEventPublisher.publish(event);
 
-                    return UserDto.builder()
-                            .id(userDto.getId())
-                            .username(userDto.getUsername())
-                            .email(userDto.getEmail())
-                            .build();
-                })
-                .orElseThrow(() -> new AdNotFoundException(String.format("Ad with postId: %s not found", postId)));
-
+        }, () -> {
+            throw new AdNotFoundException(String.format("Ad with postId: %s not found", postId));
+        });
     }
 
 
