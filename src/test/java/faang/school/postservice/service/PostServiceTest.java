@@ -407,6 +407,7 @@ class PostServiceTest {
         assertEquals("Post with id: 1 not found", ex.getMessage());
     }
 
+
     private Post createTestPost() {
         return Post.builder()
                 .id(1L)
