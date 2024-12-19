@@ -17,7 +17,7 @@ public interface UserServiceClient {
     @GetMapping("/{userId}")
     UserDto getUser(@PathVariable long userId);
 
-    @PostMapping
+    @PostMapping("/get")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
 
     @GetMapping("/notification/{userId}")

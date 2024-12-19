@@ -4,6 +4,8 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.like.LikeCommentDto;
 import faang.school.postservice.dto.like.LikePostDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.like.LikeEvent;
+import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
@@ -23,8 +25,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LikeServiceTest {
@@ -50,6 +57,7 @@ class LikeServiceTest {
     private long userId;
     private long postId;
     private long commentId;
+    private long authorId;
     Post post;
     Comment comment;
     Like savedLikePost;
@@ -60,9 +68,11 @@ class LikeServiceTest {
         userId = 1L;
         postId = 5L;
         commentId = 6L;
+        authorId = 7L;
 
         post = Post.builder()
                 .id(postId)
+                .authorId(authorId)
                 .build();
 
         comment = Comment.builder()
@@ -92,6 +102,9 @@ class LikeServiceTest {
         when(postService.getPostById(postId)).thenReturn(post);
         when(likeRepository.save(any(Like.class))).thenReturn(savedLikePost);
 
+        LikeEventPublisher likeEventPublisher = mock(LikeEventPublisher.class);
+        likeService = new LikeService(likeRepository, userServiceClient, postService, commentService, likeMapper, likeEventPublisher);
+
         LikePostDto result = likeService.createLikePost(postId, userId);
 
         verify(userServiceClient).getUser(userId);
@@ -99,6 +112,9 @@ class LikeServiceTest {
         verify(likeRepository).findByPostIdAndUserId(postId, userId);
         verify(postService).getPostById(postId);
         verify(likeRepository).save(any(Like.class));
+
+        LikeEvent expectedEvent = new LikeEvent(postId, post.getAuthorId(), userId, LocalDateTime.now());
+        verify(likeEventPublisher).publish(any(LikeEvent.class));
 
         assertNotNull(result);
         assertEquals(savedLikePost.getId(), result.id());
