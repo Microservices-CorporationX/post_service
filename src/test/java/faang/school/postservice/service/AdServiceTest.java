@@ -78,7 +78,6 @@ class AdServiceTest {
         Ad ad = new Ad();
         ad.setId(1L);
         ad.setPost(post);
-        ad.setReceiverId(2L);
         ad.setPaymentAmount(paymentAmount);
         ad.setAdDuration(adDuration);
 
