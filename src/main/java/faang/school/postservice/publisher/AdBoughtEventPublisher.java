@@ -30,7 +30,7 @@ public class AdBoughtEventPublisher implements Publisher<AdBoughtEvent> {
     }
 
     @Override
-    public Class<?> getEventClass() {
+    public Class<AdBoughtEvent> getEventClass() {
         return AdBoughtEvent.class;
     }
 }
