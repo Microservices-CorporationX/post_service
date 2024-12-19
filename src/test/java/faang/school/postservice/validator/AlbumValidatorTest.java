@@ -1,6 +1,6 @@
 package faang.school.postservice.validator;
 
-import faang.school.postservice.dto.AlbumDto;
+import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.exception.NotUniqueAlbumException;
 import faang.school.postservice.repository.AlbumRepository;
 import org.junit.jupiter.api.BeforeEach;
