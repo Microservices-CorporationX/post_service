@@ -10,4 +10,7 @@ public class RedisTopicProperties {
 
     @Value("${spring.data.redis.channels.comment}")
     private String postCommentChannel;
+
+    @Value("${spring.data.redis.channels.like-event-topic}")
+    private String likeEventTopic;
 }
