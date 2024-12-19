@@ -1,0 +1,3 @@
+ALTER TABLE album
+ADD COLUMN visibility VARCHAR(64) NOT NULL DEFAULT 'PUBLIC',
+ADD COLUMN allowed_user_ids JSONB DEFAULT '[]';
