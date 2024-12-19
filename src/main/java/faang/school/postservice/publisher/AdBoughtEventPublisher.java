@@ -24,13 +24,13 @@ public class AdBoughtEventPublisher implements Publisher<AdBoughtEvent> {
                     maxDelayExpression = "#{@retryProperties.maxDelay}"
             )
     )
-    public void publish(Object event) {
+    public void publish(AdBoughtEvent event) {
         String channel = redisConfigProperties.channel().ad_bought();
         redisTemplate.convertAndSend(channel, event);
     }
 
     @Override
-    public Class<?> getEventClass() {
+    public Class<AdBoughtEvent> getEventClass() {
         return AdBoughtEvent.class;
     }
 }
