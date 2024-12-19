@@ -28,9 +28,6 @@ public class Ad {
     @JoinColumn(name = "buyer_id", nullable = false)
     private long buyerId;
 
-    @Column(name = "receiver_id", nullable = false)
-    private Long receiverId;
-
     @Column(name = "payment_amount", nullable = false)
     private BigDecimal paymentAmount;
 
