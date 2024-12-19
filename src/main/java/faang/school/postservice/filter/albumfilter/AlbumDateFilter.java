@@ -1,6 +1,6 @@
 package faang.school.postservice.filter.albumfilter;
 
-import faang.school.postservice.dto.AlbumFilterDto;
+import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.model.Album;
 

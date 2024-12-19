@@ -1,7 +1,7 @@
 package faang.school.postservice.validator;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.AlbumDto;
+import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.user.UserDto;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
