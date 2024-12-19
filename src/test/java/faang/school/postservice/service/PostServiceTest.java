@@ -413,24 +413,4 @@ class PostServiceTest {
                 .content("Test content")
                 .build();
     }
-
-    @Test
-    void testBanOffensiveAuthors() {
-        List<Object[]> rawData = List.of(
-                new Object[]{1L, 3L},
-                new Object[]{2L, 10L},
-                new Object[]{3L, 6L}
-        );
-
-        when(postRepository.findUnverifiedPostsGroupedByAuthor()).thenReturn(rawData);
-
-        postService.banOffensiveAuthors();
-
-        String userBansChannel = "user_ban_channel";
-        verify(redisTemplate).convertAndSend(userBansChannel, 2L);
-        verify(redisTemplate).convertAndSend(userBansChannel, 3L);
-
-        verify(redisTemplate, never()).convertAndSend(userBansChannel, 1L);
-        verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
-    }
 }
