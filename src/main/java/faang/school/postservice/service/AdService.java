@@ -37,7 +37,6 @@ public class AdService {
             AdBoughtEvent event = AdBoughtEvent.builder()
                     .postId(ad.getId())
                     .actorId(userId)
-                    .receiverId(ad.getReceiverId())
                     .paymentAmount(paymentAmount)
                     .adDuration(adDuration)
                     .receivedAt(LocalDateTime.now())
