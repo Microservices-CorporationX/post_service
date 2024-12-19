@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -222,7 +223,8 @@ public class PostService {
             retryFor = {FeignException.class},
             backoff = @Backoff(delay = 500, multiplier = 2)
     )
-    private void correctAndSavePost(Post post, PostCorrecterRequest request) {
+    @Async("poolForCron")
+    public void correctAndSavePost(Post post, PostCorrecterRequest request) {
         PostCorrecterResponse response = postCorrecterClient.checkPost(request);
         if (response.isSuccess()) {
             post.setContent(response.getCorrectedPost());
