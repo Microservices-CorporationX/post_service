@@ -14,4 +14,4 @@ databaseChangeLog:
   - include:
       file: db/changelog/changeset/post_V007_albumVisibility.sql
   - include:
-      file: db/changelog/changeset/post_V008_receiver_payment_duration_fields.sql
+      file: db/changelog/changeset/post_V008_payment_duration_fields.sql

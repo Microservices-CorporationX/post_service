@@ -41,7 +41,6 @@ public class PostService {
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
     private final PostVerificationService postVerificationService;
-    private final RedisConfigProperties redisConfigProperties;
 
 
     @Value("${spring.data.redis.channel.user-bans}")
@@ -208,7 +207,7 @@ public class PostService {
 
         offensiveAuthors.forEach(entry -> {
             Long authorId = entry.getAuthorId();
-            redisTemplate.convertAndSend(redisConfigProperties.channel().user_bans(), authorId);
+            redisTemplate.convertAndSend(userBansChannelName, authorId);
         });
     }
 
