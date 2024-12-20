@@ -1,10 +1,13 @@
 package faang.school.postservice.controller.post;
 
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.service.post.PostService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -53,11 +56,17 @@ public class PostController implements PostControllerOas {
     @GetMapping("/project/{projectId}/published")
     public List<PostDto> getPublishedPostByProjectId(@PathVariable long projectId) {
         return postService.getAllPublishedByProjectId(projectId);
+    @GetMapping
+    public List<PostDto> getPostBy(@ModelAttribute @Valid PostAuthorFilterDto filter) {
+        return postService.getPostsBy(filter);
     }
 
     @GetMapping("/project/{projectId}/unpublished")
     public List<PostDto> getNonPublishedPostByProjectId(@PathVariable long projectId) {
         return postService.getAllNonPublishedByProjectId(projectId);
+    @PutMapping("/{postId}/pictures")
+    public List<ResourceDto> addPictures(@PathVariable long postId, @RequestParam MultipartFile[] files) {
+        return postService.addPictures(postId, files);
     }
 
 }
