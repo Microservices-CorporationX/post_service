@@ -1,5 +1,6 @@
 package faang.school.postservice.controller.post;
 
+import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.exception.DataValidationException;
@@ -56,17 +57,20 @@ public class PostController implements PostControllerOas {
     @GetMapping("/project/{projectId}/published")
     public List<PostDto> getPublishedPostByProjectId(@PathVariable long projectId) {
         return postService.getAllPublishedByProjectId(projectId);
-    @GetMapping
-    public List<PostDto> getPostBy(@ModelAttribute @Valid PostAuthorFilterDto filter) {
-        return postService.getPostsBy(filter);
     }
 
     @GetMapping("/project/{projectId}/unpublished")
     public List<PostDto> getNonPublishedPostByProjectId(@PathVariable long projectId) {
         return postService.getAllNonPublishedByProjectId(projectId);
+    }
+
+    @GetMapping
+    public List<PostDto> getPostBy(@ModelAttribute @Valid PostAuthorFilterDto filter) {
+        return postService.getPostsBy(filter);
+    }
+
     @PutMapping("/{postId}/pictures")
     public List<ResourceDto> addPictures(@PathVariable long postId, @RequestParam MultipartFile[] files) {
         return postService.addPictures(postId, files);
     }
-
 }

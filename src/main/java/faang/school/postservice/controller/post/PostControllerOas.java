@@ -2,15 +2,21 @@ package faang.school.postservice.controller.post;
 
 import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.album.AlbumFilterDto;
+import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.resource.ResourceDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -104,4 +110,23 @@ public interface PostControllerOas {
     })
     List<PostDto> getNonPublishedPostByProjectId(long projectId);
 
+    @Operation(summary = "Получение поста по фильтрам", description = "Необходимо передать JSON с фильтрами")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "успешное создание запроса"),
+            @ApiResponse(responseCode = "400", description = "неправильный запрос",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "поста не существует",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    List<PostDto> getPostBy(PostAuthorFilterDto filter);
+
+    @Operation(summary = "Добавление изображения к посту", description = "Необходимо передать ID поста и файл изображения")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "успешное создание запроса"),
+            @ApiResponse(responseCode = "400", description = "неправильный запрос",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "404", description = "поста не существует",
+                    content = @Content(schema = @Schema(implementation = String.class)))
+    })
+    List<ResourceDto> addPictures(long postId, MultipartFile[] files);
 }
