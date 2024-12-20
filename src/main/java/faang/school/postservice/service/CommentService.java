@@ -9,7 +9,7 @@ import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.service.sightengine.TextAnalysisService;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -35,7 +35,7 @@ public class CommentService {
     private final PostService postService;
     private final UserServiceClient userServiceClient;
     private final UsersBanPublisher usersBanPublisher;
-    private final TextAnalysisService textAnalysisService;
+    private final SightEngineReactiveClient textAnalysisService;
 
     @Transactional
     public CommentDto addComment(long postId, CommentDto commentDto) {

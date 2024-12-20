@@ -1,4 +1,4 @@
-package faang.school.postservice.service.sightengine;
+package faang.school.postservice.service.moderation.sightengine;
 
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.exception.SightengineBadRequestException;
@@ -20,7 +20,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TextAnalysisService {
+public class SightEngineReactiveClient {
     private final WebClient webClient;
 
     @Value("${api.content-analysis-service.key}")
