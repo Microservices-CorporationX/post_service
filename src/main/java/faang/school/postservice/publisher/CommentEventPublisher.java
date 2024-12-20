@@ -17,7 +17,7 @@ public class CommentEventPublisher implements Publisher<CommentEvent> {
     private String channel;
 
     @Override
-    public void publish(Object event) {
+    public void publish(CommentEvent event) {
         log.info("Publishing comment event: {} to channel: {}", event, channel);
         redisTemplate.convertAndSend(channel, event);
     }

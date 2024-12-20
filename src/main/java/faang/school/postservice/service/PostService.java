@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.config.redis.RedisConfigProperties;
 import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
@@ -39,10 +40,11 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final PostVerificationService postVerificationService;
+
 
     @Value("${spring.data.redis.channel.user-bans}")
     private String userBansChannelName;
-    private final PostVerificationService postVerificationService;
 
     @Value("${ad.batch.size}")
     private int batchSize;
