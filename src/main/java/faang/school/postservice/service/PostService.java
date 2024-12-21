@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.PostCorrecterClient;
+import com.google.common.collect.Lists;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.PostDto;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Function;
 
 @Slf4j
@@ -40,6 +42,7 @@ public class PostService {
     private final PostCorrecterClient postCorrecterClient;
     @Value("${side-api.text-gears.key}")
     private String apiKey;
+    private final ThreadPoolExecutor threadPoolExecutor;
 
     public PostDto createPostDraft(PostDto postDto) {
         validateAuthor(postDto);
@@ -160,6 +163,29 @@ public class PostService {
                 .toList();
         log.info("Fetch all posts of the project with ID: {}", projectId);
         return posts;
+    }
+
+    public void publishScheduledPosts(){
+        List<Post> postsToPublish = postRepository.findReadyToPublish();
+
+        if (postsToPublish.isEmpty()) {
+            return;
+        }
+
+        int batchSize = 1000;
+        List<List<Post>> batches = Lists.partition(postsToPublish, batchSize);
+
+        for (List<Post> batch : batches) {
+            threadPoolExecutor.submit(() -> publishBatch(batch));
+        }
+    }
+
+    private void publishBatch(List<Post> batch) {
+        batch.forEach(post -> {
+            post.setPublished(true);
+            post.setPublishedAt(LocalDateTime.now());
+        });
+        postRepository.saveAll(batch);
     }
 
     private void validateAuthor(PostDto postDto) {

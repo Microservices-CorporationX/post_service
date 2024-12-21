@@ -34,6 +34,17 @@ logging:
   level:
     root: info
 
+
+post:
+  publisher:
+    scheduler:
+      cron: "0 0/1 * 1/1 * ?" # every minute
+  ad-remover:
+    scheduler:
+      cron: "0 0/1 * 1/1 * ?" # every minute
+    threads-count: 20
+    max-list-size: 100
+
 user-service:
   host: localhost
   port: 8080
@@ -44,6 +55,8 @@ payment-service:
   host: localhost
   port: 9080
 
+thread-pool:
+  size: 10
 cron:
   spelling-check: 0 0 3 * * *
 
