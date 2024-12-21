@@ -52,4 +52,8 @@ public class Comment {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "verified_date")
     private LocalDateTime verifiedDate;
+
+    public boolean isNotVerified() {
+        return !verified;
+    }
 }

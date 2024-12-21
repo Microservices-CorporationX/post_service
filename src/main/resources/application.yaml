@@ -28,6 +28,8 @@ spring:
         calculations_channel:
           name: calculations_channel
         like-event-topic: likeEventTopic
+        users-ban-channel:
+          name: users_ban_event
 
   task:
     scheduling:
@@ -105,3 +107,4 @@ moderation:
 daily:
   cron:
    comment-moderation: 0 0 10 * * *
+   user-ban: 0 0 0 * * ?
