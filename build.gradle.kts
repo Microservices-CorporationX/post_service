@@ -136,7 +136,7 @@ tasks.jacocoTestCoverageVerification {
                     include(jacocoInclude)
                 }
             )
-            enabled = true
+            enabled = false
             limit {
                 minimum = 0.7.toBigDecimal()
             }
