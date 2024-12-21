@@ -1,12 +1,11 @@
 package faang.school.postservice.filter.albumfilter;
 
-import faang.school.postservice.dto.AlbumFilterDto;
+import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.model.Album;
 import org.junit.jupiter.api.BeforeEach;
 
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.List;
 import java.util.stream.Stream;
 
 public class SetUpFilterTest {
@@ -16,8 +15,8 @@ public class SetUpFilterTest {
     @BeforeEach
     void setUp() {
         albumFilterDto = AlbumFilterDto.builder()
-                .title("Filter")
-                .description("Java the best")
+                .titlePattern("Filter")
+                .descriptionPattern("Java the best")
                 .month(Month.MARCH)
                 .build();
         Album album1 = Album.builder()

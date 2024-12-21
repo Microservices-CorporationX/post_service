@@ -1,6 +1,7 @@
 package faang.school.postservice.validator;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.album.AlbumDto;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;

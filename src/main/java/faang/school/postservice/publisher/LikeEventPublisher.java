@@ -17,7 +17,7 @@ public class LikeEventPublisher implements Publisher<LikeEvent> {
     private String channel;
 
     @Override
-    public void publish(Object event) {
+    public void publish(LikeEvent event) {
         log.info("Publishing like event: {} to channel: {}", event, channel);
         redisTemplate.convertAndSend(channel, event);
     }

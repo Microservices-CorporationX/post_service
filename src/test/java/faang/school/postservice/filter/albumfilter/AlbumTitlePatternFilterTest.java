@@ -10,30 +10,30 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AlbumTitleFilterTest extends SetUpFilterTest {
-    private AlbumTitleFilter albumTitleFilter;
+public class AlbumTitlePatternFilterTest extends SetUpFilterTest {
+    private AlbumTitlePatternFilter albumTitlePatternFilter;
 
     @BeforeEach
     void setUp() {
         super.setUp();
-        albumTitleFilter = new AlbumTitleFilter();
+        albumTitlePatternFilter = new AlbumTitlePatternFilter();
     }
 
     @Test
     public void testAlbumTitleFilterisApplicable() {
-        assertTrue(albumTitleFilter.isApplicable(albumFilterDto));
+        assertTrue(albumTitlePatternFilter.isApplicable(albumFilterDto));
     }
 
     @Test
     public void testAlbumTitleFilterNotApplicable() {
-        albumFilterDto.setTitle(null);
+        albumFilterDto.setTitlePattern(null);
 
-        assertFalse(albumTitleFilter.isApplicable(albumFilterDto));
+        assertFalse(albumTitlePatternFilter.isApplicable(albumFilterDto));
     }
 
     @Test
     public void testAlbumTitleFilter() {
-        List<Album> filteredAlbums = albumTitleFilter.apply(albums, albumFilterDto).toList();
+        List<Album> filteredAlbums = albumTitlePatternFilter.apply(albums, albumFilterDto).toList();
 
         assertEquals(1, filteredAlbums.size());
         assertEquals("Filter", filteredAlbums.get(0).getTitle());

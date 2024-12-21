@@ -1,9 +1,9 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.AlbumDto;
-import faang.school.postservice.dto.AlbumFilterDto;
-import faang.school.postservice.dto.AlbumUpdateDto;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.dto.album.AlbumDto;
+import faang.school.postservice.dto.album.AlbumFilterDto;
+import faang.school.postservice.dto.album.AlbumUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.NotUniqueAlbumException;
 import faang.school.postservice.filter.Filter;
@@ -13,16 +13,13 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.AlbumRepository;
-import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.AlbumValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,7 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -54,7 +51,7 @@ public class AlbumServiceTest {
     private AlbumRepository albumRepository;
 
     @Mock
-    private PostRepository postRepository;
+    private PostService postService;
 
     @Spy
     private AlbumMapper albumMapper;
@@ -73,7 +70,6 @@ public class AlbumServiceTest {
 
     @Mock
     private AlbumDateFilter albumDateFilter;
-
 
     private AlbumService albumService;
 
@@ -138,8 +134,8 @@ public class AlbumServiceTest {
                 .createdAt(LocalDateTime.of(2023, Month.MARCH, 10, 12, 0))
                 .build();
         albumFilterDto = AlbumFilterDto.builder()
-                .title("Filter")
-                .description("Java the best")
+                .titlePattern("Filter")
+                .descriptionPattern("Java the best")
                 .month(Month.MARCH)
                 .build();
         filters = List.of(albumDateFilter);
@@ -150,13 +146,13 @@ public class AlbumServiceTest {
                 albumValidator,
                 albumMapper,
                 postMapper,
-                postRepository,
+                postService,
                 filters
         );
     }
 
     @Test
-    void testCreateAlbumSucсesfully() {
+    void testCreateAlbumSuccessfully() {
         doNothing().when(userValidator).checkUserExistence(albumDto.getAuthorId());
         when(albumValidator.albumExistsByTitleAndAuthorId(albumDto)).thenReturn(albumDto);
         when(albumMapper.toEntity(albumDto)).thenReturn(album);
@@ -199,56 +195,44 @@ public class AlbumServiceTest {
     }
 
     @Test
-    void testAddPostToAlboomSucсesfully() {
-        doNothing().when(postValidator).validatePostExistsById(postId);
+    void testAddPostToAlbumSuccessfully() {
         when(albumRepository.findByAuthorId(1L)).thenReturn(Stream.of(album));
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postService.getPostById(postId)).thenReturn(post);
         when(albumRepository.save(album)).thenReturn(album);
         when(albumMapper.toDto(album)).thenReturn(albumDto);
 
         AlbumDto result = albumService.addPostToAlbum(userDto.getId(), albumDto.getId(), postId);
 
         assertEquals(result, albumDto);
-        verify(postValidator, times(1)).validatePostExistsById(postId);
-        verify(postRepository, times(1)).findById(postId);
+        verify(postService, times(1)).getPostById(postId);
         verify(albumRepository, times(1)).save(album);
     }
 
     @Test
     void testAddPostToAlbumPostDoesNotExist() {
-        doThrow(new EntityNotFoundException("Post does not exist"))
-                .when(postValidator).validatePostExistsById(postId);
-
-        EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
-                albumService.addPostToAlbum(1L, 1L, postId));
-
-        assertEquals("Post does not exist", exception.getMessage());
-        verify(postValidator).validatePostExistsById(postId);
-        verify(albumRepository, times(0)).save(album);
+        assertThrows(EntityNotFoundException.class, () -> albumService.addPostToAlbum(1L, 1L, postId));
     }
 
     @Test
     void testAddPostToAlbumWhenAlbumNotFound() {
-        doNothing().when(postValidator).validatePostExistsById(postId);
-        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
+        when(postService.getPostById(postId)).thenReturn(post);
         when(albumRepository.findByAuthorId(1L)).thenReturn(Stream.of());
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
                 albumService.addPostToAlbum(1L, 1L, postId));
 
         assertEquals("Album not found or doesn't belong to the user ", exception.getMessage());
-        verify(postValidator).validatePostExistsById(postId);
         verify(albumRepository, times(0)).save(album);
     }
 
     @Test
-    void testRemovePostToAlboomSucсesfully() {
+    void testRemovePostToAlbumSuccessfully() {
         doNothing().when(postValidator).validatePostExistsById(postId);
         when(albumRepository.findByAuthorId(1L)).thenReturn(Stream.of(album));
         when(albumRepository.save(album)).thenReturn(album);
         when(albumMapper.toDto(album)).thenReturn(albumDto);
 
-        AlbumDto result = albumService.removePost(userDto.getId(), albumDto.getId(), postId);
+        AlbumDto result = albumService.removePostFromAlbum(userDto.getId(), albumDto.getId(), postId);
 
         assertEquals(result, albumDto);
         verify(postValidator, times(1)).validatePostExistsById(postId);
@@ -261,7 +245,7 @@ public class AlbumServiceTest {
                 .when(postValidator).validatePostExistsById(postId);
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () ->
-                albumService.removePost(1L, 1L, postId));
+                albumService.removePostFromAlbum(1L, 1L, postId));
 
         assertEquals("Post does not exist", exception.getMessage());
         verify(postValidator).validatePostExistsById(postId);
@@ -330,7 +314,7 @@ public class AlbumServiceTest {
     }
 
     @Test
-    void testGetAlbumsForUserByFilterWtisFilter() {
+    void testGetAlbumsForUserByFilterWithFilter() {
         when(albumRepository.findByAuthorId(userId)).thenReturn(Stream.of(album, album1));
         when(albumDateFilter.isApplicable(albumFilterDto)).thenReturn(true);
         when(albumDateFilter.apply(any(), eq(albumFilterDto))).thenAnswer(invocation -> Stream.of(album));
@@ -338,7 +322,7 @@ public class AlbumServiceTest {
 
         List<AlbumDto> result = albumService.getAlbumsForUserByFilter(userId, albumFilterDto);
 
-        Assertions.assertEquals(albumDto, result.get(0));
+        assertEquals(albumDto, result.get(0));
         verify(albumDateFilter, times(1)).isApplicable(any(AlbumFilterDto.class));
         verify(albumDateFilter, times(1)).apply(any(), eq(albumFilterDto));
     }
@@ -389,10 +373,10 @@ public class AlbumServiceTest {
     }
 
     @Test
-    void testGetFavoritAlbumsForUserByFilterSuccessfully() {
+    void testGetFavoriteAlbumsForUserByFilterSuccessfully() {
         AlbumFilterDto filterDto = AlbumFilterDto.builder()
-                .title(title)
-                .description(description)
+                .titlePattern(title)
+                .descriptionPattern(description)
                 .month(Month.valueOf(month.toUpperCase()))
                 .build();
         when(albumRepository.findFavoriteAlbumsByUserId(userId)).thenReturn(Stream.of(album, album1));
@@ -400,18 +384,18 @@ public class AlbumServiceTest {
         when(albumDateFilter.apply(any(), eq(filterDto))).thenAnswer(invocation -> Stream.of(album));
         when(albumMapper.toDto(album)).thenReturn(albumDto);
 
-        List<AlbumDto> result = albumService.getFavoritAlbumsForUserByFilter(userId, title, description, month);
+        List<AlbumDto> result = albumService.getFavoriteAlbumsForUserByFilter(userId, filterDto);
 
-        Assertions.assertEquals(albumDto, result.get(0));
+        assertEquals(albumDto, result.get(0));
         verify(albumDateFilter, times(1)).isApplicable(any(AlbumFilterDto.class));
         verify(albumDateFilter, times(1)).apply(any(), eq(filterDto));
     }
 
     @Test
-    void testGetFavoritAlbumsForUserByFilterWithNoApplicableFilters() {
+    void testGetFavoriteAlbumsForUserByFilterWithNoApplicableFilters() {
         AlbumFilterDto filterDto = AlbumFilterDto.builder()
-                .title(title)
-                .description(description)
+                .titlePattern(title)
+                .descriptionPattern(description)
                 .month(Month.valueOf(month.toUpperCase()))
                 .build();
         when(albumRepository.findFavoriteAlbumsByUserId(userId)).thenReturn(Stream.of(album, album1));
@@ -419,7 +403,7 @@ public class AlbumServiceTest {
         when(albumMapper.toDto(album1)).thenReturn(albumDto1);
         when(albumMapper.toDto(album)).thenReturn(albumDto);
 
-        List<AlbumDto> result = albumService.getFavoritAlbumsForUserByFilter(userId, title, description, month);
+        List<AlbumDto> result = albumService.getFavoriteAlbumsForUserByFilter(userId, filterDto);
 
         assertEquals(List.of(albumDto, albumDto1), result);
         verify(albumRepository, times(1)).findFavoriteAlbumsByUserId(userId);

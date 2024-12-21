@@ -22,6 +22,7 @@ spring:
       port: 6379
       host: localhost
       channel:
+        ad-bought: ad-bought-channel
         calculations: calculations_channel
         like-events: like_event_channel
         user-bans: user_ban_channel

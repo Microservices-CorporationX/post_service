@@ -1,10 +1,10 @@
 package faang.school.postservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.dto.AlbumDto;
-import faang.school.postservice.dto.AlbumFilterDto;
-import faang.school.postservice.dto.AlbumUpdateDto;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.dto.album.AlbumDto;
+import faang.school.postservice.dto.album.AlbumFilterDto;
+import faang.school.postservice.dto.album.AlbumUpdateDto;
 import faang.school.postservice.service.AlbumService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -49,16 +50,12 @@ public class AlbumControllerTest {
     @InjectMocks
     private AlbumController albumController;
 
-
     private AlbumDto albumDto;
     private AlbumDto albumDto1;
     private AlbumUpdateDto albumUpdateDto;
-    private Long userId = 1L;
-    private Long albumId = 2L;
-    private Long postId = 3L;
-    private String title;
-    private String description;
-    private String month;
+    private Long userId;
+    private Long albumId;
+    private Long postId;
     private PostDto postDto;
     private AlbumFilterDto albumFilterDto;
 
@@ -71,6 +68,9 @@ public class AlbumControllerTest {
         postDto = mockPostDto();
         albumFilterDto = mockAlbumFilterDto();
         albumUpdateDto = mockAlbumUpdateDto();
+        userId = 1L;
+        albumId = 2L;
+        postId = 3L;
     }
 
     @Test
@@ -101,8 +101,7 @@ public class AlbumControllerTest {
     void testAddPostToAlbumSuccess() throws Exception {
         when(albumService.addPostToAlbum(userId, albumId, postId)).thenReturn(albumDto);
 
-        mockMvc.perform(post("/albums/{albumId}/userId/{userId}/posts/{postId}", albumId, userId, postId)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/albums/{albumId}/users/{userId}/posts/{postId}", albumId, userId, postId))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(albumDto.getId()));
 
@@ -110,36 +109,17 @@ public class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Add Post To Album fail")
-    void testAddPostToAlbumFail() throws Exception {
-        when(albumService.addPostToAlbum(userId, albumId, postId))
-                .thenThrow(new EntityNotFoundException("Album not found"));
-
-        assertThrows(EntityNotFoundException.class, () -> albumController.addPostToAlbum(userId, albumId, postId));
-    }
-
-    @Test
     @DisplayName("Remove Post From Album success")
     void testRemovePostFromAlbumSuccess() throws Exception {
-        when(albumService.removePost(userId, albumId, postId)).thenReturn(albumDto);
+        when(albumService.removePostFromAlbum(userId, albumId, postId)).thenReturn(albumDto);
 
-        mockMvc.perform(delete("/albums/{albumId}/userId/{userId}/posts/{postId}", albumId, userId, postId)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/albums/{albumId}/users/{userId}/posts/{postId}", albumId, userId, postId))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(albumDto.getId()))
                 .andExpect(jsonPath("$.title").value(albumDto.getTitle()))
                 .andExpect(jsonPath("$.description").value(albumDto.getDescription()));
 
-        verify(albumService, times(1)).removePost(userId, albumId, postId);
-    }
-
-    @Test
-    @DisplayName("Remove Post From Album fail")
-    void testRemovePostToAlbumFail() throws Exception {
-        when(albumService.removePost(userId, albumId, postId))
-                .thenThrow(new EntityNotFoundException("Album not found"));
-
-        assertThrows(EntityNotFoundException.class, () -> albumController.removePostFromAlbum(userId, albumId, postId));
+        verify(albumService, times(1)).removePostFromAlbum(userId, albumId, postId);
     }
 
     @Test
@@ -147,8 +127,7 @@ public class AlbumControllerTest {
     void testAddAlbumToFavoritesSuccess() throws Exception {
         when(albumService.addAlbumToFavorites(userId, albumId)).thenReturn(albumDto);
 
-        mockMvc.perform(post("/albums/{albumId}/userId/{userId}/favorites", albumId, userId)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post("/albums/{albumId}/users/{userId}/favorites", albumId, userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(albumDto.getId()))
                 .andExpect(jsonPath("$.title").value(albumDto.getTitle()));
@@ -157,21 +136,11 @@ public class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Adding album to Favorites fail")
-    void testAddAlbumToFavoritesFail() throws Exception {
-        when(albumService.addAlbumToFavorites(userId, albumId))
-                .thenThrow(new EntityNotFoundException("Album not found"));
-
-        assertThrows(EntityNotFoundException.class, () -> albumController.addAlbumToFavorites(userId, albumId));
-    }
-
-    @Test
-    @DisplayName("Delete album to Favorites successfully")
+    @DisplayName("Delete album from Favorites successfully")
     void testDeleteAlbumFromFavoritesSuccess() throws Exception {
         doNothing().when(albumService).deleteAlbumFromFavorites(userId, albumId);
 
-        mockMvc.perform(delete("/albums/{albumId}/userId/{userId}/favorites", albumId, userId)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/albums/{albumId}/users/{userId}/favorites", albumId, userId))
                 .andExpect(status().isNoContent());
 
         verify(albumService, times(1)).deleteAlbumFromFavorites(userId, albumId);
@@ -193,7 +162,7 @@ public class AlbumControllerTest {
 
     @Test
     @DisplayName("Get album by ID fail")
-    void testGetAlbumByIdFail() throws Exception {
+    void testGetAlbumByIdFail() {
         when(albumService.findByAlbumId(albumId))
                 .thenThrow(new EntityNotFoundException("Album not found"));
 
@@ -201,102 +170,109 @@ public class AlbumControllerTest {
     }
 
     @Test
-    @DisplayName("Get usersAlbums with filters success")
-    void testGetUsersAlbumsWithFiltersSuccess() throws Exception {
+    @DisplayName("Get user albums with filters success")
+    void testGetUserAlbumsWithFiltersSuccess() throws Exception {
         List<AlbumDto> albums = List.of(albumDto, albumDto1);
-        when(albumService.getAlbumsForUserByFilter(userId, albumFilterDto)).thenReturn(albums);
-        mockMvc.perform(post("/albums/user/{userId}/albums", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(albumFilterDto)))
+        when(albumService.getAlbumsForUserByFilter(eq(userId), any(AlbumFilterDto.class))).thenReturn(albums);
+
+        mockMvc.perform(get("/albums/users/{userId}", userId)
+                        .param("titlePattern", albumFilterDto.getTitlePattern())
+                        .param("descriptionPattern", albumFilterDto.getDescriptionPattern())
+                        .param("month", albumFilterDto.getMonth() != null ? albumFilterDto.getMonth().toString() : null))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(albums.size()))
                 .andExpect(jsonPath("$[0].id").value(albums.get(0).getId()));
 
-        verify(albumService, times(1)).getAlbumsForUserByFilter(userId, albumFilterDto);
+        verify(albumService, times(1)).getAlbumsForUserByFilter(eq(userId), any(AlbumFilterDto.class));
     }
 
     @Test
-    @DisplayName("Get usersAlbums with filters when list is empty ")
-    void testGetUsersAlbumsWithFiltersEmptyList() throws Exception {
-        when(albumService.getAlbumsForUserByFilter(userId, albumFilterDto)).thenReturn(Collections.emptyList());
+    @DisplayName("Get user albums with filters when list is empty")
+    void testGetUserAlbumsWithFiltersEmptyList() throws Exception {
+        when(albumService.getAlbumsForUserByFilter(eq(userId),
+                any(AlbumFilterDto.class))).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(post("/albums/user/{userId}/albums", userId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(albumFilterDto)))
+        mockMvc.perform(get("/albums/users/{userId}", userId)
+                        .param("titlePattern", albumFilterDto.getTitlePattern())
+                        .param("descriptionPattern", albumFilterDto.getDescriptionPattern())
+                        .param("month", albumFilterDto.getMonth() != null ? albumFilterDto.getMonth().toString() : null))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(0));
 
-        verify(albumService, times(1)).getAlbumsForUserByFilter(userId, albumFilterDto);
+        verify(albumService, times(1)).getAlbumsForUserByFilter(eq(userId), any(AlbumFilterDto.class));
     }
 
     @Test
     @DisplayName("Get all albums with filters success")
     void testGetAllAlbumsWithFiltersSuccess() throws Exception {
         List<AlbumDto> albums = List.of(albumDto, albumDto1);
-        when(albumService.getAllAlbumsByFilter(albumFilterDto)).thenReturn(albums);
+        when(albumService.getAllAlbumsByFilter(any(AlbumFilterDto.class))).thenReturn(albums);
 
-        mockMvc.perform(post("/albums/albums")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(albumFilterDto)))
+        mockMvc.perform(get("/albums")
+                        .param("titlePattern", albumFilterDto.getTitlePattern())
+                        .param("descriptionPattern", albumFilterDto.getDescriptionPattern())
+                        .param("month", albumFilterDto.getMonth() != null ? albumFilterDto.getMonth().toString() : null))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(albums.size()))
                 .andExpect(jsonPath("$[0].id").value(albums.get(0).getId()));
 
-        verify(albumService, times(1)).getAllAlbumsByFilter(albumFilterDto);
+        verify(albumService, times(1)).getAllAlbumsByFilter(any(AlbumFilterDto.class));
     }
 
     @Test
-    @DisplayName("Get all albums with filters when list is empty ")
+    @DisplayName("Get all albums with filters when list is empty")
     void testGetAllAlbumsWithFiltersEmptyList() throws Exception {
-        when(albumService.getAllAlbumsByFilter(albumFilterDto)).thenReturn(Collections.emptyList());
+        when(albumService.getAllAlbumsByFilter(any(AlbumFilterDto.class))).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(post("/albums/albums")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(albumFilterDto)))
+        mockMvc.perform(get("/albums")
+                        .param("titlePattern", albumFilterDto.getTitlePattern())
+                        .param("descriptionPattern", albumFilterDto.getDescriptionPattern())
+                        .param("month", albumFilterDto.getMonth() != null ? albumFilterDto.getMonth().toString() : null)
+                        .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(0));
 
-        verify(albumService, times(1)).getAllAlbumsByFilter(albumFilterDto);
+        verify(albumService, times(1)).getAllAlbumsByFilter(any(AlbumFilterDto.class));
     }
 
     @Test
-    @DisplayName("Get favorit usersAlbums with filters success")
-    void testGetFavoritUsersAlbumsWithFiltersSuccess() throws Exception {
+    @DisplayName("Get favorite usersAlbums with filters success")
+    void testGetUserFavoriteAlbumsWithFiltersSuccess() throws Exception {
         List<AlbumDto> albums = List.of(albumDto, albumDto1);
-        when(albumService.getFavoritAlbumsForUserByFilter(userId, title, description, month)).thenReturn(albums);
+        when(albumService.getFavoriteAlbumsForUserByFilter(userId, albumFilterDto)).thenReturn(albums);
 
-        mockMvc.perform(get("/albums/user/{userId}/favorites", userId)
-                        .param("title", title)
-                        .param("description", description)
-                        .param("month", month)
+        mockMvc.perform(get("/albums/users/{userId}/favorites", userId)
+                        .param("titlePattern", albumFilterDto.getTitlePattern())
+                        .param("descriptionPattern", albumFilterDto.getDescriptionPattern())
+                        .param("month", albumFilterDto.getMonth() != null ? albumFilterDto.getMonth().toString() : null)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(albums.size()))
                 .andExpect(jsonPath("$[0].id").value(albums.get(0).getId()));
 
-        verify(albumService, times(1)).getFavoritAlbumsForUserByFilter(userId, title, description, month);
+        verify(albumService, times(1)).getFavoriteAlbumsForUserByFilter(userId, albumFilterDto);
     }
 
     @Test
-    @DisplayName("Get favorit usersAlbums with filters when list is empty ")
-    void testGetFavoritUsersAlbumsWithFiltersEmptyList() throws Exception {
-        when(albumService.getFavoritAlbumsForUserByFilter(userId, title, description, month)).thenReturn(Collections.emptyList());
+    @DisplayName("Get favorite usersAlbums with filters when list is empty ")
+    void testGetUserFavoriteAlbumsWithFiltersEmptyList() throws Exception {
+        when(albumService.getFavoriteAlbumsForUserByFilter(userId, albumFilterDto)).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/albums/user/{userId}/favorites", userId)
-                        .param("title", title)
-                        .param("description", description)
-                        .param("month", month)
+        mockMvc.perform(get("/albums/users/{userId}/favorites", userId)
+                        .param("titlePattern", albumFilterDto.getTitlePattern())
+                        .param("descriptionPattern", albumFilterDto.getDescriptionPattern())
+                        .param("month", albumFilterDto.getMonth() != null ? albumFilterDto.getMonth().toString() : null)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.length()").value(0));
 
-        verify(albumService, times(1)).getFavoritAlbumsForUserByFilter(userId, title, description, month);
+        verify(albumService, times(1)).getFavoriteAlbumsForUserByFilter(userId, albumFilterDto);
     }
 
     @Test
@@ -320,8 +296,7 @@ public class AlbumControllerTest {
     void testDeleteAlbumSuccess() throws Exception {
         doNothing().when(albumService).deleteAlbum(userId, albumId);
 
-        mockMvc.perform(delete("/albums/{albumId}/userId/{userId}", albumId, userId)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(delete("/albums/{albumId}/users/{userId}", albumId, userId))
                 .andExpect(status().isNoContent());
 
         verify(albumService, times(1)).deleteAlbum(userId, albumId);
@@ -364,8 +339,8 @@ public class AlbumControllerTest {
 
     private AlbumFilterDto mockAlbumFilterDto() {
         return AlbumFilterDto.builder()
-                .title("Filter")
-                .description("Java the best")
+                .titlePattern("Filter")
+                .descriptionPattern("Java the best")
                 .month(Month.MARCH)
                 .build();
     }

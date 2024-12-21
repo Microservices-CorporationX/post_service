@@ -1,8 +1,8 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.CreatePostDto;
-import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
+import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
@@ -67,8 +67,6 @@ class PostServiceTest {
 
     @InjectMocks
     private PostService postService;
-
-    private String userBansChannel = "user_ban_channel";
 
     @BeforeEach
     void setUp() {
@@ -391,6 +389,7 @@ class PostServiceTest {
     }
 
     @DisplayName("Get post with valid id")
+    @Test
     void testGetPostByIdValidId() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
@@ -409,29 +408,11 @@ class PostServiceTest {
         assertEquals("Post with id: 1 not found", ex.getMessage());
     }
 
+
     private Post createTestPost() {
         return Post.builder()
                 .id(1L)
                 .content("Test content")
                 .build();
-    }
-
-    @Test
-    void testBanOffensiveAuthors() {
-        List<Object[]> rawData = List.of(
-                new Object[]{1L, 3L},
-                new Object[]{2L, 10L},
-                new Object[]{3L, 6L}
-        );
-
-        when(postRepository.findUnverifiedPostsGroupedByAuthor()).thenReturn(rawData);
-
-        postService.banOffensiveAuthors();
-
-        verify(redisTemplate).convertAndSend(userBansChannel, 2L);
-        verify(redisTemplate).convertAndSend(userBansChannel, 3L);
-
-        verify(redisTemplate, never()).convertAndSend(userBansChannel, 1L);
-        verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
     }
 }

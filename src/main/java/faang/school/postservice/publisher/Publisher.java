@@ -1,7 +1,7 @@
 package faang.school.postservice.publisher;
 
 public interface Publisher<T> {
-    void publish(Object event);
+    void publish(T event);
 
-    Class<?> getEventClass();
+    Class<T> getEventClass();
 }
