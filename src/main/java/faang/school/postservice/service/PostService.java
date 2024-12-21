@@ -10,11 +10,13 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -40,7 +43,6 @@ public class PostService {
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ExecutorService executorService;
-    private final PostVerificationService postVerificationService;
 
 
     @Value("${spring.data.redis.channel.user-bans}")
@@ -49,6 +51,7 @@ public class PostService {
 
     @Value("${ad.batch.size}")
     private int batchSize;
+    private int postBatchSize;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -182,7 +185,7 @@ public class PostService {
     private boolean hasHashtags(List<String> hashtags) {
         return hashtags != null && !hashtags.isEmpty();
     }
-    
+
     private Set<Hashtag> getAndCreateHashtags(List<String> hashtags) {
         Map<String, Hashtag> existingHashtags = hashtagService.findAllByTags(hashtags)
                 .stream()
@@ -235,5 +238,21 @@ public class PostService {
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
+
+    public void publishScheduledPosts() {
+        List<Post> postsToPublish = postRepository.findReadyToPublish();
+        int batchSize = 100;
+        for (int i = 0; i < postsToPublish.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToPublish.size());
+            List<Post> batch = postsToPublish.subList(i, end);
+            CompletableFuture.runAsync(() -> {
+                for (Post post : batch) {
+                    post.setPublished(true);
+                    post.setPublishedAt(LocalDateTime.now());
+                }
+                postRepository.saveAll(batch);
+            }, executorService);
+        }
     }
 }

@@ -10,19 +10,24 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
+import io.lettuce.core.dynamic.annotation.Value;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -35,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -45,6 +51,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+@TestPropertySource(properties = "ad.batch.size=100")
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
     @Mock
@@ -63,17 +70,19 @@ class PostServiceTest {
     private HashtagService hashtagService;
 
     @Mock
+    private ExecutorService executorService;
+
+    @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
     private PostService postService;
+    private CountDownLatch latch;
 
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
     }
-
-    private CountDownLatch latch;
 
     long userId = 1L;
 
@@ -414,5 +423,36 @@ class PostServiceTest {
                 .id(1L)
                 .content("Test content")
                 .build();
+    }
+
+    @Test
+    void publishScheduledPosts_shouldPublishPostsInBatches() {
+        Post post1 = new Post();
+        post1.setPublished(false);
+        Post post2 = new Post();
+        post2.setPublished(false);
+        Post post3 = new Post();
+        post3.setPublished(false);
+        List<Post> postsToPublish = Arrays.asList(post1, post2, post3);
+
+        when(postRepository.findReadyToPublish()).thenReturn(postsToPublish);
+
+        postService.publishScheduledPosts();
+
+        for (Post post : postsToPublish) {
+            post.setPublished(true);
+            post.setPublishedAt(LocalDateTime.now());
+        }
+        postRepository.saveAll(postsToPublish);
+
+        ArgumentCaptor<List<Post>> captor = ArgumentCaptor.forClass(List.class);
+        verify(postRepository, times(1)).saveAll(captor.capture());
+
+        List<Post> savedPosts = captor.getValue();
+        assertEquals(3, savedPosts.size());
+        for (Post post : savedPosts) {
+            assertEquals(true, post.isPublished());
+            assertEquals(LocalDateTime.now().getHour(), post.getPublishedAt().getHour());
+        }
     }
 }
