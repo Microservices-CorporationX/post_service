@@ -14,6 +14,7 @@ public class PostThreadPoolConfig {
     @Bean(destroyMethod = "shutdown")
     public ExecutorService executorService() {
         log.info("Thread pool created");
+
         return Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
     }
 }

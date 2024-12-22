@@ -44,6 +44,7 @@ public class PostService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ExecutorService executorService;
 
+    private final int PostBatchSize = 100;
 
     @Value("${spring.data.redis.channel.user-bans}")
     private String userBansChannelName;
@@ -242,9 +243,8 @@ public class PostService {
 
     public void publishScheduledPosts() {
         List<Post> postsToPublish = postRepository.findReadyToPublish();
-        int batchSize = 100;
-        for (int i = 0; i < postsToPublish.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, postsToPublish.size());
+        for (int i = 0; i < postsToPublish.size(); i += PostBatchSize) {
+            int end = Math.min(i + PostBatchSize, postsToPublish.size());
             List<Post> batch = postsToPublish.subList(i, end);
             CompletableFuture.runAsync(() -> {
                 for (Post post : batch) {

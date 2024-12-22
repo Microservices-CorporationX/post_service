@@ -44,6 +44,7 @@ import java.util.concurrent.ExecutorService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -51,7 +52,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@TestPropertySource(properties = "ad.batch.size=100")
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
     @Mock
@@ -426,33 +426,29 @@ class PostServiceTest {
     }
 
     @Test
-    void publishScheduledPosts_shouldPublishPostsInBatches() {
+    void publishScheduledPosts() {
         Post post1 = new Post();
         post1.setPublished(false);
         Post post2 = new Post();
         post2.setPublished(false);
-        Post post3 = new Post();
-        post3.setPublished(false);
-        List<Post> postsToPublish = Arrays.asList(post1, post2, post3);
+        List<Post> postsToPublish = Arrays.asList(post1, post2);
 
         when(postRepository.findReadyToPublish()).thenReturn(postsToPublish);
 
+        doAnswer(invocation -> {
+            Runnable task = invocation.getArgument(0);
+            task.run();
+            return null;
+        }).when(executorService).execute(any(Runnable.class));
+
         postService.publishScheduledPosts();
 
-        for (Post post : postsToPublish) {
-            post.setPublished(true);
-            post.setPublishedAt(LocalDateTime.now());
-        }
-        postRepository.saveAll(postsToPublish);
+        verify(postRepository, times(1)).findReadyToPublish();
+        verify(postRepository, times(1)).saveAll(any());
 
-        ArgumentCaptor<List<Post>> captor = ArgumentCaptor.forClass(List.class);
-        verify(postRepository, times(1)).saveAll(captor.capture());
-
-        List<Post> savedPosts = captor.getValue();
-        assertEquals(3, savedPosts.size());
-        for (Post post : savedPosts) {
-            assertEquals(true, post.isPublished());
-            assertEquals(LocalDateTime.now().getHour(), post.getPublishedAt().getHour());
-        }
+        assert post1.isPublished();
+        assert post1.getPublishedAt() != null;
+        assert post2.isPublished();
+        assert post2.getPublishedAt() != null;
     }
 }
