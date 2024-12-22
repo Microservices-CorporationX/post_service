@@ -43,7 +43,7 @@ public class OutboxEventProcessor {
                                 .findFirst()
                                 .orElseThrow(() -> new IllegalArgumentException("No publisher found for event type: " + event.getEventType()));
 
-                        sender.publish(objectMapper.readValue(event.getPayload(), sender.getEventClass()));
+                        processEvent(sender, event);
 
                         event.setProcessed(true);
                         outboxEventRepository.save(event);
@@ -69,5 +69,10 @@ public class OutboxEventProcessor {
         log.info("Starting cleanup of processed events");
         int deletedCount = outboxEventRepository.deleteProcessedEvents();
         log.info("Cleanup completed. Deleted {} processed events", deletedCount);
+    }
+
+    private <T> void processEvent(Publisher<T> publisher, OutboxEvent event) throws Exception {
+        T payload = objectMapper.readValue(event.getPayload(), publisher.getEventClass());
+        publisher.publish(payload);
     }
 }

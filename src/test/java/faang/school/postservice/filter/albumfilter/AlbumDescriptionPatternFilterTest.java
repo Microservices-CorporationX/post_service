@@ -10,29 +10,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class AlbumDescriptionFilterTest extends SetUpFilterTest {
-    private AlbumDescriptionFilter albumDescriptionFilter;
+public class AlbumDescriptionPatternFilterTest extends SetUpFilterTest {
+    private AlbumDescriptionPatternFilter albumDescriptionPatternFilter;
 
     @BeforeEach
     void setUp() {
         super.setUp();
-        albumDescriptionFilter = new AlbumDescriptionFilter();
+        albumDescriptionPatternFilter = new AlbumDescriptionPatternFilter();
     }
 
     @Test
     public void testAlbumDescriptionFilterIsApplicable() {
-        assertTrue(albumDescriptionFilter.isApplicable(albumFilterDto));
+        assertTrue(albumDescriptionPatternFilter.isApplicable(albumFilterDto));
     }
 
     @Test
     public void testAlbumDescriptionFilterNotApplicable() {
-        albumFilterDto.setDescription(null);
-        assertFalse(albumDescriptionFilter.isApplicable(albumFilterDto));
+        albumFilterDto.setDescriptionPattern(null);
+        assertFalse(albumDescriptionPatternFilter.isApplicable(albumFilterDto));
     }
 
     @Test
     public void testAlbumDescriptionFilter() {
-        List <Album>  filteredAlbums = albumDescriptionFilter.apply(albums,albumFilterDto).toList();
+        List <Album>  filteredAlbums = albumDescriptionPatternFilter.apply(albums,albumFilterDto).toList();
 
         assertEquals(2,filteredAlbums.size());
         assertEquals("Java the best",filteredAlbums.get(0).getDescription());

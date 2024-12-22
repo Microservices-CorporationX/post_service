@@ -24,11 +24,12 @@ public class CommentEventPublisher implements Publisher<CommentEvent> {
                     )
     )
     public void publish(Object event) {
+        log.info("Publishing comment event: {} to channel: {}", event, redisProperties.getChannel().getCommentChannel());
         redisTemplate.convertAndSend(redisProperties.getChannel().getCommentChannel(), event);
     }
 
     @Override
-    public Class<?> getEventClass() {
+    public Class<CommentEvent> getEventClass() {
         return CommentEvent.class;
     }
 }

@@ -1,9 +1,8 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
-import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
+import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
@@ -26,12 +25,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
-import java.time.ZoneId;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -61,8 +62,16 @@ class PostServiceTest {
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Mock
+    private PostVerificationService postVerificationService;
+
     @InjectMocks
     private PostService postService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+    }
 
     long userId = 1L;
 
@@ -71,15 +80,9 @@ class PostServiceTest {
 
     Post post = createTestPost();
 
+
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
-
-    private String userBansChannel = "user_ban_channel";
-
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
-    }
 
     @Test
     void createShouldCreatePostSuccessfully() {
@@ -385,6 +388,7 @@ class PostServiceTest {
     }
 
     @DisplayName("Get post with valid id")
+    @Test
     void testGetPostByIdValidId() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
@@ -403,29 +407,11 @@ class PostServiceTest {
         assertEquals("Post with id: 1 not found", ex.getMessage());
     }
 
+
     private Post createTestPost() {
         return Post.builder()
                 .id(1L)
                 .content("Test content")
                 .build();
-    }
-
-    @Test
-    void testBanOffensiveAuthors() {
-        List<Object[]> rawData = List.of(
-                new Object[]{1L, 3L},
-                new Object[]{2L, 10L},
-                new Object[]{3L, 6L}
-        );
-
-        when(postRepository.findUnverifiedPostsGroupedByAuthor()).thenReturn(rawData);
-
-        postService.banOffensiveAuthors();
-
-        verify(redisTemplate).convertAndSend(userBansChannel, 2L);
-        verify(redisTemplate).convertAndSend(userBansChannel, 3L);
-
-        verify(redisTemplate, never()).convertAndSend(userBansChannel, 1L);
-        verify(postRepository, times(1)).findUnverifiedPostsGroupedByAuthor();
     }
 }

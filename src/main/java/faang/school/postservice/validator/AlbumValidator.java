@@ -1,7 +1,8 @@
 package faang.school.postservice.validator;
 
-import faang.school.postservice.dto.AlbumDto;
+import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.exception.NotUniqueAlbumException;
+import faang.school.postservice.model.Album;
 import faang.school.postservice.repository.AlbumRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -17,5 +18,13 @@ public class AlbumValidator {
         } else {
             return albumDto;
         }
+    }
+
+    public void validateAlbumOwner(long userId, Album album) {
+        // проверка, что юзер - хозяин альбома
+    }
+
+    public void validateAlbumAccess(long userId, Album album) {
+        // проверка, что у юзера есть доступ к альбому
     }
 }

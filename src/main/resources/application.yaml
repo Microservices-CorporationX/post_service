@@ -22,6 +22,7 @@ spring:
       port: 6379
       host: localhost
       channel:
+        ad-bought: ad-bought-channel
         calculations: calculations_channel
         like-events: like_event_channel
         user-bans: user_ban_channel
@@ -38,6 +39,15 @@ spring:
       path=/api-docs
     swagger-ui:
       path=/swagger-ui.html
+
+moderation:
+  batch-size: 100
+
+async:
+  core-pool-size: 4
+  max-pool-size: 10
+  queue-capacity: 100
+  thread-name-prefix: PostService-Async-
 
 server:
   port: 8081
