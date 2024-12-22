@@ -1,6 +1,6 @@
 package faang.school.postservice;
 
-import faang.school.postservice.config.redis.RedisConfigProperties;
+import faang.school.postservice.config.redis.RedisProperties;
 import org.springframework.boot.Banner;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableRetry
 @EnableFeignClients(basePackages = "faang.school.postservice.client")
 @EnableAsync
-@EnableConfigurationProperties(RedisConfigProperties.class)
+@EnableConfigurationProperties(RedisProperties.class)
 public class PostServiceApp {
     public static void main(String[] args) {
         new SpringApplicationBuilder(PostServiceApp.class)

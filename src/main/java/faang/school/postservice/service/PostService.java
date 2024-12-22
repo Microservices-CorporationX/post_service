@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.config.redis.RedisConfigProperties;
 import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
@@ -43,7 +42,7 @@ public class PostService {
     private final PostVerificationService postVerificationService;
 
 
-    @Value("${spring.data.redis.channel.user-bans}")
+    @Value("${spring.data.redis.channel.user-bans-channel}")
     private String userBansChannelName;
 
     @Value("${ad.batch.size}")

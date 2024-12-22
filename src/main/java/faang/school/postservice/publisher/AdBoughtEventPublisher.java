@@ -1,6 +1,6 @@
 package faang.school.postservice.publisher;
 
-import faang.school.postservice.config.redis.RedisConfigProperties;
+import faang.school.postservice.config.redis.RedisProperties;
 import faang.school.postservice.event.AdBoughtEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,20 +12,20 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AdBoughtEventPublisher implements Publisher<AdBoughtEvent> {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final RedisConfigProperties redisConfigProperties;
+    private final RedisProperties redisProperties;
 
 
     @Override
     @Retryable(retryFor = Exception.class,
-            maxAttemptsExpression = "#{@retryProperties.maxAttempts}",
+            maxAttemptsExpression = "@retryProperties.maxAttempts",
             backoff = @Backoff(
-                    delayExpression = "#{@retryProperties.initialDelay}",
-                    multiplierExpression = "#{@retryProperties.multiplier}",
-                    maxDelayExpression = "#{@retryProperties.maxDelay}"
+                    delayExpression = "@retryProperties.initialDelay",
+                    multiplierExpression = "@retryProperties.multiplier",
+                    maxDelayExpression = "@retryProperties.maxDelay"
             )
     )
     public void publish(AdBoughtEvent event) {
-        String channel = redisConfigProperties.channel().ad_bought();
+        String channel = redisProperties.channel().adsChannel();
         redisTemplate.convertAndSend(channel, event);
     }
 

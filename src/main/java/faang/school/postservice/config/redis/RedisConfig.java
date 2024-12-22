@@ -14,7 +14,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @RequiredArgsConstructor
 public class RedisConfig {
     private final ObjectMapper objectMapper;
-    private final RedisProperties redisProperties;
 
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
@@ -28,10 +27,5 @@ public class RedisConfig {
 
         redisTemplate.afterPropertiesSet();
         return redisTemplate;
-    }
-
-    @Bean
-    public ChannelTopic commentTopic() {
-        return new ChannelTopic(redisProperties.getChannel().getCommentChannel());
     }
 }

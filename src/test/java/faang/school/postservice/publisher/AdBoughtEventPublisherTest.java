@@ -1,7 +1,7 @@
 package faang.school.postservice.publisher;
 
 import faang.school.postservice.config.redis.RedisProperties;
-import faang.school.postservice.event.CommentEvent;
+import faang.school.postservice.event.AdBoughtEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,13 +14,13 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class CommentEventPublisherTest {
+class AdBoughtEventPublisherTest {
 
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
 
     @InjectMocks
-    private CommentEventPublisher commentEventPublisher;
+    private AdBoughtEventPublisher adBoughtEventPublisher;
 
     private RedisProperties redisProperties;
 
@@ -37,13 +37,13 @@ class CommentEventPublisherTest {
                         "userBansChannel",
                         "commentsChannel"));
 
-        CommentEvent event = new CommentEvent();
+        AdBoughtEvent event = new AdBoughtEvent();
 
-        commentEventPublisher = new CommentEventPublisher(redisTemplate, redisProperties);
+        adBoughtEventPublisher = new AdBoughtEventPublisher(redisTemplate, redisProperties);
 
-        commentEventPublisher.publish(event);
+        adBoughtEventPublisher.publish(event);
 
         verify(redisTemplate, times(1)).
-                convertAndSend(redisProperties.channel().commentsChannel(), event);
+                convertAndSend(redisProperties.channel().adsChannel(), event);
     }
 }

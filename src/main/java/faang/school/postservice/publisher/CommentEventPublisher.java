@@ -1,6 +1,6 @@
 package faang.school.postservice.publisher;
 
-import faang.school.postservice.config.redis.RedisConfigProperties;
+import faang.school.postservice.config.redis.RedisProperties;
 import faang.school.postservice.event.CommentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CommentEventPublisher implements Publisher<CommentEvent> {
     private final RedisTemplate<String, Object> redisTemplate;
-    private final RedisConfigProperties redisConfigProperties;
+    private final RedisProperties redisProperties;
 
     @Retryable(
             retryFor = Exception.class,
@@ -26,8 +26,8 @@ public class CommentEventPublisher implements Publisher<CommentEvent> {
     )
     @Override
     public void publish(CommentEvent event) {
-        log.info("Publishing comment event: {} to channel: {}", event, redisConfigProperties.channel().comments_events());
-        redisTemplate.convertAndSend(redisConfigProperties.channel().comments_events(), event);
+        log.info("Publishing comment event: {} to channel: {}", event, redisProperties.channel().commentsChannel());
+        redisTemplate.convertAndSend(redisProperties.channel().commentsChannel(), event);
     }
 
     @Override

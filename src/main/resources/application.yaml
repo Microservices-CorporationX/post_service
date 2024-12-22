@@ -22,11 +22,11 @@ spring:
       port: 6379
       host: localhost
       channel:
-        ad-bought: ad-bought-channel
-        calculations: calculations_channel
-        like-events: like_event_channel
-        user-bans: user_ban_channel
-        comment-channel: comment_channel
+        ads-channel: ad-bought-channel
+        calculations-channel: calculations_channel
+        likes-channel: like_event_channel
+        user-bans-channel: user_ban_channel
+        comments-channel: comment_channel
 
   retry:
     maxAttempts: 3
