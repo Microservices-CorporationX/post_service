@@ -8,6 +8,7 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validator.comment.CommentServiceValidator;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;

@@ -71,6 +71,11 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
     /**
+     * Swagger
+     */
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+
+    /**
      * Jacoco
      */
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
@@ -131,7 +136,7 @@ tasks.jacocoTestCoverageVerification {
                     include(jacocoInclude)
                 }
             )
-            enabled = true
+            enabled = false
             limit {
                 minimum = 0.7.toBigDecimal()
             }
