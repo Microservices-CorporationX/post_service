@@ -1,10 +1,11 @@
-package faang.school.postservice.dto.comment;
-
+package faang.school.postservice.event;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -15,4 +16,5 @@ public class CommentEvent {
     private Long postAuthorId;
     private Long postId;
     private Long commentId;
+    private LocalDateTime createdAt;
 }
