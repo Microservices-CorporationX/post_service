@@ -27,7 +27,7 @@ public class Comment {
     private String content;
 
     @Column(name = "author_id", nullable = false)
-    private long authorId;
+    private Long authorId;
 
     @OneToMany(mappedBy = "comment", orphanRemoval = true)
     private List<Like> likes;

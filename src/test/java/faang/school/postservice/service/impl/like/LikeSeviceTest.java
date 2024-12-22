@@ -8,6 +8,7 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -36,6 +37,8 @@ public class LikeSeviceTest {
     UserServiceClient userServiceClient = Mockito.mock(UserServiceClient.class);
     PostRepository postRepository = Mockito.mock(PostRepository.class);
     LikeMapper likeMapper = Mockito.mock(LikeMapper.class);
+    LikeEventPublisher likeEventPublisher;
+
 
     long id;
     LikeDto likeDto;
@@ -49,12 +52,12 @@ public class LikeSeviceTest {
 
     @BeforeEach
     void setUp() {
-        likeService = new LikeServiceImpl(likeRepository, commentRepository, userServiceClient, postRepository, likeMapper);
+        likeService = new LikeServiceImpl(likeRepository, commentRepository, userServiceClient, postRepository, likeMapper, likeEventPublisher);
         id = 1;
         likeDto = LikeDto.builder().userId(2L).authorId(6L).build();
         post = Post.builder().id(4L).build();
         comment = Comment.builder().post(post).id(1).build();
-        userDto = new UserDto(5L);
+        userDto = new UserDto(5L, "Ted", "test@mail.ru", "89343223232233", UserDto.PreferredContact.SMS  );
 
         like = Like.builder().build();
         likeList = new ArrayList<>();
