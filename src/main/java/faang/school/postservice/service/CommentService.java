@@ -102,14 +102,6 @@ public class CommentService {
                 new EntityNotFoundException(String.format("Comment with id: %s doesn't exist", id)));
     }
 
-//    private CommentEvent createNewCommentEvent(Comment comment) {
-//        return new CommentEvent(
-//                comment.getPost().getId(),
-//                comment.getAuthorId(),
-//                comment.getId(),
-//                comment.getCreatedAt());
-//    }
-
     private String createAndSerializeCommentEvent(Comment comment) {
         return helper.serializeToJson(
                 CommentEvent.builder()
