@@ -1,4 +1,4 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.resource;
 
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;

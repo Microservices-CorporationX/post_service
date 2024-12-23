@@ -6,7 +6,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.ResourceService;
+import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.validator.post.PostValidator;
 import org.junit.jupiter.api.Test;
