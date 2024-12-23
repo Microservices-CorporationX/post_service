@@ -43,14 +43,7 @@ public class CommentService {
 
         comment = commentRepository.save(comment);
 
-        CommentEvent event = CommentEvent.builder()
-                .commentId(comment.getId())
-                .authorId(commentDto.getAuthorId())
-                .postId(commentDto.getPostId())
-                .date(LocalDateTime.now())
-                .build();
-
-        commentEventPublisher.publish(event);
+        publishEvent(comment, commentDto);
 
         return commentMapper.toDto(comment);
     }
@@ -78,6 +71,17 @@ public class CommentService {
 
     public void deleteComment(long commentId) {
         commentRepository.deleteById(commentId);
+    }
+
+    public void publishEvent(Comment comment, CommentDto commentDto) {
+        CommentEvent event = CommentEvent.builder()
+                .commentId(comment.getId())
+                .authorId(commentDto.getAuthorId())
+                .postId(commentDto.getPostId())
+                .date(LocalDateTime.now())
+                .build();
+
+        commentEventPublisher.publish(event);
     }
 
 }
