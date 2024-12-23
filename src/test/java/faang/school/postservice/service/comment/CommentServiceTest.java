@@ -48,8 +48,10 @@ class CommentServiceTest {
                 .content("1234")
                 .postId(1L)
                 .build();
+        Comment comment = Comment.builder().id(3L).authorId(2L).build();
         Mockito.when(postService.findEntityById(anyLong())).thenReturn(Post.builder().id(2L).build());
-        Mockito.when(commentMapper.toEntity(any())).thenReturn(Comment.builder().id(3L).build());
+        Mockito.when(commentMapper.toEntity(any())).thenReturn(comment);
+        Mockito.when(commentRepository.save(comment)).thenReturn(comment);
 
         commentService.createComment(commentDto);
         Mockito.verify(commentRepository, times(1)).save(any());
