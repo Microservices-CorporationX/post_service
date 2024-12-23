@@ -1,9 +1,13 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.PostCorrecterClient;
 import com.google.common.collect.Lists;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.dto.postCorrecter.PostCorrecterRequest;
+import faang.school.postservice.dto.postCorrecter.PostCorrecterResponse;
+import faang.school.postservice.dto.postCorrecter.textGears.TextGearsRequest;
 import faang.school.postservice.exception.ExternalServiceException;
 import faang.school.postservice.exception.PostValidationException;
 import faang.school.postservice.mapper.PostMapper;
@@ -13,7 +17,12 @@ import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -30,6 +39,9 @@ public class PostService {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final PostMapper postMapper;
+    private final PostCorrecterClient postCorrecterClient;
+    @Value("${side-api.text-gears.key}")
+    private String apiKey;
     private final ThreadPoolExecutor threadPoolExecutor;
 
     public PostDto createPostDraft(PostDto postDto) {
@@ -214,5 +226,36 @@ public class PostService {
 
     private int countLikesForPost(Long postId) {
         return postRepository.countLikesByPostId(postId);
+    }
+
+    @Transactional
+    public void sendPostToSpellingCheck() {
+        List<Post> readyToPublishPosts = postRepository.findReadyToPublish();
+        readyToPublishPosts.forEach(post -> {
+            PostCorrecterRequest request = TextGearsRequest.builder()
+                    .text(post.getContent())
+                    .key(apiKey)
+                    .build();
+
+            try {
+                correctAndSavePost(post, request);
+            } catch (ExternalServiceException e) {
+                log.error("Error while communicating with external service", e);
+            }
+        });
+    }
+
+    @Retryable(
+            retryFor = {FeignException.class},
+            backoff = @Backoff(delay = 500, multiplier = 2)
+    )
+    @Async("poolForCron")
+    public void correctAndSavePost(Post post, PostCorrecterRequest request) {
+        PostCorrecterResponse response = postCorrecterClient.checkPost(request);
+        if (response.isSuccess()) {
+            post.setContent(response.getCorrectedPost());
+            postRepository.save(post);
+        }
+        throw new ExternalServiceException("Failed to communicate with external service. Please try again later.");
     }
 }

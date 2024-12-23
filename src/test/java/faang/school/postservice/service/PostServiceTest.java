@@ -1,8 +1,12 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.PostCorrecterClient;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.PostDto;
+import faang.school.postservice.dto.postCorrecter.PostCorrecterRequest;
+import faang.school.postservice.dto.postCorrecter.PostCorrecterResponse;
+import faang.school.postservice.dto.postCorrecter.textGears.TextGearsRequest;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.ExternalServiceException;
 import faang.school.postservice.exception.PostValidationException;
@@ -26,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -45,6 +51,9 @@ public class PostServiceTest {
 
     @Mock
     private PostMapper postMapper;
+
+    @Mock
+    private PostCorrecterClient postCorrecterClient;
 
     @Mock
     private ThreadPoolExecutor threadPoolExecutor;
@@ -346,6 +355,27 @@ public class PostServiceTest {
         verify(postMapper, times(1)).toDto(thirdPost);
 
         assertEquals(postsPublishedResult, result);
+    }
+
+    @Test
+    public void testSendPostToSpellingCheck() {
+        String testContent = "test content";
+        Post mockPost = mock(Post.class);
+        PostCorrecterResponse mockResponse = mock(PostCorrecterResponse.class);
+        PostCorrecterRequest mockRequest = TextGearsRequest.builder()
+                .text(mockPost.getContent())
+                .build();
+
+        when(postRepository.findReadyToPublish()).thenReturn(List.of(mockPost));
+        when(postCorrecterClient.checkPost(mockRequest)).thenReturn(mockResponse);
+        when(mockResponse.isSuccess()).thenReturn(true);
+        when(mockResponse.getCorrectedPost()).thenReturn(testContent);
+
+        PostService spy = spy(postService);
+        spy.sendPostToSpellingCheck();
+
+        verify(postRepository, times(1)).findReadyToPublish();
+        verify(spy).correctAndSavePost(mockPost, mockRequest);
     }
 
     @Test

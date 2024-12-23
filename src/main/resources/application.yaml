@@ -1,4 +1,6 @@
 spring:
+  config:
+    import: optional:secrets.yaml
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -42,7 +44,7 @@ post:
       cron: "0 0/1 * 1/1 * ?" # every minute
     threads-count: 20
     max-list-size: 100
-    
+
 user-service:
   host: localhost
   port: 8080
@@ -55,3 +57,11 @@ payment-service:
 
 thread-pool:
   size: 10
+cron:
+  spelling-check: 0 0 3 * * *
+
+side-api:
+  text-gears:
+    key: ${secrets.text-gears-api-key}
+    base-url: https://api.textgears.com
+    auto-correct: /correct
