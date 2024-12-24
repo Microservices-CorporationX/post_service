@@ -1,5 +1,6 @@
 package faang.school.postservice.service.ad;
 
+import faang.school.postservice.model.ad.Ad;
 import faang.school.postservice.repository.ad.AdRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -16,14 +17,11 @@ public class AdService {
     private final AdRepository adRepository;
 
     public List<Long> findExpiredAdIds() {
-        List<Long> expiredIds = new ArrayList<>();
-        adRepository.findAll()
-                .forEach(ad -> {
-                    if (ad.getAppearancesLeft() < 1 || ad.getEndDate().isBefore(LocalDateTime.now())) {
-                        expiredIds.add(ad.getId());
-                    }
-                });
-        return expiredIds;
+
+        return adRepository.findAll().stream()
+                .filter(ad -> ad.getAppearancesLeft() < 1 || ad.getEndDate().isBefore(LocalDateTime.now()))
+                .map(Ad::getId)
+                .toList();
     }
 
     public void deleteAdByIds(List<Long> ids) {

@@ -29,6 +29,7 @@ public class ExpiredAdRemover {
         List<Long> expiredAdIds = adService.findExpiredAdIds();
 
         if (!expiredAdIds.isEmpty()) {
+            log.info("Starting deleting...");
             List<CompletableFuture<Void>> adDeleteFuture = ListUtils
                     .partition(expiredAdIds, batchSize).stream()
                     .map(this::delete)
