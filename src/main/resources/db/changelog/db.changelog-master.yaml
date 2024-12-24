@@ -15,3 +15,5 @@ databaseChangeLog:
       file: db/changelog/changeset/post_V007_albumVisibility.sql
   - include:
       file: db/changelog/changeset/post_V008_payment_duration_fields.sql
+  - include:
+      file: db/changelog/changeset/post_V006_verified_fields.sql

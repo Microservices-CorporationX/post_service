@@ -7,6 +7,7 @@ import faang.school.postservice.dto.comment.UpdateCommentDto;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.OutboxEventRepository;
 import faang.school.postservice.utils.Helper;
@@ -34,6 +35,9 @@ class CommentServiceTest {
 
     @Mock
     CommentRepository commentRepository;
+
+    @Mock
+    CommentEventPublisher commentEventPublisher;
 
     @Mock
     PostService postService;

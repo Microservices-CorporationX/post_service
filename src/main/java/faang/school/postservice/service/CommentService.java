@@ -1,16 +1,15 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
-import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.dto.like.LikeEvent;
+import faang.school.postservice.event.CommentEvent;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.OutboxEvent;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.OutboxEventRepository;
 import faang.school.postservice.utils.Helper;
@@ -31,6 +30,7 @@ import java.util.List;
 @Slf4j
 public class CommentService {
     private final CommentRepository commentRepository;
+    private final CommentEventPublisher commentEventPublisher;
     private final PostService postService;
     private final CommentMapper commentMapper;
     private final PostValidator postValidator;
@@ -48,7 +48,7 @@ public class CommentService {
         Comment comment = commentMapper.toEntity(dto);
         comment.setPost(postService.getPostById(postId));
         commentRepository.save(comment);
-        log.info("New comment: {} post: {} has been created", comment.getId(), comment.getPost().getId());
+        log.info("New comment: {} to post: {} has been created", comment.getId(), comment.getPost().getId());
 
         OutboxEvent outboxEvent = OutboxEvent.builder()
                 .aggregateId(postId)
