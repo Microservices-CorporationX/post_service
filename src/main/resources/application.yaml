@@ -1,15 +1,3 @@
-server:
-  port: 8081
-user-service:
-  host: localhost
-  port: 8080
-project-service:
-  host: localhost
-  port: 8082
-payment-service:
-  host: localhost
-  port: 9080
-
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
@@ -34,21 +22,22 @@ spring:
       port: 6379
       host: localhost
       channels:
-        post-comment: post_comment_channel
         calculations_channel:
           name: calculations_channel
 
-post:
-  publisher:
-    scheduler:
-      cron: "0 0/1 * 1/1 * ?" # every minute
-  ad-remover:
-    scheduler:
-      cron: "0 0/1 * 1/1 * ?" # every minute
+server:
+  port: 8081
 
 logging:
   level:
-    root: INFO
-    org.springframework.web: INFO
-    org.hibernate.SQL: ERROR
-    org.hibernate.type: ERROR
+    root: info
+
+user-service:
+  host: localhost
+  port: 8080
+project-service:
+  host: localhost
+  port: 8082
+payment-service:
+  host: localhost
+  port: 9080
