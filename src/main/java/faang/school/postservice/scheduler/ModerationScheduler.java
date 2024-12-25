@@ -23,13 +23,13 @@ public class ModerationScheduler {
 
     @Scheduled(cron = "${schedule.verify-posts.cron}")
     public void verifyPosts() {
-        List<Post> posts = postService.findNotReviewedPost();
+        List<Post> posts = postService.findNotReviewedPosts();
         if (posts.isEmpty()) {
-            log.info("Reviewed posts not found");
+            log.info("Not reviewed posts not found");
             return;
         }
 
         int chunkSize = posts.size() / numOfChunk + posts.size() % numOfChunk;
-        Lists.partition(posts, chunkSize).forEach(postService::verifyPostAsync);
+        Lists.partition(posts, chunkSize).forEach(postService::verifyPostsAsync);
     }
 }

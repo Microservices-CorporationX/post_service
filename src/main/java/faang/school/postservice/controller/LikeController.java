@@ -3,10 +3,10 @@ package faang.school.postservice.controller;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeCommentDto;
 import faang.school.postservice.dto.like.LikePostDto;
-
 import faang.school.postservice.service.LikeService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,10 +16,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 @Validated
-@RequestMapping("/like")
+@RequestMapping("api/v1/like")
 public class LikeController {
     private final LikeService likeService;
     private final UserContext userContext;
@@ -27,36 +28,26 @@ public class LikeController {
     @PostMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.CREATED)
     public LikePostDto likePost(@PathVariable @Positive long postId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+        @Positive long userId = userContext.getUserId();
         return likeService.createLikePost(postId, userId);
     }
 
     @PostMapping("/comment/{commentId}")
     @ResponseStatus(HttpStatus.CREATED)
     public LikeCommentDto likeComment(@PathVariable @Positive long commentId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+        @Positive long userId = userContext.getUserId();
         return likeService.createLikeComment(commentId, userId);
     }
 
     @DeleteMapping("/post/{postId}")
-    public void deleteLikeFromPost(@PathVariable @Positive long postId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+    public void removeLikeFromPost(@PathVariable @Positive long postId) {
+        @Positive long userId = userContext.getUserId();
         likeService.deleteLikeFromPost(postId, userId);
     }
 
     @DeleteMapping("/comment/{commentId}")
-    public void deleteLikeFromComment(@PathVariable @Positive long commentId) {
-        long userId = userContext.getUserId();
-        validateUserId(userId);
+    public void removeLikeFromComment(@PathVariable @Positive long commentId) {
+        @Positive long userId = userContext.getUserId();
         likeService.deleteLikeFromComment(commentId, userId);
-    }
-
-    private void validateUserId(Long userId) {
-        if (userId <= 0) {
-            throw new IllegalArgumentException("User id must be more 0");
-        }
     }
 }

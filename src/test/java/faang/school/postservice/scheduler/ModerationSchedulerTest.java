@@ -36,39 +36,39 @@ public class ModerationSchedulerTest {
 
     @Test
     void testVerifyPosts_ShouldNotCallVerifyPostAsync() {
-        when(postService.findNotReviewedPost()).thenReturn(new ArrayList<>());
+        when(postService.findNotReviewedPosts()).thenReturn(new ArrayList<>());
         moderationScheduler.verifyPosts();
 
-        verify(postService, never()).verifyPostAsync(any());
+        verify(postService, never()).verifyPostsAsync(any());
     }
 
     @Test
     void testVerifyPosts_ShouldCallVerifyPostAsync() {
         List<Post> posts = List.of(new Post(), new Post(), new Post(), new Post());
-        when(postService.findNotReviewedPost()).thenReturn(posts);
+        when(postService.findNotReviewedPosts()).thenReturn(posts);
 
         moderationScheduler.verifyPosts();
 
-        verify(postService, times(2)).verifyPostAsync(anyList());
+        verify(postService, times(2)).verifyPostsAsync(anyList());
     }
 
     @Test
     void testVerifyPosts_WhenPostsNotDivisibleByChunks_ShouldHandleRemainder() {
         List<Post> posts = List.of(new Post(), new Post(), new Post());
-        when(postService.findNotReviewedPost()).thenReturn(posts);
+        when(postService.findNotReviewedPosts()).thenReturn(posts);
 
         moderationScheduler.verifyPosts();
 
-        verify(postService, times(2)).verifyPostAsync(anyList());
+        verify(postService, times(2)).verifyPostsAsync(anyList());
     }
 
     @Test
     void testVerifyPosts_WhenSinglePost_ShouldCreateSingleChunk() {
         List<Post> posts = List.of(new Post());
-        when(postService.findNotReviewedPost()).thenReturn(posts);
+        when(postService.findNotReviewedPosts()).thenReturn(posts);
 
         moderationScheduler.verifyPosts();
 
-        verify(postService, times(1)).verifyPostAsync(anyList());
+        verify(postService, times(1)).verifyPostsAsync(anyList());
     }
 }

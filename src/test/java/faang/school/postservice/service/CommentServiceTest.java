@@ -2,18 +2,25 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
+import faang.school.postservice.message.event.UsersBanEvent;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.sightengine.TextAnalysisService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +49,12 @@ public class CommentServiceTest {
 
     @Mock
     private UserServiceClient userServiceClient;
+
+    @Mock
+    private TextAnalysisService textAnalysisService;
+
+    @Mock
+    private UsersBanPublisher usersBanPublisher;
 
     private long postId;
     private long authorId;
@@ -74,7 +87,7 @@ public class CommentServiceTest {
                 .id(postId)
                 .build();
 
-        when(postService.findPostById(postId)).thenReturn(post);
+        when(postService.findPostById(postId)).thenReturn(Optional.ofNullable(post));
         when(commentMapper.toEntity(commentDto)).thenReturn(comment);
 
         // act
@@ -134,7 +147,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void testGetPostByIdWithExistentPost(){
+    public void testGetPostByIdWithExistentPost() {
         when(commentRepository.findById(commentId))
                 .thenReturn(Optional.ofNullable(comment));
 
@@ -145,7 +158,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void testGetPostByIdWhenPostNotExist(){
+    public void testGetPostByIdWhenPostNotExist() {
         when(commentRepository.findById(commentId))
                 .thenThrow(EntityNotFoundException.class);
 
@@ -154,7 +167,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void testIsPostNotExistWithExistentPost(){
+    public void testIsPostNotExistWithExistentPost() {
         when(commentRepository.existsById(commentId)).thenReturn(true);
 
         boolean result = commentService.isCommentNotExist(commentId);
@@ -169,5 +182,104 @@ public class CommentServiceTest {
         boolean result = commentService.isCommentNotExist(commentId);
 
         assertTrue(result);
+    }
+
+    @Test
+    public void testVerifyComments() {
+        List<Comment> comments = List.of(comment);
+        TextAnalysisResponse analysisResponse = new TextAnalysisResponse();
+
+        when(commentRepository.findByVerifiedIsNull()).thenReturn(comments);
+        when(textAnalysisService.analyzeText(comment.getContent())).thenReturn(Mono.just(analysisResponse));
+
+        commentService.verifyComments();
+
+        verify(commentRepository).findByVerifiedIsNull();
+    }
+
+    @Test
+    public void testPublishUsersToBanEvent() {
+        // arrange
+        List<Comment> comments = List.of(
+                Comment.builder().authorId(1).verified(false).build(),
+                Comment.builder().authorId(1).verified(false).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(2).verified(false).build(),
+                Comment.builder().authorId(1).verified(false).build(),
+                Comment.builder().authorId(2).verified(false).build(),
+                Comment.builder().authorId(1).verified(false).build(),
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(2).verified(false).build(),
+                Comment.builder().authorId(1).verified(false).build(),
+                Comment.builder().authorId(3).verified(true).build(),
+                Comment.builder().authorId(2).verified(false).build(),
+                Comment.builder().authorId(2).verified(false).build(),
+                Comment.builder().authorId(2).verified(false).build(),
+                Comment.builder().authorId(1).verified(false).build()
+        );
+        when(commentRepository.findAll())
+                .thenReturn(comments);
+        List<Long> expected = List.of(1L, 2L);
+
+        // act
+        commentService.publishUsersToBanEvent();
+
+        // assert
+        ArgumentCaptor<UsersBanEvent> captor = ArgumentCaptor.forClass(UsersBanEvent.class);
+        verify(usersBanPublisher).publish(captor.capture());
+        List<Long> actual = captor.getValue().userIdsToBan();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testPublishUsersToBanEventWhenNoUsersToBanShouldReturnEmptyList() {
+        // arrange
+        List<Comment> comments = List.of(
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(1).verified(true).build(),
+                Comment.builder().authorId(3).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(2).verified(true).build(),
+                Comment.builder().authorId(1).verified(true).build()
+        );
+        when(commentRepository.findAll())
+                .thenReturn(comments);
+        List<Long> expected = List.of();
+
+        // act
+        commentService.publishUsersToBanEvent();
+
+        // assert
+        ArgumentCaptor<UsersBanEvent> captor = ArgumentCaptor.forClass(UsersBanEvent.class);
+        verify(usersBanPublisher).publish(captor.capture());
+        List<Long> actual = captor.getValue().userIdsToBan();
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testPublishUsersToBanEventWhenEmptyUserListShouldReturnEmptyList() {
+        // arrange
+        List<Comment> comments = List.of();
+        when(commentRepository.findAll())
+                .thenReturn(comments);
+        List<Long> expected = List.of();
+
+        // act
+        commentService.publishUsersToBanEvent();
+
+        // assert
+        ArgumentCaptor<UsersBanEvent> captor = ArgumentCaptor.forClass(UsersBanEvent.class);
+        verify(usersBanPublisher).publish(captor.capture());
+        List<Long> actual = captor.getValue().userIdsToBan();
+        assertEquals(expected, actual);
     }
 }

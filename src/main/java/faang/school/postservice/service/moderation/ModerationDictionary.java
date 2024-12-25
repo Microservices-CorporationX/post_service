@@ -31,7 +31,7 @@ public class ModerationDictionary {
                 .getDictionary();
     }
 
-    public boolean isVerified(String text) {
+    public boolean hasNoRestrictedWords(String text) {
         return Arrays.stream(text.split(regex))
                 .noneMatch(word -> moderationDictionary.contains(word));
     }

@@ -2,18 +2,29 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.message.event.UsersBanEvent;
+import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -23,13 +34,16 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final PostService postService;
     private final UserServiceClient userServiceClient;
+    private final UsersBanPublisher usersBanPublisher;
+    private final SightEngineReactiveClient textAnalysisService;
 
     @Transactional
     public CommentDto addComment(long postId, CommentDto commentDto) {
         log.info("Trying to add comment: {} to post: {}", commentDto, postId);
         validateUserExists(commentDto.authorId());
 
-        Post post = postService.findPostById(postId);
+        Post post = postService.findPostById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(postId)));
         Comment comment = commentMapper.toEntity(commentDto);
 
         postService.addCommentToPost(post, comment);
@@ -60,6 +74,45 @@ public class CommentService {
         commentRepository.deleteById(commentId);
     }
 
+    public void publishUsersToBanEvent() {
+        log.info("Trying to get all available comments");
+        List<Comment> comments = new ArrayList<>(commentRepository.findAll());
+
+        log.debug("Trying to convert all available comments to list of user id's to ban");
+        Map<Long, Long> authorsUnverifiedCommentsAmount = comments.stream()
+                .filter(Comment::isNotVerified)
+                .collect(Collectors.groupingBy(Comment::getAuthorId, Collectors.counting()));
+
+        List<Long> userIdsToBan = authorsUnverifiedCommentsAmount.entrySet().stream()
+                .filter(entry -> entry.getValue() > 5)
+                .map(Map.Entry::getKey)
+                .toList();
+
+        usersBanPublisher.publish(new UsersBanEvent(userIdsToBan));
+    }
+
+
+    public void verifyComments() {
+        List<Comment> notVerifiedComments = commentRepository.findByVerifiedIsNull();
+        log.info("Starting moderation of {} comments", notVerifiedComments.size());
+
+        Flux.fromIterable(notVerifiedComments)
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .flatMap(comment -> textAnalysisService.analyzeText(comment.getContent())
+                        .publishOn(Schedulers.boundedElastic())
+                        .doOnNext(response -> {
+                            comment.setVerified(textAnalysisService.textAnalysisProcessing(response));
+                            comment.setVerifiedDate(LocalDateTime.now());
+                            commentRepository.save(comment);
+                        })
+                        .doOnError(e -> log.error("Error processing comment '{}'", comment, e))
+                        .onErrorResume(e -> Mono.empty())
+                ).sequential()
+                .doOnComplete(() -> log.info("The comment moderation process has been completed"))
+                .doOnError(e -> log.error("Error during overall comment processing: ", e))
+                .subscribe();
+    }
 
     public Comment getCommentById(long commentId) {
         log.debug("start searching comment by ID {}", commentId);
@@ -78,5 +131,11 @@ public class CommentService {
         } catch (FeignException ex) {
             throw new EntityNotFoundException("User does not exist");
         }
+    }
+
+    private boolean textAnalysisProcessing(TextAnalysisResponse response) {
+        List<Double> analysisResults = response.getModerationClasses().collectingTextAnalysisResult();
+        return analysisResults.stream()
+                .allMatch(assessmentResult -> assessmentResult < 0.6);
     }
 }
