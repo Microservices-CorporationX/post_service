@@ -55,4 +55,10 @@ public class Comment {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "large_image_file_key")
+    private String largeImageFileKey;
+
+    @Column(name = "small_image_file_key")
+    private String smallImageFileKey;
 }
