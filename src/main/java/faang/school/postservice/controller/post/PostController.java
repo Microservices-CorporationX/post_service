@@ -13,9 +13,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/posts")
 @AllArgsConstructor
-public class PostController {
+@RequestMapping("/posts")
+public class PostController implements PostControllerOas {
     private final PostService postService;
 
     @PostMapping
@@ -44,6 +44,26 @@ public class PostController {
         return postService.deletePost(postId);
     }
 
+    @GetMapping("/author/{authorId}/published")
+    public List<PostDto> getPublishedPostByAuthorId(@PathVariable long authorId) {
+        return postService.getAllPublishedByAuthorId(authorId);
+    }
+
+    @GetMapping("/author/{authorId}/unpublished")
+    public List<PostDto> getNonPublishedPostByAuthorId(@PathVariable long authorId) {
+        return postService.getAllNonPublishedByAuthorId(authorId);
+    }
+
+    @GetMapping("/project/{projectId}/published")
+    public List<PostDto> getPublishedPostByProjectId(@PathVariable long projectId) {
+        return postService.getAllPublishedByProjectId(projectId);
+    }
+
+    @GetMapping("/project/{projectId}/unpublished")
+    public List<PostDto> getNonPublishedPostByProjectId(@PathVariable long projectId) {
+        return postService.getAllNonPublishedByProjectId(projectId);
+    }
+
     @GetMapping
     public List<PostDto> getPostBy(@ModelAttribute @Valid PostAuthorFilterDto filter) {
         return postService.getPostsBy(filter);
@@ -53,5 +73,4 @@ public class PostController {
     public List<ResourceDto> addPictures(@PathVariable long postId, @RequestParam MultipartFile[] files) {
         return postService.addPictures(postId, files);
     }
-
 }
