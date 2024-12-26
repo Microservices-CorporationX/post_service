@@ -8,22 +8,20 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.utils.PostSpecifications;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
-import io.lettuce.core.dynamic.annotation.Value;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.task.TaskExecutor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
@@ -79,9 +77,13 @@ class PostServiceTest {
     private PostService postService;
     private CountDownLatch latch;
 
+    @Autowired
+    private int batchSize;
+
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+        ReflectionTestUtils.setField(postService, "batchSize", 100);
     }
 
     long userId = 1L;
@@ -433,7 +435,7 @@ class PostServiceTest {
         post2.setPublished(false);
         List<Post> postsToPublish = Arrays.asList(post1, post2);
 
-        when(postRepository.findReadyToPublish()).thenReturn(postsToPublish);
+        when(postRepository.findAll(PostSpecifications.isReadyToPublish())).thenReturn(postsToPublish);
 
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(0);
@@ -443,12 +445,12 @@ class PostServiceTest {
 
         postService.publishScheduledPosts();
 
-        verify(postRepository, times(1)).findReadyToPublish();
+        verify(postRepository, times(1)).findAll(PostSpecifications.isReadyToPublish());
         verify(postRepository, times(1)).saveAll(any());
 
-        assert post1.isPublished();
-        assert post1.getPublishedAt() != null;
-        assert post2.isPublished();
-        assert post2.getPublishedAt() != null;
+        assertTrue(post1.isPublished(), "Post 1 should be published");
+        assertNotNull(post1.getPublishedAt(), "Post 1 publishedAt should not be null");
+        assertTrue(post2.isPublished(), "Post 2 should be published");
+        assertNotNull(post2.getPublishedAt(), "Post 2 publishedAt should not be null");
     }
 }

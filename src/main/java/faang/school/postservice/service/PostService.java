@@ -8,15 +8,14 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.utils.PostSpecifications;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -44,15 +43,12 @@ public class PostService {
     private final RedisTemplate<String, Object> redisTemplate;
     private final ExecutorService executorService;
 
-    private final int PostBatchSize = 100;
-
     @Value("${spring.data.redis.channel.user-bans-channel}")
     private String userBansChannelName;
     private final PostVerificationService postVerificationService;
 
     @Value("${ad.batch.size}")
     private int batchSize;
-    private int postBatchSize;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -242,17 +238,39 @@ public class PostService {
     }
 
     public void publishScheduledPosts() {
-        List<Post> postsToPublish = postRepository.findReadyToPublish();
-        for (int i = 0; i < postsToPublish.size(); i += PostBatchSize) {
-            int end = Math.min(i + PostBatchSize, postsToPublish.size());
+        List<Post> postsToPublish = postRepository.findAll(PostSpecifications.isReadyToPublish());
+
+        if (postsToPublish.isEmpty()) {
+            log.info("No posts to publish at this time");
+            return;
+        }
+
+        log.info("Starting batch processing for {} posts", postsToPublish.size());
+
+        for (int i = 0; i < postsToPublish.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToPublish.size());
             List<Post> batch = postsToPublish.subList(i, end);
+
             CompletableFuture.runAsync(() -> {
-                for (Post post : batch) {
-                    post.setPublished(true);
-                    post.setPublishedAt(LocalDateTime.now());
+                log.info("Processing batch of size {}", batch.size());
+                try {
+                    LocalDateTime now = LocalDateTime.now();
+                    for (Post post : batch) {
+                        post.setPublished(true);
+                        post.setPublishedAt(now);
+                    }
+                    postRepository.saveAll(batch);
+                    log.info("Successfully saved batch of size {}", batch.size());
+                } catch (Exception e) {
+                    log.error("Error while processing batch: {}", batch, e);
                 }
-                postRepository.saveAll(batch);
             }, executorService);
         }
+
+        log.info("Batch processing completed");
+    }
+
+    public List<Post> getReadyToPublishPosts() {
+        return postRepository.findAll(PostSpecifications.isReadyToPublish());
     }
 }
