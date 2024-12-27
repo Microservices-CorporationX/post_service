@@ -6,6 +6,7 @@ import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.service.PostResourceService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.utilities.UrlUtils;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;

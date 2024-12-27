@@ -1,16 +1,22 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.PostViewEvent;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import feign.FeignException;
 import feign.Request;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,8 +44,16 @@ public class PostServiceTest {
     private PostService postService;
     @Mock
     private OrthographyService orthographyService;
+    @Mock
+    private PostViewEventPublisher postViewEventPublisher;
+    @Mock
+    private UserContext userContext;
 
     private final PostDto postDtoForUser = new PostDto("Test", 1L, null);
+
+    @Captor
+    ArgumentCaptor<PostViewEvent> postViewEventArgumentCaptor;
+
 
     @Test
     void createDraftPostByUserSuccessTest() {
@@ -260,11 +274,13 @@ public class PostServiceTest {
         Post existingPost = new Post();
         existingPost.setId(postId);
         existingPost.setContent("Sample content");
+        existingPost.setAuthorId(2L);
 
         PostDto postDto = new PostDto("Sample content", 1L, null);
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(existingPost));
         when(postMapper.toDto(existingPost)).thenReturn(postDto);
+        when(userContext.getUserId()).thenReturn(5L);
 
         PostDto result = postService.getPost(postId);
 
@@ -273,6 +289,12 @@ public class PostServiceTest {
         assertEquals("Sample content", result.content());
         verify(postRepository).findById(postId);
         verify(postMapper).toDto(existingPost);
+
+        verify(postViewEventPublisher).publish(postViewEventArgumentCaptor.capture());
+        PostViewEvent capturedPostViewEvent = postViewEventArgumentCaptor.getValue();
+        assertEquals(postId, capturedPostViewEvent.getId());
+        assertEquals(existingPost.getAuthorId(), capturedPostViewEvent.getAuthorId());
+        assertEquals(userContext.getUserId(), capturedPostViewEvent.getUserId());
     }
 
     @Test
@@ -401,4 +423,6 @@ public class PostServiceTest {
 
         verify(postRepository).findAll();
     }
+
+
 }
