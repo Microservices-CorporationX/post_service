@@ -76,7 +76,7 @@ public class ResourceServiceTest {
 
     @Test
     public void testUploadFiles() {
-        when(postService.findPostById(anyLong())).thenReturn(Optional.of(post));
+        when(postService.findPostById(anyLong())).thenReturn(post);
         when(file.getContentType()).thenReturn("image/png");
         when(fileValidator.getValidatedImage(any(MultipartFile.class))).thenReturn(image);
         when(s3Service.uploadImageFile(any(MultipartFile.class), anyString(), any(BufferedImage.class))).thenReturn("test-key");
@@ -99,7 +99,7 @@ public class ResourceServiceTest {
     @Test
     public void testUpdateFiles() {
         when(resourceRepository.findById(anyLong())).thenReturn(Optional.of(resource));
-        when(postService.findPostById(anyLong())).thenReturn(Optional.of(post));
+        when(postService.findPostById(anyLong())).thenReturn(post);
         when(file.getContentType()).thenReturn("image/png");
         when(fileValidator.getValidatedImage(any(MultipartFile.class))).thenReturn(image);
         when(s3Service.uploadImageFile(any(MultipartFile.class), anyString(), any(BufferedImage.class))).thenReturn("new-key");

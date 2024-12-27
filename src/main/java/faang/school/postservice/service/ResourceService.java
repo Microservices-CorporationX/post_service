@@ -9,7 +9,6 @@ import faang.school.postservice.model.ResourceType;
 import faang.school.postservice.repository.ResourceRepository;
 import faang.school.postservice.validator.FileValidator;
 import faang.school.postservice.validator.RequestValidator;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,8 +34,7 @@ public class ResourceService {
     private final ResourceMapper resourceMapper;
 
     public List<ResourceDto> uploadFiles(Long postId, List<MultipartFile> files) {
-        Post post = postService.findPostById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(postId)));
+        Post post = postService.findPostById(postId);
 
         requestValidator.validateAuthorUpdatesPost(post);
         fileValidator.validateNumberOfFiles(files, MAX_FILES);

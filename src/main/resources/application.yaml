@@ -27,6 +27,11 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+        ban-user-channel:
+          name: ban_user_channel
+        like-event-topic: likeEventTopic
+        users-ban-channel:
+          name: users_ban_event
 
   task:
     scheduling:
@@ -89,6 +94,8 @@ thread-pool:
 schedule:
   verify-posts:
     cron: "0 0 3 * * ?"
+  ban-users:
+    cron: "0 0 3 * * ?"
 
 moderation:
   dictionary:
@@ -104,3 +111,4 @@ moderation:
 daily:
   cron:
    comment-moderation: 0 0 10 * * *
+   user-ban: 0 0 0 * * ?

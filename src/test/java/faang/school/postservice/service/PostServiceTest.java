@@ -2,6 +2,7 @@ package faang.school.postservice.service;
 
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.redis.RedisTopicProperties;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.project.ProjectDto;
@@ -17,6 +18,7 @@ import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifier;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
+import faang.school.postservice.message.producer.MessagePublisher;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,8 +32,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -68,6 +75,12 @@ public class PostServiceTest {
     @Mock
     private ModerationDictionary dictionary;
 
+    @Mock
+    private MessagePublisher messagePublisher;
+
+    @Mock
+    private RedisTopicProperties redisTopicProperties;
+
     private Post post;
     private PostDto postDto;
     private ProjectDto projectDto;
@@ -77,6 +90,8 @@ public class PostServiceTest {
     private Post post5;
     private String verifiedContent;
     private ModerationVerifier moderationVerifier;
+
+    private static final int MAX_UNVERIFIED_POSTS_BEFORE_BAN = 5;
 
     @BeforeEach
     public void setUp() {
@@ -244,14 +259,14 @@ public class PostServiceTest {
     public void testGetById() {
         // arrange
         long postId = 5L;
-        Optional<Post> post = Optional.ofNullable(Post.builder()
+        Post post = Post.builder()
                 .id(postId)
-                .build());
+                .build();
 
-        when(postRepository.findById(postId)).thenReturn(post);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
         // act
-        Optional<Post> returnedPost = postService.findPostById(postId);
+        Post returnedPost = postService.findPostById(postId);
 
         // assert
         assertEquals(post, returnedPost);
@@ -393,4 +408,61 @@ public class PostServiceTest {
         assertFalse(post.isVerified());
     }
 
+    @Test
+    void testBanAuthorsWithTooManyUnverifiedPosts_withNoUnverifiedPosts_shouldNotBan() {
+        when(postRepository.findByVerifiedIsFalse()).thenReturn(Collections.emptyList());
+
+        postService.banAuthorsWithTooManyUnverifiedPosts();
+
+        verify(messagePublisher, never()).publish(anyString(), anyString());
+    }
+
+    @Test
+    void testBanAuthorsWithTooManyUnverifiedPosts_withExceedLimit_shouldBan() {
+        Long authorId1 = 1L;
+        Long authorId2 = 2L;
+        String banUserTopic = "banUserTopic";
+
+        List<Post> posts = new ArrayList<>();
+        posts.addAll(createUnverifiedPosts(authorId1, MAX_UNVERIFIED_POSTS_BEFORE_BAN + 1));
+        posts.addAll(createUnverifiedPosts(authorId2, MAX_UNVERIFIED_POSTS_BEFORE_BAN - 1));
+
+        when(postRepository.findByVerifiedIsFalse()).thenReturn(posts);
+        when(redisTopicProperties.getBanUserTopic()).thenReturn(banUserTopic);
+
+        postService.banAuthorsWithTooManyUnverifiedPosts();
+
+        verify(messagePublisher).publish(banUserTopic, authorId1);
+        verify(messagePublisher).publish(banUserTopic, authorId2);
+    }
+
+    @Test
+    void testBanAuthorsWithTooManyUnverifiedPosts_withSomeAuthorsExceedLimitAndSomeNot() {
+        Long authorId1 = 1L;
+        Long authorId2 = 2L;
+        String banUserTopic = "banUserTopic";
+
+        List<Post> posts = new ArrayList<>();
+        posts.addAll(createUnverifiedPosts(authorId1, MAX_UNVERIFIED_POSTS_BEFORE_BAN + 1));
+        posts.addAll(createUnverifiedPosts(authorId2, MAX_UNVERIFIED_POSTS_BEFORE_BAN - 1));
+
+        when(postRepository.findByVerifiedIsFalse()).thenReturn(posts);
+        when(redisTopicProperties.getBanUserTopic()).thenReturn(banUserTopic);
+
+        postService.banAuthorsWithTooManyUnverifiedPosts();
+
+        verify(messagePublisher).publish(banUserTopic, authorId1);
+        verify(messagePublisher, never()).publish(banUserTopic, authorId2);
+    }
+
+    private List<Post> createUnverifiedPosts(Long authorId, int count) {
+        return IntStream.range(0, count)
+                .mapToObj(i -> {
+                    Post post = new Post();
+                    post.setAuthorId(authorId);
+                    post.setVerified(false);
+                    return post;
+                })
+                .collect(Collectors.toList());
+    }
 }
