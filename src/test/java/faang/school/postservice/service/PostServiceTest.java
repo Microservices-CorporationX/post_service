@@ -77,9 +77,6 @@ class PostServiceTest {
     private PostService postService;
     private CountDownLatch latch;
 
-    @Autowired
-    private int batchSize;
-
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
