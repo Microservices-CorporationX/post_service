@@ -30,6 +30,9 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class CommentService {
+
+    private static final int MAX_BLOCKED_POSTS_BEFORE_BAN = 5;
+
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final PostService postService;
@@ -42,8 +45,7 @@ public class CommentService {
         log.info("Trying to add comment: {} to post: {}", commentDto, postId);
         validateUserExists(commentDto.authorId());
 
-        Post post = postService.findPostById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post with id %s not found".formatted(postId)));
+        Post post = postService.findPostById(postId);
         Comment comment = commentMapper.toEntity(commentDto);
 
         postService.addCommentToPost(post, comment);
@@ -84,7 +86,7 @@ public class CommentService {
                 .collect(Collectors.groupingBy(Comment::getAuthorId, Collectors.counting()));
 
         List<Long> userIdsToBan = authorsUnverifiedCommentsAmount.entrySet().stream()
-                .filter(entry -> entry.getValue() > 5)
+                .filter(entry -> entry.getValue() > MAX_BLOCKED_POSTS_BEFORE_BAN)
                 .map(Map.Entry::getKey)
                 .toList();
 
@@ -131,11 +133,5 @@ public class CommentService {
         } catch (FeignException ex) {
             throw new EntityNotFoundException("User does not exist");
         }
-    }
-
-    private boolean textAnalysisProcessing(TextAnalysisResponse response) {
-        List<Double> analysisResults = response.getModerationClasses().collectingTextAnalysisResult();
-        return analysisResults.stream()
-                .allMatch(assessmentResult -> assessmentResult < 0.6);
     }
 }
