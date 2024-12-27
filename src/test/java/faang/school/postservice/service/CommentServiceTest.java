@@ -9,7 +9,7 @@ import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.service.sightengine.TextAnalysisService;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ public class CommentServiceTest {
     private UserServiceClient userServiceClient;
 
     @Mock
-    private TextAnalysisService textAnalysisService;
+    private SightEngineReactiveClient textAnalysisService;
 
     @Mock
     private UsersBanPublisher usersBanPublisher;

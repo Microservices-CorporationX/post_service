@@ -93,7 +93,6 @@ public class CommentService {
         usersBanPublisher.publish(new UsersBanEvent(userIdsToBan));
     }
 
-
     public void verifyComments() {
         List<Comment> notVerifiedComments = commentRepository.findByVerifiedIsNull();
         log.info("Starting moderation of {} comments", notVerifiedComments.size());
