@@ -259,14 +259,14 @@ public class PostServiceTest {
     public void testGetById() {
         // arrange
         long postId = 5L;
-        Optional<Post> post = Optional.ofNullable(Post.builder()
+        Post post = Post.builder()
                 .id(postId)
-                .build());
+                .build();
 
-        when(postRepository.findById(postId)).thenReturn(post);
+        when(postRepository.findById(postId)).thenReturn(Optional.of(post));
 
         // act
-        Optional<Post> returnedPost = postService.findPostById(postId);
+        Post returnedPost = postService.findPostById(postId);
 
         // assert
         assertEquals(post, returnedPost);

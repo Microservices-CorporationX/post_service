@@ -87,7 +87,7 @@ public class CommentServiceTest {
                 .id(postId)
                 .build();
 
-        when(postService.findPostById(postId)).thenReturn(Optional.ofNullable(post));
+        when(postService.findPostById(postId)).thenReturn(post);
         when(commentMapper.toEntity(commentDto)).thenReturn(comment);
 
         // act
