@@ -13,7 +13,7 @@ public class AuthorBanner {
 
     private final PostService postService;
 
-    @Scheduled(cron = "${schedule.ban-users}")
+    @Scheduled(cron = "${schedule.ban-users.cron}")
     public void banAuthors() {
         postService.banAuthorsWithTooManyUnverifiedPosts();
     }

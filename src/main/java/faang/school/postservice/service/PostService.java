@@ -4,13 +4,13 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.thread.pool.ThreadPoolConfig;
 import faang.school.postservice.config.redis.RedisTopicProperties;
-import faang.school.postservice.config.thread.pool.ThreadPoolConfig;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.sightengine.textAnalysis.ModerationClasses;
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.message.producer.MessagePublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -182,7 +182,7 @@ public class PostService {
         return !postRepository.existsById(postId);
     }
 
-    public List<Post> findNotReviewedPost() {
+    public List<Post> findNotReviewedPosts() {
         log.info("start reading not reviewed posts");
         return postRepository.findByVerifiedDateIsNull();
     }
