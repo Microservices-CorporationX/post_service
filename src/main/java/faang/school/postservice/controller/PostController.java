@@ -85,10 +85,11 @@ public class PostController {
             @NotNull(message = "Post id cannot be null")
             @Positive(message = "Post id must be positive")
             Long postId,
-            @Valid @RequestBody UpdatePostDto updatePostDto
+            @RequestPart("updatePostDto") @Valid UpdatePostDto updatePostDto,
+            @RequestPart(value = "file", required = false) @Size(max = 10) List<MultipartFile> files
     ) {
         log.info("Request for update post: {} with content: {}", postId, updatePostDto.getContent());
-        return ResponseEntity.ok(postService.update(postId, updatePostDto));
+        return ResponseEntity.ok(postService.update(postId, updatePostDto, files));
     }
 
     @DeleteMapping("/{postId}")

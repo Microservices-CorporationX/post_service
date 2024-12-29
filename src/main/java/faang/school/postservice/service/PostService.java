@@ -65,17 +65,15 @@ public class PostService {
 
         postRepository.save(entity);
 
-        files = imageResolutionConversionUtil.imagesListCompression(files);
-        // сделать валидацию, на надобности преобразования картинки
-        // добавить сюда преобразование картинок с большим разрешением
+        List<MultipartFile> compressedFiles = files.stream().map(imageResolutionConversionUtil::imagesListCompression).toList();
 
-        for (MultipartFile file : files) {
+        compressedFiles.forEach(file -> {
             String folder = "ByAuthorize" + createPostDto.getAuthorId();
             Resource resource = minioS3Service.uploadFile(file, folder);
             resource.setPost(entity);
             log.info("Image File uploaded: {}", file.getOriginalFilename());
             resourceService.saveResource(resource);
-        }
+        });
 
         return postMapper.toDto(entity);
     }
@@ -97,7 +95,7 @@ public class PostService {
     }
 
     @Transactional
-    public ResponsePostDto update(Long postId, UpdatePostDto updatePostDto) {
+    public ResponsePostDto update(Long postId, UpdatePostDto updatePostDto, List<MultipartFile> files) {
         postValidator.validateExistingPostId(postId);
         postValidator.validateContent(updatePostDto.getContent());
 
@@ -111,6 +109,8 @@ public class PostService {
 
         post.setContent(updatePostDto.getContent());
         post.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC+3")));
+        
+        //добавить сюда обновление файлов
 
         postRepository.save(post);
 

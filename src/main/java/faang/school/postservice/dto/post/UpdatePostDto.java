@@ -17,4 +17,5 @@ public class UpdatePostDto {
     @Size(max = 4096, message = "Post content must be between 1 and 4096 characters")
     private String content;
     private List<@NotNull(message = "Hashtag don`t have be null") String> hashtags;
+    private List<Integer> imageIdToDelete;
 }
