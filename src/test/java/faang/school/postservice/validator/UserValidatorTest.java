@@ -1,7 +1,7 @@
 package faang.school.postservice.validator;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.AlbumDto;
+import faang.school.postservice.dto.album.AlbumDto;
 import faang.school.postservice.dto.user.UserDto;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,7 +41,7 @@ public class UserValidatorTest {
         when(userServiceClient.getUser(albumDto.getAuthorId()))
                 .thenReturn(new UserDto(1L, "User", "email"));
 
-        assertDoesNotThrow(() -> userValidator.checkUserExistence(albumDto),
+        assertDoesNotThrow(() -> userValidator.checkUserExistence(albumDto.getAuthorId()),
                 "No exception should be thrown if the user exists");
         verify(userServiceClient, times(1)).getUser(albumDto.getAuthorId());
     }
@@ -52,7 +52,7 @@ public class UserValidatorTest {
                 .thenThrow(new EntityNotFoundException("User not found with id: " + albumDto.getAuthorId()));
 
         EntityNotFoundException exception = assertThrows(EntityNotFoundException.class, () -> {
-            userValidator.checkUserExistence(albumDto);
+            userValidator.checkUserExistence(albumDto.getAuthorId());
         });
         verify(userServiceClient, times(1)).getUser(albumDto.getAuthorId());
     }

@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -15,20 +16,25 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
 @RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
@@ -36,9 +42,18 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final PostVerificationService postVerificationService;
     private final MinioS3Service minioS3Service;
     private final ResourceService resourceService;
     private final ImageResolutionConversionUtil imageResolutionConversionUtil;
+
+
+    @Value("${spring.data.redis.channel.user-bans-channel}")
+    private String userBansChannelName;
+
+    @Value("${ad.batch.size}")
+    private int batchSize;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto, List<MultipartFile> files) {
@@ -109,7 +124,7 @@ public class PostService {
 
         post.setContent(updatePostDto.getContent());
         post.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC+3")));
-        
+
         //добавить сюда обновление файлов
 
         postRepository.save(post);
@@ -196,5 +211,45 @@ public class PostService {
             result.add(hashtag);
         }
         return result;
+    }
+
+    public void banOffensiveAuthors() {
+        List<AuthorPostCount> unverifiedPostsByAuthor = getUnverifiedPostsGroupedByAuthor();
+
+        List<AuthorPostCount> offensiveAuthors = unverifiedPostsByAuthor.stream()
+                .filter(entry -> entry.getPostCount() > 5)
+                .toList();
+
+        log.info("Found {} authors with more than 5 unverified posts", offensiveAuthors.size());
+
+        offensiveAuthors.forEach(entry -> {
+            Long authorId = entry.getAuthorId();
+            redisTemplate.convertAndSend(userBansChannelName, authorId);
+        });
+    }
+
+    private List<AuthorPostCount> getUnverifiedPostsGroupedByAuthor() {
+        List<Object[]> rawResults = postRepository.findUnverifiedPostsGroupedByAuthor();
+
+        return rawResults.stream()
+                .map(result -> new AuthorPostCount((Long) result[0], (Long) result[1]))
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    public void checkAndVerifyPosts() {
+        List<Post> postsToVerify = postRepository.findAllByVerifiedDateIsNull();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (int i = 0; i < postsToVerify.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToVerify.size());
+            List<Post> batch = postsToVerify.subList(i, end);
+
+            CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(batch);
+            futures.add(future);
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 }

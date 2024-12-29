@@ -1,8 +1,8 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.CreatePostDto;
-import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
+import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
@@ -11,6 +11,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,14 +19,20 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -52,8 +59,19 @@ class PostServiceTest {
     @Mock
     private HashtagService hashtagService;
 
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Mock
+    private PostVerificationService postVerificationService;
+
     @InjectMocks
     private PostService postService;
+
+    @BeforeEach
+    void setUp() {
+        ReflectionTestUtils.setField(postService, "userBansChannelName", "user_ban_channel");
+    }
 
     long userId = 1L;
 
@@ -61,6 +79,7 @@ class PostServiceTest {
     Post secondPost = new Post();
 
     Post post = createTestPost();
+
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
@@ -369,6 +388,7 @@ class PostServiceTest {
     }
 
     @DisplayName("Get post with valid id")
+    @Test
     void testGetPostByIdValidId() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
 
@@ -386,6 +406,7 @@ class PostServiceTest {
         Exception ex = assertThrows(EntityNotFoundException.class, () -> postService.getPostById(1L));
         assertEquals("Post with id: 1 not found", ex.getMessage());
     }
+
 
     private Post createTestPost() {
         return Post.builder()

@@ -1,19 +1,20 @@
 package faang.school.postservice.filter.albumfilter;
 
-import faang.school.postservice.dto.AlbumFilterDto;
+import faang.school.postservice.dto.album.AlbumFilterDto;
 import faang.school.postservice.filter.Filter;
 import faang.school.postservice.model.Album;
 
 import java.util.stream.Stream;
 
-public class AlbumDescriptionFilter implements Filter<Album,AlbumFilterDto> {
+public class AlbumDescriptionPatternFilter implements Filter<Album,AlbumFilterDto> {
     @Override
     public boolean isApplicable(AlbumFilterDto albumFilterDto) {
-        return albumFilterDto.getDescription() != null;
+        return albumFilterDto.getDescriptionPattern() != null;
     }
 
     @Override
     public Stream<Album> apply(Stream<Album> albums, AlbumFilterDto filter){
-        return albums.filter(album -> album.getDescription().toLowerCase().equals(filter.getDescription().toLowerCase()));
+        return albums.filter(album ->
+                album.getDescription().toLowerCase().contains(filter.getDescriptionPattern().toLowerCase()));
     }
 }

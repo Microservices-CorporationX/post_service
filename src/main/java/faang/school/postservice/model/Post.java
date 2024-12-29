@@ -34,6 +34,9 @@ public class Post {
     @Column(name = "project_id")
     private Long projectId;
 
+    @Column(name = "verified")
+    private boolean verified;
+
     @OneToMany(mappedBy = "post", orphanRemoval = true)
     private List<Like> likes;
 
@@ -73,6 +76,7 @@ public class Post {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+
     @ManyToMany(cascade = CascadeType.PERSIST)
     @JoinTable(
             name = "post_hashtags",
@@ -80,4 +84,7 @@ public class Post {
             inverseJoinColumns = @JoinColumn(name = "hashtag_id")
     )
     private Set<Hashtag> hashtags;
+
+    @Column(name = "verified_date")
+    private LocalDateTime verifiedDate;
 }

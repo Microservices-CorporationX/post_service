@@ -22,10 +22,11 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation ("org.springframework.retry:spring-retry")
     testImplementation ("org.springframework:spring-test:5.3.29")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
-
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    implementation("org.springframework.boot:spring-boot-starter-logging")
 
     /**
      * Database
@@ -38,6 +39,7 @@ dependencies {
      * Utils & Logging
      */
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("org.slf4j:slf4j-api:2.0.5")
     implementation("ch.qos.logback:logback-classic:1.4.6")
     implementation("org.projectlombok:lombok:1.18.26")
@@ -57,6 +59,8 @@ dependencies {
      * Tests
      */
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
+    testImplementation ("org.mockito:mockito-core:4.11.0")
+    testImplementation ("org.mockito:mockito-junit-jupiter:4.11.0")
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 
@@ -70,6 +74,11 @@ dependencies {
      * Swagger
      */
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+
+    /**
+     * Redis
+     */
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
 
     /**
      * Amazon S3
@@ -88,7 +97,7 @@ dependencies {
 }
 
 jacoco {
-    toolVersion = "0.8.7"
+    toolVersion = "0.8.10"
 }
 
 tasks.test {
