@@ -26,6 +26,8 @@ spring:
           name: post_view_channel
         calculations_channel:
           name: calculations_channel
+        ad_bought_channel:
+          name: ad_bought_channel
 
   servlet:
     multipart:
