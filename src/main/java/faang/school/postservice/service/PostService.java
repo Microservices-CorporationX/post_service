@@ -8,6 +8,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.utils.PostSpecifications;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,11 +41,11 @@ public class PostService {
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
     private final RedisTemplate<String, Object> redisTemplate;
-    private final PostVerificationService postVerificationService;
-
+    private final ExecutorService executorService;
 
     @Value("${spring.data.redis.channel.user-bans-channel}")
     private String userBansChannelName;
+    private final PostVerificationService postVerificationService;
 
     @Value("${ad.batch.size}")
     private int batchSize;
@@ -180,7 +182,7 @@ public class PostService {
     private boolean hasHashtags(List<String> hashtags) {
         return hashtags != null && !hashtags.isEmpty();
     }
-    
+
     private Set<Hashtag> getAndCreateHashtags(List<String> hashtags) {
         Map<String, Hashtag> existingHashtags = hashtagService.findAllByTags(hashtags)
                 .stream()
@@ -233,5 +235,42 @@ public class PostService {
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
+
+    public void publishScheduledPosts() {
+        List<Post> postsToPublish = postRepository.findAll(PostSpecifications.isReadyToPublish());
+
+        if (postsToPublish.isEmpty()) {
+            log.info("No posts to publish at this time");
+            return;
+        }
+
+        log.info("Starting batch processing for {} posts", postsToPublish.size());
+
+        for (int i = 0; i < postsToPublish.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToPublish.size());
+            List<Post> batch = postsToPublish.subList(i, end);
+
+            CompletableFuture.runAsync(() -> {
+                log.info("Processing batch of size {}", batch.size());
+                try {
+                    LocalDateTime now = LocalDateTime.now();
+                    for (Post post : batch) {
+                        post.setPublished(true);
+                        post.setPublishedAt(now);
+                    }
+                    postRepository.saveAll(batch);
+                    log.info("Successfully saved batch of size {}", batch.size());
+                } catch (Exception e) {
+                    log.error("Error while processing batch: {}", batch, e);
+                }
+            }, executorService);
+        }
+
+        log.info("Batch processing completed");
+    }
+
+    public List<Post> getReadyToPublishPosts() {
+        return postRepository.findAll(PostSpecifications.isReadyToPublish());
     }
 }
