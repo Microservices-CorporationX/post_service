@@ -22,6 +22,11 @@ public class RedisConfiguration {
     }
 
     @Bean
+    ChannelTopic postViewTopic(){
+        return new ChannelTopic(redisProperties.getChannels().getPostViewChannel().getName());
+    }
+
+    @Bean
     JedisConnectionFactory jedisConnectionFactory() {
         return new JedisConnectionFactory();
     }

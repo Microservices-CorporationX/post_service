@@ -1,6 +1,5 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.service.PostResourceService;

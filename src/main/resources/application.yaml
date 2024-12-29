@@ -41,6 +41,8 @@ spring:
           name: calculations_channel
         userBanChannel:
           name: user_ban_channel
+        postViewChannel:
+          name: post_view_channel
 
 server:
   port: 8081

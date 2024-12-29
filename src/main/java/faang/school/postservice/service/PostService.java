@@ -4,8 +4,10 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.PostViewEvent;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -32,6 +35,7 @@ public class PostService {
     private final ProjectServiceClient projectServiceClient;
     private final UserContext userContext;
     private final OrthographyService orthographyService;
+    private final PostViewEventPublisher postViewEventPublisher;
 
     public Long createDraftPost(PostDto postDto) {
         checkAuthorIdExist(postDto.userId(), postDto.projectId());
@@ -67,9 +71,14 @@ public class PostService {
     }
 
     public PostDto getPost(Long postId) {
-        return postRepository.findById(postId)
-                .map(postMapper::toDto)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found with ID: " + postId));
+        Optional<Post> optionalPost = postRepository.findById(postId);
+        if (optionalPost.isPresent()) {
+            Post post = optionalPost.get();
+            PostDto postDto = postMapper.toDto(post);
+            postViewEventPublisher.publish(new PostViewEvent(postId, post.getAuthorId(),
+                    userContext.getUserId(), LocalDateTime.now()));
+            return postDto;
+        } else throw new EntityNotFoundException("Post not found with ID: " + postId);
     }
 
     public List<PostDto> getDraftPostsForUser(Long idUser) {
@@ -93,22 +102,28 @@ public class PostService {
 
     public List<PostDto> getPublishedPostsForUser(Long idUser) {
         checkUserExistById(idUser);
-        return postRepository.findByAuthorId(idUser)
+        List<Post> postList = postRepository.findByAuthorId(idUser)
                 .stream()
                 .filter(post -> post.isPublished() && !post.isDeleted())
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
-                .map(postMapper::toDto)
-                .collect(Collectors.toList());
+                .toList();
+        List<PostDto> postDtoList = postList.stream().map(postMapper::toDto)
+                .toList();
+        postList.forEach(post -> postViewEventPublisher.publish(new PostViewEvent(post.getId(),
+                post.getAuthorId(), userContext.getUserId(), LocalDateTime.now())));
+        return postDtoList;
     }
 
     public List<PostDto> getPublishedPostForProject(Long idProject) {
         checkProjectExistById(idProject);
-        return postRepository.findByProjectId(idProject)
+        List<Post> postList = postRepository.findByProjectId(idProject)
                 .stream()
                 .filter(post -> post.isPublished() && !post.isDeleted())
-                .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
-                .map(postMapper::toDto)
-                .collect(Collectors.toList());
+                .sorted(Comparator.comparing(Post::getPublishedAt).reversed()).toList();
+        List<PostDto> postDtoList = postList.stream().map(postMapper::toDto).toList();
+        postList.forEach(post -> postViewEventPublisher.publish(new PostViewEvent(post.getId(),
+                post.getAuthorId(), userContext.getUserId(), LocalDateTime.now())));
+        return postDtoList;
     }
 
 
