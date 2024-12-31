@@ -5,7 +5,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.SpellCheckerDto;
-import faang.school.postservice.event.kafka.EventsBuilder;
+import faang.school.postservice.event.kafka.EventBuilder;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.PostRequirementsException;
 import faang.school.postservice.mapper.PostMapper;
@@ -34,7 +34,7 @@ public class PostService {
     private final UserContext userContext;
     private final YandexSpeller yandexSpeller;
     private final PostCacheService postCacheService;
-    private final EventsBuilder eventsBuilder;
+    private final EventBuilder eventsBuilder;
     private final AuthorCacheService authorCacheService;
     private final PostMapper postMapper;
 

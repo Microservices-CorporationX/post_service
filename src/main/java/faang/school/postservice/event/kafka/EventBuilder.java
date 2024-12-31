@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class EventsBuilder {
+public class EventBuilder {
     private final KafkaEventProducer kafkaEventProducer;
     private final UserServiceClient userServiceClient;
 

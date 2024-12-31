@@ -4,7 +4,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.CommentEventDto;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.event.kafka.EventsBuilder;
+import faang.school.postservice.event.kafka.EventBuilder;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.comment.CommentEventMapper;
 import faang.school.postservice.mapper.comment.CommentMapper;
@@ -30,7 +30,7 @@ public class CommentService {
     private final CommentEventPublisher commentEventPublisher;
     private final CommentEventMapper commentEventMapper;
     private final CommentMapper commentMapper;
-    private final EventsBuilder eventsBuilder;
+    private final EventBuilder eventsBuilder;
     private final AuthorCacheService authorCacheService;
 
     @Transactional
