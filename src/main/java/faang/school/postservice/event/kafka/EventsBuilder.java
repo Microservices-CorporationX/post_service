@@ -1,6 +1,7 @@
 package faang.school.postservice.event.kafka;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.kafka.producer.KafkaEventProducer;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.user.UserDto;

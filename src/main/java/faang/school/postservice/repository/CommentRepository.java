@@ -19,4 +19,6 @@ public interface CommentRepository extends CrudRepository<Comment, Long> {
              ORDER BY created_at DESC
              """)
     List<Comment> findAllByPostIdOrderByCreatedAtDesc(long postId);
+
+
 }
