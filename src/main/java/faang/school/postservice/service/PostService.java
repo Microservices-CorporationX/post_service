@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -80,15 +79,9 @@ public class PostService {
 
         postRepository.save(entity);
 
-        List<MultipartFile> compressedFiles = files.stream().map(imageResolutionConversionUtil::imagesListCompression).toList();
-
-        compressedFiles.forEach(file -> {
-            String folder = "ByAuthorize" + createPostDto.getAuthorId();
-            Resource resource = minioS3Service.uploadFile(file, folder);
-            resource.setPost(entity);
-            log.info("Image File uploaded: {}", file.getOriginalFilename());
-            resourceService.saveResource(resource);
-        });
+        if (isProcessingRequired(files)) {
+            compressAndUploadImage(entity, getPostCreatorId(createPostDto.getProjectId(), createPostDto.getAuthorId()), files);
+        }
 
         return postMapper.toDto(entity);
     }
@@ -110,7 +103,8 @@ public class PostService {
     }
 
     @Transactional
-    public ResponsePostDto update(Long postId, UpdatePostDto updatePostDto, List<MultipartFile> files) {
+    public ResponsePostDto update(Long postId,
+                                  UpdatePostDto updatePostDto) {
         postValidator.validateExistingPostId(postId);
         postValidator.validateContent(updatePostDto.getContent());
 
@@ -124,8 +118,6 @@ public class PostService {
 
         post.setContent(updatePostDto.getContent());
         post.setUpdatedAt(LocalDateTime.now(ZoneId.of("UTC+3")));
-
-        //добавить сюда обновление файлов
 
         postRepository.save(post);
 
@@ -233,7 +225,7 @@ public class PostService {
 
         return rawResults.stream()
                 .map(result -> new AuthorPostCount((Long) result[0], (Long) result[1]))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 
@@ -251,5 +243,49 @@ public class PostService {
         }
 
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
+
+    public Post findPostById(Long postId) {
+        return postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("Post with id '" + postId + "' not found"));
+    }
+
+    public ResponsePostDto updatePostResources(Long postId, List<MultipartFile> files, List<String> resourceDeleteKeys) {
+        Post post = findPostById(postId);
+        if (isProcessingRequired(files)) {
+            compressAndUploadImage(post, getPostCreatorId(post.getProjectId(), post.getAuthorId()), files);
+        }
+        if (isProcessingRequired(resourceDeleteKeys)) {
+            resourceDeleteKeys.forEach(this::deleteImageFromPost);
+        }
+        return postMapper.toDto(post);
+    }
+
+    public void deleteImageFromPost(String fileKey) {
+        Long resourceId = resourceService.findIdByKey(fileKey);
+        minioS3Service.deleteFile(fileKey);
+        resourceService.deleteResource(resourceId);
+        log.info("Image File deleted: {}", fileKey);
+    }
+
+    private Long getPostCreatorId(Long projectId, Long authorId) {
+        return projectId != null ? projectId : authorId;
+    }
+
+    private <T> boolean isProcessingRequired(List<T> data) {
+        return data != null && !data.isEmpty();
+    }
+
+    private void compressAndUploadImage(Post post, Long creatorId, List<MultipartFile> files) {
+        List<MultipartFile> compressedFiles = files.stream()
+                .map(imageResolutionConversionUtil::imagesListCompression)
+                .toList();
+
+        compressedFiles.forEach(file -> {
+            String folder = "ByAuthorize" + creatorId;
+            Resource resource = minioS3Service.uploadFile(file, folder);
+            resource.setPost(post);
+            resourceService.saveResource(resource);
+            log.info("Image File uploaded: {}", file.getOriginalFilename());
+        });
     }
 }

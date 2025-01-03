@@ -52,7 +52,7 @@ class PostControllerTest {
         ResponsePostDto responsePostDto = new ResponsePostDto();
         responsePostDto.setContent("Test content");
 
-        when(postService.create(any(CreatePostDto.class))).thenReturn(responsePostDto);
+        when(postService.create(any(CreatePostDto.class), anyList())).thenReturn(responsePostDto);
 
         mockMvc.perform(post("/posts")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -60,7 +60,7 @@ class PostControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.content").value("Test content"));
 
-        verify(postService, times(1)).create(any(CreatePostDto.class));
+        verify(postService, times(1)).create(any(CreatePostDto.class), anyList());
     }
 
     @Test

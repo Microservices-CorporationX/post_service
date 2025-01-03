@@ -1,7 +1,10 @@
 package faang.school.postservice.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import faang.school.postservice.exception.FileDeletionException;
 import faang.school.postservice.exception.FileException;
 import faang.school.postservice.model.Resource;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -14,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -46,5 +50,16 @@ public class MinioS3Service {
         resource.setName(multipartFile.getOriginalFilename());
         resource.setType(multipartFile.getContentType());
         return resource;
+    }
+
+    public void deleteFile(String fileKey) {
+        try {
+            DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(bucketName, fileKey);
+            s3Client.deleteObject(deleteObjectRequest);
+            log.info("File with key '{}' deleted from MinIO bucket '{}'", fileKey, bucketName);
+        } catch (Exception e) {
+            log.error("Failed to delete file with key '{}' from bucket '{}': {}", fileKey, bucketName, e.getMessage(), e);
+            throw new FileDeletionException("Error while deleting file with key: " + fileKey);
+        }
     }
 }

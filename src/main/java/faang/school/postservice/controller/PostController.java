@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -65,6 +66,27 @@ public class PostController {
         return ResponseEntity.ok("File uploaded successfully: " + file.getOriginalFilename());
     }
 
+    @DeleteMapping(value = "/file")
+    public ResponseEntity<String> deleteFiles(@RequestParam(value = "fileKey") String fileKey) {
+        postService.deleteImageFromPost(fileKey);
+        return ResponseEntity.ok("Files deleted successfully");
+    }
+
+    @PutMapping("{postId}/resources")
+    public ResponseEntity<ResponsePostDto> updateResources(@PathVariable
+                                                           @NotNull(message = "Post id is required")
+                                                           @Positive(message = "Post id must be positive number")
+                                                           Long postId,
+                                                           @RequestPart(value = "file", required = false)
+                                                           @Size(max = 10)
+                                                           List<MultipartFile> files,
+                                                           @RequestPart(value = "resourceId", required = false)
+                                                           List<String> resourceDeleteKeys
+    ) {
+        log.info("Updating resources in post with id '{}'", postId);
+        return ResponseEntity.ok(postService.updatePostResources(postId, files, resourceDeleteKeys));
+    }
+
     @PutMapping("{postId}/publish")
     @PublishPostDoc
     public ResponseEntity<ResponsePostDto> publish(
@@ -84,11 +106,10 @@ public class PostController {
             @NotNull(message = "Post id cannot be null")
             @Positive(message = "Post id must be positive")
             Long postId,
-            @RequestPart("updatePostDto") @Valid UpdatePostDto updatePostDto,
-            @RequestPart(value = "file", required = false) @Size(max = 10) List<MultipartFile> files
+            @RequestPart("updatePostDto") @Valid UpdatePostDto updatePostDto
     ) {
         log.info("Request for update post: {} with content: {}", postId, updatePostDto.getContent());
-        return ResponseEntity.ok(postService.update(postId, updatePostDto, files));
+        return ResponseEntity.ok(postService.update(postId, updatePostDto));
     }
 
     @DeleteMapping("/{postId}")

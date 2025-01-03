@@ -4,7 +4,6 @@ import faang.school.postservice.exception.FileException;
 import faang.school.postservice.exception.ResizeFileException;
 import faang.school.postservice.exception.UnsupportedResourceException;
 import lombok.extern.slf4j.Slf4j;
-import net.coobird.thumbnailator.Thumbnailator;
 import net.coobird.thumbnailator.Thumbnails;
 import org.apache.tika.mime.MimeType;
 import org.apache.tika.mime.MimeTypeException;
@@ -17,8 +16,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 @Component
 @Slf4j
