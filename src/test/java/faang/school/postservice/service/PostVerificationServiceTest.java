@@ -22,7 +22,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PostVerificationServiceTest {
+public class    PostVerificationServiceTest {
     @Mock
     private PostRepository postRepository;
 
