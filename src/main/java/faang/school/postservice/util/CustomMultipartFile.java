@@ -20,6 +20,7 @@ public class CustomMultipartFile implements MultipartFile {
     private final String originalFilename;
     @Getter
     private final String contentType;
+
     private final byte[] content;
 
     @Override

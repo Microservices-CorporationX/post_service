@@ -1,7 +1,6 @@
 package faang.school.postservice.dto;
 
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 
 @Data

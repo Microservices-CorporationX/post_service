@@ -10,6 +10,7 @@ import faang.school.postservice.docs.post.GetPublishedPostByAuthorDoc;
 import faang.school.postservice.docs.post.GetPublishedPostByProjectDoc;
 import faang.school.postservice.docs.post.PublishPostDoc;
 import faang.school.postservice.docs.post.UpdatePostDoc;
+import faang.school.postservice.docs.post.UpdatePostResourcesDoc;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -45,7 +46,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/posts")
 @RequiredArgsConstructor
-@Tag(name = "Post", description = "This controller handles post operations")
+@Tag(name = "Post API", description = "This controller handles post operations")
 public class PostController {
     private final PostService postService;
 
@@ -60,27 +61,16 @@ public class PostController {
         return ResponseEntity.status(HttpStatus.CREATED).body(postService.create(createPostDto, files));
     }
 
-    @PostMapping(value = "/upload-files", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> uploadFiles(@RequestPart(value = "file", required = false) MultipartFile file) {
-        log.info("File uploaded: {}", file.getOriginalFilename());
-        return ResponseEntity.ok("File uploaded successfully: " + file.getOriginalFilename());
-    }
-
-    @DeleteMapping(value = "/file")
-    public ResponseEntity<String> deleteFiles(@RequestParam(value = "fileKey") String fileKey) {
-        postService.deleteImageFromPost(fileKey);
-        return ResponseEntity.ok("Files deleted successfully");
-    }
-
     @PutMapping("{postId}/resources")
+    @UpdatePostResourcesDoc
     public ResponseEntity<ResponsePostDto> updateResources(@PathVariable
                                                            @NotNull(message = "Post id is required")
                                                            @Positive(message = "Post id must be positive number")
                                                            Long postId,
-                                                           @RequestPart(value = "file", required = false)
+                                                           @RequestPart(value = "files", required = false)
                                                            @Size(max = 10)
                                                            List<MultipartFile> files,
-                                                           @RequestPart(value = "resourceId", required = false)
+                                                           @RequestPart(value = "resourcesDeleteKeys", required = false)
                                                            List<String> resourceDeleteKeys
     ) {
         log.info("Updating resources in post with id '{}'", postId);
@@ -106,7 +96,7 @@ public class PostController {
             @NotNull(message = "Post id cannot be null")
             @Positive(message = "Post id must be positive")
             Long postId,
-            @RequestPart("updatePostDto") @Valid UpdatePostDto updatePostDto
+            @Valid @RequestBody UpdatePostDto updatePostDto
     ) {
         log.info("Request for update post: {} with content: {}", postId, updatePostDto.getContent());
         return ResponseEntity.ok(postService.update(postId, updatePostDto));

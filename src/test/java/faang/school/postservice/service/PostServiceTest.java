@@ -21,6 +21,7 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -91,6 +92,7 @@ class PostServiceTest {
         createPostDto.setAuthorId(1L);
         createPostDto.setProjectId(2L);
         createPostDto.setHashtags(List.of("tag1", "tag2"));
+        List<MultipartFile> files = Collections.emptyList();
 
         Post post = new Post();
         ResponsePostDto responseDto = new ResponsePostDto();
@@ -119,7 +121,7 @@ class PostServiceTest {
 
         when(postRepository.save(post)).thenReturn(post);
 
-        ResponsePostDto result = postService.create(createPostDto);
+        ResponsePostDto result = postService.create(createPostDto, files);
 
         verify(postValidator, times(1)).validateContent(createPostDto.getContent());
         verify(postValidator, times(1)).validateAuthorIdAndProjectId(1L, 2L);
@@ -139,10 +141,11 @@ class PostServiceTest {
         createPostDto.setContent("");
         createPostDto.setAuthorId(1L);
         createPostDto.setProjectId(2L);
+        List<MultipartFile> files = Collections.emptyList();
 
         doThrow(new DataValidationException("Content cannot be blank")).when(postValidator).validateContent(createPostDto.getContent());
 
-        assertThrows(DataValidationException.class, () -> postService.create(createPostDto));
+        assertThrows(DataValidationException.class, () -> postService.create(createPostDto, files));
 
         verify(postValidator, times(1)).validateContent(createPostDto.getContent());
     }

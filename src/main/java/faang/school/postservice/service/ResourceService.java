@@ -1,13 +1,11 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.ResourceRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -16,15 +14,14 @@ public class ResourceService {
 
     private final ResourceRepository resourceRepository;
 
-    public Resource saveResource(Resource resource) {
+    public void saveResource(Resource resource) {
         Resource result = resourceRepository.save(resource);
-        log.info("Resource saved: {}", result.getId());
-        return result;
+        log.info("Resource with ID: {} saved", result.getId());
     }
 
     public void deleteResource(Long resourceId) {
         resourceRepository.deleteById(resourceId);
-        log.info("Resource deleted: {}", resourceId);
+        log.info("Resource with ID: {} deleted", resourceId);
     }
 
     public Long findIdByKey(String key) {

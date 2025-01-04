@@ -23,8 +23,8 @@ public class ImageResolutionConversionUtil {
 
 private static final int MAX_IMAGE_WIDTH_PX = 1024;
 private static final int MAX_IMAGE_HEIGHT_PX = 566;
-private static final int MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 private static final int EXTENSION_START_INDEX = 1;
+private static final double OUTPUT_IMAGE_QUALITY = 0.8d;
 
     public MultipartFile imagesListCompression(MultipartFile file) {
         try {
@@ -43,8 +43,8 @@ private static final int EXTENSION_START_INDEX = 1;
             log.debug("Taking image with resolution {}x{}", width, height);
 
             byte[] resizedImageBytes = findResourceOrientation(image, width, height, extension);
-
             log.debug("Image resolution conversion completed for file: {}", file.getOriginalFilename());
+
             return CustomMultipartFile.builder()
                     .name(file.getName())
                     .originalFilename(file.getOriginalFilename())
@@ -78,7 +78,7 @@ private static final int EXTENSION_START_INDEX = 1;
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Thumbnails.of(image)
                     .size(targetWidth, targetHeight)
-                    .outputQuality(0.8d)
+                    .outputQuality(OUTPUT_IMAGE_QUALITY)
                     .outputFormat(extension)
                     .toOutputStream(outputStream);
             return outputStream.toByteArray();
