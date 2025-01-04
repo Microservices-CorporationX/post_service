@@ -54,7 +54,6 @@ public class PostService {
     @Value("${spring.data.redis.channel.user-bans-channel}")
     private String userBansChannelName;
 
-    private final PostVerificationService postVerificationService;
 
     @Value("${ad.batch.size}")
     private int batchSize;
