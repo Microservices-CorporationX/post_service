@@ -1,4 +1,4 @@
-package faang.school.postservice.util;
+package faang.school.postservice.utils;
 
 import faang.school.postservice.exception.FileException;
 import faang.school.postservice.exception.ResizeFileException;
@@ -26,7 +26,7 @@ private static final int MAX_IMAGE_HEIGHT_PX = 566;
 private static final int EXTENSION_START_INDEX = 1;
 private static final double OUTPUT_IMAGE_QUALITY = 0.8d;
 
-    public MultipartFile imagesListCompression(MultipartFile file) {
+    public MultipartFile compressImage(MultipartFile file) {
         try {
             log.debug("Starting image resolution conversion for file: {}", file.getOriginalFilename());
             InputStream inputStream = file.getInputStream();

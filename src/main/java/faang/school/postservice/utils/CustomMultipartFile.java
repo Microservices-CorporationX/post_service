@@ -1,4 +1,4 @@
-package faang.school.postservice.util;
+package faang.school.postservice.utils;
 
 import lombok.Builder;
 import lombok.Getter;

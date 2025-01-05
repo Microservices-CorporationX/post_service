@@ -10,7 +10,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.utils.PostSpecifications;
-import faang.school.postservice.util.ImageResolutionConversionUtil;
+import faang.school.postservice.utils.ImageResolutionConversionUtil;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -304,7 +304,8 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
-    private void deleteImageFromPost(String fileKey) {
+    @Transactional
+    public void deleteImageFromPost(String fileKey) {
         Long resourceId = resourceService.findIdByKey(fileKey);
         resourceService.deleteResource(resourceId);
         minioS3Service.deleteFile(fileKey);
@@ -321,7 +322,7 @@ public class PostService {
 
     private void compressAndUploadImage(Post post, Long creatorId, List<MultipartFile> files) {
         List<MultipartFile> compressedFiles = files.stream()
-                .map(imageResolutionConversionUtil::imagesListCompression)
+                .map(imageResolutionConversionUtil::compressImage)
                 .toList();
 
         compressedFiles.forEach(file -> {

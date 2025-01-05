@@ -68,9 +68,9 @@ public class PostController {
                                                            @Positive(message = "Post id must be positive number")
                                                            Long postId,
                                                            @RequestPart(value = "files", required = false)
-                                                           @Size(max = 10)
+                                                           @Size(max = 10, message = "Post can have maximum 10 files")
                                                            List<MultipartFile> files,
-                                                           @RequestPart(value = "resourcesDeleteKeys", required = false)
+                                                           @RequestParam(value = "resourceDeleteKeys", required = false)
                                                            List<String> resourceDeleteKeys
     ) {
         log.info("Updating resources in post with id '{}'", postId);

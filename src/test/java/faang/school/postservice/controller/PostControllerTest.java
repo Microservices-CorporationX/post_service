@@ -13,6 +13,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMultipartHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.Mockito.*;
@@ -27,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.IntStream;
 
 @ExtendWith(MockitoExtension.class)
 class PostControllerTest {
@@ -268,5 +271,31 @@ class PostControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(mockPosts.size()));
+    }
+
+    @Test
+    void testUpdateResources_shouldReturnOk() throws Exception {
+        Long postId = 1L;
+
+        List<MockMultipartFile> tooManyFiles = IntStream.rangeClosed(1, 5)
+                .mapToObj(i -> new MockMultipartFile(
+                        "files",
+                        "test" + i + ".png",
+                        "image/png",
+                        ("some-test-data-" + i).getBytes()
+                ))
+                .toList();
+
+        MockMultipartHttpServletRequestBuilder requestBuilder =
+                (MockMultipartHttpServletRequestBuilder) MockMvcRequestBuilders.multipart("/posts/{postId}/resources", postId)
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE);
+
+        tooManyFiles.forEach(requestBuilder::file);
+
+        mockMvc.perform(requestBuilder.with(req -> {
+                            req.setMethod("PUT");
+                            return req;
+                        }))
+                .andExpect(status().isOk());
     }
 }
