@@ -13,14 +13,19 @@ import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -29,6 +34,9 @@ import java.util.stream.StreamSupport;
 @RequiredArgsConstructor
 public class PostService {
 
+    @Value("${post.publish-post.batch-size}")
+    private int batchSize;
+
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final UserServiceClient userServiceClient;
@@ -36,6 +44,8 @@ public class PostService {
     private final UserContext userContext;
     private final OrthographyService orthographyService;
     private final PostViewEventPublisher postViewEventPublisher;
+
+    private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     public Long createDraftPost(PostDto postDto) {
         checkAuthorIdExist(postDto.userId(), postDto.projectId());
@@ -135,7 +145,51 @@ public class PostService {
         });
     }
 
-    List<Post> getAllUnpublishedPostsOrThrow() {
+    public void publishScheduledPosts() {
+        List<Post> allToPublishPosts = postRepository.findReadyToPublish();
+
+        if (allToPublishPosts.size() == 0) {
+            return;
+        }
+
+        int quantity = allToPublishPosts.size() / batchSize;
+        LocalDateTime now = LocalDateTime.now();
+
+        log.info("Posts publishing: batch quantity = {}", quantity + 1);
+
+        for (int i = 0; i <= quantity; i++) {
+            int fromIndex = quantity * i;
+            int toIndex = quantity == 0 ? 1 : Math.min(allToPublishPosts.size(), quantity * (i + 1));
+
+            List<Post> readyToPublishPosts = allToPublishPosts.subList(fromIndex, toIndex);
+
+            int batchNumber = i + 1;
+            CompletableFuture
+                    .supplyAsync(() -> this.publishBatch(readyToPublishPosts, now), threadPoolTaskExecutor)
+                    .exceptionally((ex) -> {
+                        log.error("Posts publishing: batch {} has not been published, size = {}", batchNumber, readyToPublishPosts.size());
+                        return new ArrayList<>();
+                    })
+                    .thenAccept(list -> log.info("Posts publishing: batch {} has been published, size = {}", batchNumber, readyToPublishPosts.size()));
+        }
+    }
+
+    @Transactional
+    public List<Post> publishBatch(List<Post> readyToPublishPosts, LocalDateTime now) {
+        List<Post> posts = readyToPublishPosts.stream()
+                .peek(post -> {
+                    post.setPublished(true);
+                    post.setPublishedAt(now);
+                })
+                .collect(Collectors.toList());
+        Iterable<Post> iterableResult = postRepository.saveAll(posts);
+        List<Post> saved = new ArrayList<>();
+        iterableResult.forEach(saved::add);
+
+        return saved;
+    }
+
+    private List<Post> getAllUnpublishedPostsOrThrow() {
         List<Post> unpublishedPosts = StreamSupport
                 .stream(postRepository.findAll().spliterator(), false)
                 .filter(post -> !post.isPublished() && !post.isDeleted())
