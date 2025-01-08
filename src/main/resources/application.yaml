@@ -22,17 +22,42 @@ spring:
       port: 6379
       host: localhost
       channels:
+        post_view_channel:
+          name: post_view_channel
         calculations_channel:
           name: calculations_channel
         ban_user_channel:
           name: ban_user
+        comment_channel:
+          name: comment_channel
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 50MB
 
 server:
   port: 8081
 
 logging:
   level:
-    root: debug
+    root: info
+
+app:
+  posts:
+    files:
+      max-file-size: 5242880
+      max-post-files-count: 10
+      picture-max-width: 1080
+      picture-max-height: 566
+
+services:
+  s3:
+    endpoint: http://localhost:9000
+    region: us-east-1
+    accessKey: user
+    accessSecret: password
+    postBucketName: corpbucket
 
 user-service:
   host: localhost
@@ -40,6 +65,7 @@ user-service:
 project-service:
   host: localhost
   port: 8082
+  version: api/v1
 payment-service:
   host: localhost
   port: 9080
@@ -48,7 +74,17 @@ moderation:
   batch-size: 50
   cron: 0 0 0 * * *
   zone: Europe/Moscow
-  thread-pool: 1
+  thread-pool-size: 1
+
+api:
+  version: "/api/v1"
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
 
 banner:
   minimum-size-of-unverified-posts: 5

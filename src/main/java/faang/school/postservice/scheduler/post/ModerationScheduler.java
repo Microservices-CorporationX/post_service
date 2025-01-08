@@ -40,7 +40,7 @@ public class ModerationScheduler {
                         () -> log.info("not checked posts to offensive content not found!")
                 );
         if (notCheckedToVerificationPosts.isEmpty()) {
-            log.info("not checked posts found!");
+            log.info("not checked posts not found!");
             return;
         }
 

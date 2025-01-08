@@ -1,0 +1,41 @@
+package faang.school.postservice.publisher.postview;
+
+import faang.school.postservice.dto.analytics.AnalyticsEventDto;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+
+@ExtendWith(MockitoExtension.class)
+class PostViewEventPublisherTest {
+    public static final long RECEIVER_ID = 1L;
+    public static final long ACTOR_ID = 2L;
+
+    @Value("${spring.data.redis.channels.post_view_channel.name}")
+    private String topic;
+
+    @Mock
+    private RedisTemplate<String, Object> redisTemplate;
+    @InjectMocks
+    private PostViewEventPublisher postViewEventPublisher;
+
+    @Test
+    public void testSendMethodIsCalled() {
+        AnalyticsEventDto analyticsEventDto = getAnalyticsEventDto();
+
+        postViewEventPublisher.publish(analyticsEventDto);
+
+        Mockito.verify(redisTemplate).convertAndSend(topic, analyticsEventDto);
+    }
+
+    private static AnalyticsEventDto getAnalyticsEventDto() {
+        return AnalyticsEventDto.builder()
+                .receiverId(RECEIVER_ID)
+                .actorId(ACTOR_ID)
+                .build();
+    }
+}

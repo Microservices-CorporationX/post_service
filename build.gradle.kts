@@ -1,4 +1,7 @@
+import java.math.RoundingMode
+
 plugins {
+    jacoco
     java
     id("org.springframework.boot") version "3.0.6"
     id("io.spring.dependency-management") version "1.1.0"
@@ -32,6 +35,16 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     /**
+     * Amazon S3
+     */
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.481")
+
+    /**
+     * Image scaling
+     */
+    implementation("org.imgscalr:imgscalr-lib:4.2")
+
+    /**
      * Utils & Logging
      */
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
@@ -41,6 +54,13 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.26")
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2")
+
+    /**
+     * Swagger
+     */
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+
 
     /**
      * Test containers
@@ -70,4 +90,62 @@ val test by tasks.getting(Test::class) { testLogging.showStandardStreams = true 
 
 tasks.bootJar {
     archiveFileName.set("service.jar")
+}
+
+    /**
+     * Jacoco
+     */
+jacoco {
+    toolVersion = "0.8.9"
+    reportsDirectory.set(layout.buildDirectory.dir("$buildDir/reports/jacoco"))
+}
+tasks.test {
+    finalizedBy(tasks.jacocoTestReport)
+}
+
+val jacocoIncludePackagesList = listOf(
+    "**/service/**",
+    "**/validator/**",
+    "**/controller/**"
+)
+val jacocoExcludePackAgeList = listOf(
+    "**/model/**",
+    "**/repository/**",
+    "**/dto/**",
+    "**/mapper/**"
+)
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+
+    reports {
+        xml.required.set(false)
+        csv.required.set(false)
+        html.required.set(true)
+    }
+
+    classDirectories.setFrom(
+        sourceSets.main.get().output.asFileTree.matching {
+            include(jacocoIncludePackagesList)
+            exclude(jacocoExcludePackAgeList)
+        }
+    )
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.70".toBigDecimal()
+            }
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.70".toBigDecimal()
+            }
+
+        }
+    }
 }
