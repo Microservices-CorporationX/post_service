@@ -11,8 +11,8 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.image.ImageResizeService;
+import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.validator.post.PostValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,9 +23,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
-
-import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -46,13 +43,6 @@ public class PostService {
     private final PostViewEventMapper postViewEventMapper;
     private final ResourceService resourceService;
     private final ImageResizeService imageResizeService;
-    private final PostValidator postValidator;
-    private final PostRepository postRepository;
-    private final PostMapper postMapper;
-    private final UserBanPublisher userBanPublisher;
-    @Getter
-    @Value("${banner.minimum-size-of-unverified-posts}")
-    private int minimumSizeOfUnverifiedPosts;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)

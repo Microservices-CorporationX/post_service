@@ -1,6 +1,5 @@
 package faang.school.postservice.scheduler.user;
 
-import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -13,14 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserBanner {
 
-    private final PostService postService;
+    private final UserBanner userBanner;
 
     @Async("userBannerThreadPool")
     @Transactional
     @Scheduled(cron = "${banner.cron}", zone = "${banner.zone}")
     public void banUsersScheduler() {
         log.info("user banner scheduler is starting!");
-        postService.banUsers();
+        userBanner.banUsersScheduler();
         log.info("user banner scheduler is success finished!");
     }
 }

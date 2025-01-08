@@ -26,8 +26,6 @@ public class RedisConfig {
     private String userBanChannelTopic;
 
     @Bean
-    public RedisConnectionFactory redisConnectionFactory() {
-    @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
         RedisStandaloneConfiguration redisConfig = new RedisStandaloneConfiguration(redisHost, redisPort);
         return new JedisConnectionFactory(redisConfig);
