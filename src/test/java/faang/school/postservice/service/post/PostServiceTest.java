@@ -1,10 +1,14 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.image.ImageResizeService;
@@ -29,7 +33,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -39,6 +46,12 @@ class PostServiceTest {
     private PostRepository postRepository;
     @Mock
     private PostMapper postMapper;
+    @Mock
+    private PostViewEventPublisher postViewEventPublisher;
+    @Mock
+    private UserContext userContext;
+    @Mock
+    private PostViewEventMapper postViewEventMapper;
     @Mock
     private ResourceService resourceService;
     @Mock
@@ -181,6 +194,22 @@ class PostServiceTest {
     }
 
     @Test
+    void testPublishPostViewEventAfterGetAllPosts() {
+        long userId = 1L;
+        int numberOfInvocations = 3;
+        when(postRepository.findByAuthorIdWithLikes(anyLong())).thenReturn(getPosts());
+        when(postMapper.toDto(any())).thenReturn(PostDto.builder().build());
+        when(userContext.getUserId()).thenReturn(userId);
+        when(postViewEventMapper.toAnalyticsEventDto(any(), eq(userId))).thenReturn(new AnalyticsEventDto());
+
+        postService.getAllPublishedByAuthorId(userId);
+
+        verify(userContext).getUserId();
+        verify(postViewEventMapper, times(numberOfInvocations)).toAnalyticsEventDto(any(), eq(userId));
+        verify(postViewEventPublisher, times(numberOfInvocations)).publish(any());
+    }
+
+    @Test
     void testAddPicturesOk() {
         Mockito.when(postRepository.findById(anyLong())).thenReturn(Optional.of(new Post()));
         Mockito.doNothing().when(postValidator).validateMedia(any(), any());
@@ -213,5 +242,4 @@ class PostServiceTest {
                 Post.builder().published(false).createdAt(LocalDateTime.now().minusDays(2)).deleted(false).build()
         );
     }
-
 }

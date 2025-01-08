@@ -1,12 +1,15 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.image.ImageResizeService;
@@ -35,6 +38,9 @@ public class PostService {
     private final PostValidator postValidator;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
+    private final PostViewEventPublisher postViewEventPublisher;
+    private final UserContext userContext;
+    private final PostViewEventMapper postViewEventMapper;
     private final ResourceService resourceService;
     private final ImageResizeService imageResizeService;
 
@@ -114,12 +120,16 @@ public class PostService {
 
     public List<PostDto> getAllPublishedByAuthorId(long id) {
         postValidator.validateUser(id);
-        return filterPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
+        List<PostDto> postDtos = filterPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
+        publishPostViewEvent(postDtos);
+        return postDtos;
     }
 
     public List<PostDto> getAllPublishedByProjectId(long id) {
         postValidator.validateProject(id);
-        return filterPublishedPostsByTimeToDto(postRepository.findByProjectIdWithLikes(id));
+        List<PostDto> postDtos = filterPublishedPostsByTimeToDto(postRepository.findByProjectIdWithLikes(id));
+        publishPostViewEvent(postDtos);
+        return postDtos;
     }
 
 
@@ -159,4 +169,11 @@ public class PostService {
                 .build();
     }
 
+    private void publishPostViewEvent(List<PostDto> postDtos) {
+        long actorId = userContext.getUserId();
+        postValidator.validateUser(actorId);
+        postDtos.stream()
+                .map(postDto -> postViewEventMapper.toAnalyticsEventDto(postDto, actorId))
+                .forEach(postViewEventPublisher::publish);
+    }
 }
