@@ -26,6 +26,8 @@ spring:
           name: post_view_channel
         calculations_channel:
           name: calculations_channel
+        comment_channel:
+          name: comment_channel
 
   servlet:
     multipart:
