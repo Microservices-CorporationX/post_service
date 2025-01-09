@@ -1,5 +1,7 @@
 package faang.school.postservice.publisher.postview;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,6 +11,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PostViewEventPublisherTest {
@@ -20,16 +24,19 @@ class PostViewEventPublisherTest {
 
     @Mock
     private RedisTemplate<String, Object> redisTemplate;
+    @Mock
+    private ObjectMapper objectMapper;
     @InjectMocks
     private PostViewEventPublisher postViewEventPublisher;
 
     @Test
-    public void testSendMethodIsCalled() {
+    public void testSendMethodIsCalled() throws JsonProcessingException {
         AnalyticsEventDto analyticsEventDto = getAnalyticsEventDto();
+        when(objectMapper.writeValueAsString(analyticsEventDto)).thenReturn(analyticsEventDto.toString());
 
         postViewEventPublisher.publish(analyticsEventDto);
 
-        Mockito.verify(redisTemplate).convertAndSend(topic, analyticsEventDto);
+        Mockito.verify(redisTemplate).convertAndSend(topic, analyticsEventDto.toString());
     }
 
     private static AnalyticsEventDto getAnalyticsEventDto() {

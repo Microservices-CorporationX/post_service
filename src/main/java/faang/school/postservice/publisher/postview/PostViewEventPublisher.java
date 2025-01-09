@@ -1,5 +1,7 @@
 package faang.school.postservice.publisher.postview;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +14,19 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PostViewEventPublisher {
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${spring.data.redis.channels.post_view_channel.name}")
     private String topic;
 
     public void publish(AnalyticsEventDto postViewEvent) {
-        log.info("event publication: {}", postViewEvent);
-        redisTemplate.convertAndSend(topic, postViewEvent);
+        try {
+            log.info("event publication: {}", postViewEvent);
+            String stringValue = objectMapper.writeValueAsString(postViewEvent);
+            redisTemplate.convertAndSend(topic, stringValue);
+        } catch (JsonProcessingException e) {
+            log.error("failed to serialize: {}", postViewEvent, e);
+            throw new RuntimeException(e);
+        }
     }
 }
