@@ -75,6 +75,7 @@ moderation:
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool-size: 1
+  days-period: 1
 
 api:
   version: "/api/v1"
