@@ -5,11 +5,13 @@ import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
+import faang.school.postservice.dto.user.BanUsersDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
+import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
@@ -23,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -34,6 +37,8 @@ public class PostService {
     private int maxImageWidth;
     @Value("${app.posts.files.picture-max-height}")
     private int maxImageHeight;
+    @Value("${banner.minimum-size-of-unverified-posts}")
+    private int minimumSizeOfUnverifiedPosts;
 
     private final PostValidator postValidator;
     private final PostRepository postRepository;
@@ -43,6 +48,7 @@ public class PostService {
     private final PostViewEventMapper postViewEventMapper;
     private final ResourceService resourceService;
     private final ImageResizeService imageResizeService;
+    private final UserBanPublisher userBanPublisher;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -175,5 +181,35 @@ public class PostService {
         postDtos.stream()
                 .map(postDto -> postViewEventMapper.toAnalyticsEventDto(postDto, actorId))
                 .forEach(postViewEventPublisher::publish);
+    }
+
+    public void banUsers() {
+        List<Post> postsWithOffensiveContent = postRepository.findNotVerifiedPots()
+                .orElseGet(() -> null);
+        if (postsWithOffensiveContent == null) {
+            log.info("users for ban not found! cause not posts which not verified");
+            return;
+        }
+        List<Long> banningUsersIds = getBanningUsersIds(postsWithOffensiveContent);
+        if (banningUsersIds != null && banningUsersIds.isEmpty()) {
+            log.info("users for ban not found!, " +
+                    "cause no users who have unverified posts exceeding {}", minimumSizeOfUnverifiedPosts);
+            return;
+        }
+        log.info("users for ban received! users ids: {}", banningUsersIds);
+        userBanPublisher.publish(BanUsersDto
+                .builder()
+                .usersIds(banningUsersIds)
+                .build());
+    }
+
+    public List<Long> getBanningUsersIds(List<Post> posts) {
+        return posts.stream()
+                .map(Post::getAuthorId)
+                .filter(authorId -> Collections.frequency(posts
+                        .stream().map(Post::getAuthorId).toList(), authorId) >= minimumSizeOfUnverifiedPosts
+                )
+                .distinct()
+                .toList();
     }
 }
