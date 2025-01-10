@@ -70,11 +70,14 @@ public class PostService {
         postDto.setUpdatedAt(LocalDateTime.now());
 
         Post post = postMapper.toEntity(postDto);
-        postEventPublisher.publish(PostEvent.builder()
-                .userId(post.getAuthorId())
-                .postId(post.getId())
-                .build());
-        return postMapper.toDto(postRepository.save(post));
+        PostDto createdPost = postMapper.toDto(postRepository.save(post));
+        if(post.getAuthorId() != null) {
+            postEventPublisher.publish(PostEvent.builder()
+                    .userId(post.getAuthorId())
+                    .postId(createdPost.getId())
+                    .build());
+        }
+        return createdPost;
     }
 
     public PostDto publish(long postId) {
