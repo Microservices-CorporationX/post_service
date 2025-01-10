@@ -102,7 +102,7 @@ class PostServiceTest {
         Mockito.doNothing().when(postValidator).validateCreation(any());
         Mockito.when(postMapper.toEntity(any())).thenReturn(Post.builder().id(1L).authorId(1L).build());
         Mockito.when(postRepository.save(any())).thenReturn(new Post());
-        Mockito.when(postMapper.toDto(any())).thenReturn(PostDto.builder().build());
+        Mockito.when(postMapper.toDto(any())).thenReturn(PostDto.builder().id(1L).build());
 
         PostDto postDto = PostDto.builder().id(1L).build();
 
