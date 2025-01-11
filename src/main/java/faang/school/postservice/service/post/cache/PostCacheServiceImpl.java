@@ -1,6 +1,8 @@
 package faang.school.postservice.service.post.cache;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.redis.cache.PostCacheDto;
+import faang.school.postservice.publisher.KafkaLikePublisher;
 import faang.school.postservice.repository.cache.PostCacheRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,8 @@ public class PostCacheServiceImpl implements PostCacheService {
 
     private final PostCacheRepository postCacheRepository;
     private final RedisTemplate<String, PostCacheDto> redisTemplate;
+    private final KafkaLikePublisher kafkaLikePublisher;
+    private final UserContext userContext;
 
     @Value("${spring.data.redis.post.time-to-live}")
     private int timeToLive;
@@ -43,6 +47,7 @@ public class PostCacheServiceImpl implements PostCacheService {
     @Override
     public void addLike(Long postId, Long likeId) {
         String key = getKey(postId);
+        long userId = userContext.getUserId();
         redisTemplate.watch(key);
         try {
             redisTemplate.multi();
@@ -51,6 +56,7 @@ public class PostCacheServiceImpl implements PostCacheService {
             post.setLikesCount(post.getLikesCount() + 1);
             post.getLikes().add(likeId);
             postCacheRepository.save(post);
+            kafkaLikePublisher.publishLikeEvent(post.getAuthorId(), userId, post.getId());
             redisTemplate.exec();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
