@@ -15,7 +15,9 @@ spring:
         format_sql: true
   kafka:
     bootstrap-servers: localhost:9092
-
+    topic:
+      post:
+        like: likes
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
