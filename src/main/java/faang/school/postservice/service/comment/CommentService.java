@@ -13,6 +13,7 @@ import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommentService {
@@ -100,7 +102,8 @@ public class CommentService {
 
     private void checkCommentsBatchForProfanities(List<Comment> comments) {
         comments.forEach(comment -> {
-            comment.setVerified(moderationDictionary.containsProfanity(comment.getContent()));
+            log.info("Checking content {} for profanities", comment.getContent());
+            comment.setVerified(!moderationDictionary.containsProfanity(comment.getContent()));
             comment.setVerifiedDate(LocalDateTime.now());
             commentRepository.save(comment);
         });

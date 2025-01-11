@@ -16,6 +16,6 @@ public interface CommentRepository extends CrudRepository<Comment, Long> {
     @Query("SELECT c FROM Comment c WHERE c.post.id = :postId")
     List<Comment> findAllByPostId(long postId);
 
-    @Query("SELECT c FROM Comment c WHERE c.verifiedDate = NULL OR c.updatedAt >= :lastDayDate")
+    @Query("SELECT c FROM Comment c WHERE c.verifiedDate = NULL OR (c.updatedAt >= :lastDayDate AND c.verifiedDate <= :lastDayDate)")
     List<Comment> findNotCheckedToVerificationComments(@Param("lastDayDate") LocalDateTime lastDayDate);
 }

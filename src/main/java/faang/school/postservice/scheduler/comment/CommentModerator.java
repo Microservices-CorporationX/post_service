@@ -17,7 +17,7 @@ public class CommentModerator {
     @Async("moderationCommentThreadPool")
     @Transactional
     @Scheduled(cron = "${moderation.cron}", zone = "${moderation.zone}")
-    public void moderatePostToOffensiveContent() {
+    public void moderateCommentsToOffensiveContent() {
         log.info("Started checking profanities for comments");
         commentService.checkProfanities();
         log.info("Finished checking profanities for comments");
