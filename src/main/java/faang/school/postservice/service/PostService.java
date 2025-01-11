@@ -152,14 +152,14 @@ public class PostService {
             return;
         }
 
-        int quantity = allToPublishPosts.size() / batchSize;
+        int quantity = allToPublishPosts.size() == batchSize ? 0 : allToPublishPosts.size() / batchSize;
         LocalDateTime now = LocalDateTime.now();
 
         log.info("Posts publishing: batch quantity = {}", quantity + 1);
 
         for (int i = 0; i <= quantity; i++) {
-            int fromIndex = quantity * i;
-            int toIndex = quantity == 0 ? 1 : Math.min(allToPublishPosts.size(), quantity * (i + 1));
+            int fromIndex = batchSize * i;
+            int toIndex = Math.min(allToPublishPosts.size(), batchSize * (i + 1));
 
             List<Post> readyToPublishPosts = allToPublishPosts.subList(fromIndex, toIndex);
 
@@ -176,17 +176,16 @@ public class PostService {
 
     @Transactional
     public List<Post> publishBatch(List<Post> readyToPublishPosts, LocalDateTime now) {
-        List<Post> posts = readyToPublishPosts.stream()
-                .peek(post -> {
-                    post.setPublished(true);
-                    post.setPublishedAt(now);
-                })
-                .collect(Collectors.toList());
-        Iterable<Post> iterableResult = postRepository.saveAll(posts);
-        List<Post> saved = new ArrayList<>();
-        iterableResult.forEach(saved::add);
+        for (Post post : readyToPublishPosts) {
+            post.setPublished(true);
+            post.setPublishedAt(now);
+        }
 
-        return saved;
+        List<Post> savedPosts = StreamSupport
+                .stream(postRepository.saveAll(readyToPublishPosts).spliterator(), false)
+                .collect(Collectors.toList());
+
+        return savedPosts;
     }
 
     private List<Post> getAllUnpublishedPostsOrThrow() {
