@@ -76,6 +76,11 @@ moderation:
   zone: Europe/Moscow
   thread-pool-size: 1
 
+post-correction:
+  thread-pool-size: 1
+  cron: 0 0 0 * * *
+  api-url: https://speller.yandex.net/services/spellservice.json
+
 api:
   version: "/api/v1"
 
