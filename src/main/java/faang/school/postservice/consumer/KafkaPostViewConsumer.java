@@ -17,10 +17,10 @@ public class KafkaPostViewConsumer {
     @KafkaListener(topics = "${spring.kafka.topic.post_views:post-views}")
     public void listener(KafkaPostViewDto event, Acknowledgment acknowledgment) {
         try {
-            postCacheService.addPostView(event.getPostId());
+            postCacheService.addPostView(event.postId());
             acknowledgment.acknowledge();
         } catch (Exception e) {
-            log.error("PostView is not added to post with id: " + event.getPostId());
+            log.error("PostView on post with id:{} is not added to post.", event.postId());
             throw e;
         }
     }

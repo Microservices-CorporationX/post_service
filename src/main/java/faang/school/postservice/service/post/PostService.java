@@ -8,6 +8,7 @@ import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.filter.post.PostFilter;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.redis.CachePost;
 import faang.school.postservice.publisher.KafkaPostProducer;
 import faang.school.postservice.publisher.KafkaPostViewProducer;
 import faang.school.postservice.repository.PostRepository;
@@ -15,6 +16,9 @@ import faang.school.postservice.repository.redis.CachePostRepository;
 import faang.school.postservice.service.UserCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +40,13 @@ public class PostService {
     private final UserServiceClient userClient;
     private final CachePostRepository cachePostRepository;
     private final UserCacheService userCacheService;
+    private final RedissonClient redissonClient;
+    @Value("${spring.data.redis.redisson_client.name_version}")
+    private String version;
+    @Value("${spring.data.redis.redisson_client.key_for_version}")
+    private String versionedKey;
+    @Value("${spring.data.redis.redisson_client.start_num_for_version}")
+    private int startNumForKey;
 
     public PostDto create(PostDto postDto) {
         validator.validateBeforeCreate(postDto);
@@ -43,7 +54,7 @@ public class PostService {
         postEntity = preparer.prepareForCreate(postDto, postEntity);
         Post createdEntity = postRepository.save(postEntity);
         userCacheService.saveCacheUser(createdEntity.getAuthorId());
-        cachePostRepository.save(mapper.toCachePost(createdEntity));
+        createCachePostAndSave(createdEntity);
         sendKafkaEvent(createdEntity);
         return mapper.toDto(createdEntity);
     }
@@ -101,6 +112,22 @@ public class PostService {
         return postDtoList;
     }
 
+    public List<PostDto> getPostsByAuthorIds(List<Long> menteesIds, Long startPostId, int batchSize) {
+        List<Post> posts = postRepository
+                .findPostsByAuthorIds(menteesIds, startPostId, PageRequest.of(0, batchSize));
+        return posts.stream()
+                .map(mapper::toDto)
+                .toList();
+    }
+
+    private void createCachePostAndSave(Post createdEntity) {
+        CachePost cachePost = mapper.toCachePost(createdEntity);
+        RMap<String, Integer> versionMap = redissonClient.getMap(version);
+        versionMap.put(versionedKey, startNumForKey);
+        cachePost.setVersion(versionMap);
+        cachePostRepository.save(cachePost);
+    }
+
     private void sendKafkaEvent(Post createdEntity) {
         KafkaPostDto kafkaDto = mapper.toKafkaPostDto(createdEntity);
         kafkaDto.setSubscriberIds(userClient.getUser(createdEntity.getAuthorId()).getFollowersIds());
@@ -110,13 +137,5 @@ public class PostService {
     private Post getPostEntity(Long postId) {
         return postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("There is no such message"));
-    }
-
-    public List<PostDto> getPostsByAuthorIds(List<Long> menteesIds, Long startPostId, int batchSize) {
-        List<Post> posts = postRepository
-                .findPostsByAuthorIds(menteesIds, startPostId, PageRequest.of(0, batchSize));
-        return posts.stream()
-                .map(mapper::toDto)
-                .toList();
     }
 }

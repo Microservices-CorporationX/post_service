@@ -1,4 +1,8 @@
 spring:
+  mvc:
+    servlet:
+      path: /api/v1
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -29,8 +33,18 @@ spring:
       feed-cache:
         batch_size: 20
         max_feed_size: 500
+        key: "feed:"
+        number_of_users_on_page: 3
       post-cache:
         comments-in-post: 3
+      time_to_live:
+        post: 86400
+        user: 86400
+      redisson_client:
+        name_version: version
+        key_for_version: versionedKey
+        start_num_for_version: 1
+        lock_cache_post: "lock:cachePost:"
 
   kafka:
     bootstrap-servers: localhost:29092

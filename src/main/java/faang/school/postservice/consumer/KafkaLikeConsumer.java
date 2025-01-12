@@ -17,10 +17,13 @@ public class KafkaLikeConsumer {
     @KafkaListener(topics = "${spring.kafka.topic.likes:likes}")
     public void listener(KafkaLikeDto event, Acknowledgment acknowledgment) {
         try {
-            postCacheService.incrementPostLikes(event.getPostId(), event.getId());
+            postCacheService.incrementPostLikes(event.postId(), event.id());
             acknowledgment.acknowledge();
         } catch (Exception e) {
-            log.error("Like is not added to post with id: " + event.getPostId());
+            log.error("Like with id:{} and author id:{} is not added to post with id: {}.",
+                    event.id(),
+                    event.authorId(),
+                    event.postId());
             throw e;
         }
     }

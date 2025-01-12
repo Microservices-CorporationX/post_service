@@ -20,7 +20,9 @@ public class KafkaPostConsumer {
             feedService.addPostIdToAuthorSubscribers(event.getId(), event.getSubscriberIds());
             acknowledgment.acknowledge();
         } catch (Exception e) {
-            log.error("Post with id:{} is not added to subscribers feeds.", event.getId());
+            log.error("Post with id:{} and author id:{} is not added to subscribers feeds.",
+                    event.getId(),
+                    event.getAuthorId());
             throw e;
         }
     }
