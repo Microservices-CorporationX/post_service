@@ -1,4 +1,4 @@
-package faang.school.postservice.config;
+package faang.school.postservice.config.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -34,9 +34,19 @@ public class RedisConfig {
     }
 
     @Bean
+    RedisTemplate<String, Long> redisTemplateLong(JedisConnectionFactory jedisConnectionFactory) {
+        final RedisTemplate<String, Long> template = new RedisTemplate<>();
+        template.setConnectionFactory(jedisConnectionFactory);
+        template.setKeySerializer(new StringRedisSerializer());
+        template.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
+        return template;
+    }
+
+    @Bean
     public ChannelTopic likeEventTopic() {
         return new ChannelTopic(likeEventChannel);
     }
+
     @Bean
     public RedisCacheManager cacheManager() {
         return RedisCacheManager.builder(jedisConnectionFactory()).build();

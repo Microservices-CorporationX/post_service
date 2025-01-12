@@ -2,7 +2,6 @@ package faang.school.postservice.config.kafka;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -14,9 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaProducerConfig {
-    @Value(value = "${spring.kafka.bootstrap-servers:localhost:29092}")
-    private String bootstrapAddress;
+public class KafkaProducerConfig extends DefaultKafkaConfig {
 
     @Bean
     public ProducerFactory<String, Object> producerFactory() {

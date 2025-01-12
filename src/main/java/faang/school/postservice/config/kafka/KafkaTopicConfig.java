@@ -5,25 +5,24 @@ import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaAdmin;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaTopicConfig {
+public class KafkaTopicConfig extends DefaultKafkaConfig {
     @Value(value = "${spring.kafka.topic.posts:posts}")
-    private String POSTS_TOPIC;
+    private String postsTopic;
     @Value(value = "${spring.kafka.topic.likes:likes}")
-    private String LIKES_TOPIC;
+    private String likesTopic;
     @Value(value = "${spring.kafka.topic.comments:comments}")
-    private String COMMENTS_TOPIC;
+    private String commentsTopic;
     @Value(value = "${spring.kafka.topic.post_views:post-views}")
-    private String POST_VIEWS_TOPIC;
+    private String postViewsTopic;
     @Value(value = "${spring.kafka.topic.feed_heater:feed-heater}")
-    private String FEED_HEATER_TOPIC;
-    @Value(value = "${spring.kafka.bootstrap-servers:localhost:29092}")
-    private String bootstrapAddress;
+    private String feedHeaterTopic;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -34,26 +33,26 @@ public class KafkaTopicConfig {
 
     @Bean
     public NewTopic topicPosts() {
-        return new NewTopic(POSTS_TOPIC, 1, (short) 1);
+        return TopicBuilder.name(postsTopic).build();
     }
 
     @Bean
     public NewTopic topicLikes() {
-        return new NewTopic(LIKES_TOPIC, 1, (short) 1);
+        return TopicBuilder.name(likesTopic).build();
     }
 
     @Bean
     public NewTopic topicComments() {
-        return new NewTopic(COMMENTS_TOPIC, 1, (short) 1);
+        return TopicBuilder.name(commentsTopic).build();
     }
 
     @Bean
     public NewTopic topicPostViews() {
-        return new NewTopic(POST_VIEWS_TOPIC, 1, (short) 1);
+        return TopicBuilder.name(postViewsTopic).build();
     }
 
     @Bean
     public NewTopic topicFeedHeater() {
-        return new NewTopic(FEED_HEATER_TOPIC, 1, (short) 1);
+        return TopicBuilder.name(feedHeaterTopic).build();
     }
 }

@@ -39,7 +39,6 @@ public interface PostMapper {
 
     @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapLikes")
     @Mapping(source = "comments", target = "commentIds", qualifiedByName = "mapComments")
-    @Mapping(source = "albums", target = "albumIds", qualifiedByName = "mapAlbums")
     @Mapping(source = "ad.id", target = "adId")
     @Mapping(source = "resources", target = "resourceIds", qualifiedByName = "mapResources")
     @Mapping(target = "numLikes", expression = "java(mapLikesToNumLikes(entity.getLikes()))")

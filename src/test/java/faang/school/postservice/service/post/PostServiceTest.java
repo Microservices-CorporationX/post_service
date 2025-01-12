@@ -22,7 +22,6 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.redis.CachePostRepository;
 import faang.school.postservice.service.UserCacheService;
 import faang.school.postservice.util.container.PostContainer;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,12 +30,17 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.redisson.api.RMap;
+import org.redisson.api.RedissonClient;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
@@ -45,6 +49,8 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
+    @Value("${spring.data.redis.redisson_client.name_version}")
+    private String version;
     private PostService postService;
     @Mock
     private PostRepository postRepository;
@@ -60,6 +66,10 @@ public class PostServiceTest {
     private UserServiceClient userClient;
     @Mock
     private CachePostRepository redisPostRepository;
+    @Mock
+    private RedissonClient redissonClient;
+    @Mock
+    private RMap<Object, Object> versionMap;
     @Mock
     private UserCacheService userCacheService;
     @Spy
@@ -86,7 +96,7 @@ public class PostServiceTest {
                 projectPostNonDeleted);
 
         postService = new PostService(postRepository, validator, mapper, preparer, postFilters,
-                kafkaPostProducer, kafkaPostViewProducer, userClient, redisPostRepository, userCacheService);
+                kafkaPostProducer, kafkaPostViewProducer, userClient, redisPostRepository, userCacheService, redissonClient);
     }
 
     @Test
@@ -105,8 +115,8 @@ public class PostServiceTest {
         doThrow(PostWithTwoAuthorsException.class).when(validator).validateBeforeCreate(dtoWithTwoAuthors);
 
         // then
-        Assertions.assertThrows(PostWOAuthorException.class, () -> postService.create(dtoWOAuthors));
-        Assertions.assertThrows(PostWithTwoAuthorsException.class, () -> postService.create(dtoWithTwoAuthors));
+        assertThrows(PostWOAuthorException.class, () -> postService.create(dtoWOAuthors));
+        assertThrows(PostWithTwoAuthorsException.class, () -> postService.create(dtoWithTwoAuthors));
     }
 
     @Test
@@ -139,6 +149,7 @@ public class PostServiceTest {
         when(preparer.prepareForCreate(inputDto, postEntity)).thenReturn(preparedPost);
         when(postRepository.save(preparedPost)).thenReturn(createdPost);
         when(userClient.getUser(anyLong())).thenReturn(userDto);
+        when(redissonClient.getMap(version)).thenReturn(versionMap);
 
         // when
         postService.create(inputDto);
@@ -155,7 +166,7 @@ public class PostServiceTest {
         doThrow(PostAlreadyPublishedException.class).when(validator).validatePublished(entity);
 
         // then
-        Assertions.assertThrows(PostAlreadyPublishedException.class, () -> postService.publish(postId));
+        assertThrows(PostAlreadyPublishedException.class, () -> postService.publish(postId));
     }
 
     @Test
@@ -191,7 +202,7 @@ public class PostServiceTest {
         doThrow(PostWithTwoAuthorsException.class).when(validator).validateBeforeUpdate(dto, entity);
 
         // then
-        Assertions.assertThrows(PostWithTwoAuthorsException.class, () -> postService.update(dto));
+        assertThrows(PostWithTwoAuthorsException.class, () -> postService.update(dto));
     }
 
     @Test
@@ -219,7 +230,7 @@ public class PostServiceTest {
         doThrow(PostAlreadyDeletedException.class).when(validator).validateDeleted(entity);
 
         // then
-        Assertions.assertThrows(PostAlreadyDeletedException.class, () -> postService.delete(postId));
+        assertThrows(PostAlreadyDeletedException.class, () -> postService.delete(postId));
     }
 
     @Test
@@ -260,6 +271,17 @@ public class PostServiceTest {
 
         // then
         assertEquals(dto, actualDto);
+        verify(kafkaPostViewProducer, times(1)).publish(mapper.toKafkaPostViewDto(dto));
+    }
+
+    @Test
+    void testGetPostNotFound() {
+        // given
+        Long postId = dto.getId();
+        when(postRepository.findById(postId)).thenReturn(Optional.empty());
+
+        // then
+        assertThrows(RuntimeException.class, () -> postService.getPost(postId));
     }
 
     @Test
@@ -278,6 +300,40 @@ public class PostServiceTest {
         assertEquals(expSize, filteredPosts.size());
         assertEquals(expDto, filteredPosts.get(0));
 
+    }
+
+    @Test
+    void testGetPostsByAuthorIds() {
+        //given
+        List<Long> authorIds = List.of(1L, 2L);
+        long startPostId = 3L;
+        int batchSize = 2;
+        List<Post> posts = createPosts();
+        when(postRepository.findPostsByAuthorIds(authorIds, startPostId, PageRequest.of(0, batchSize)))
+                .thenReturn(posts.subList(0, 2));
+        List<PostDto> expDtos = List.of(mapper.toDto(posts.get(0)), mapper.toDto(posts.get(1)));
+
+        //when
+        List<PostDto> actualDtos = postService.getPostsByAuthorIds(authorIds, startPostId, batchSize);
+
+        //then
+        assertEquals(expDtos, actualDtos);
+    }
+
+    @Test
+    void testGetPostsByAuthorIdsEmpty() {
+        //given
+        List<Long> authorIds = List.of(1L, 2L);
+        long startPostId = 3L;
+        int batchSize = 2;
+        when(postRepository.findPostsByAuthorIds(authorIds, startPostId, PageRequest.of(0, batchSize)))
+                .thenReturn(List.of());
+
+        //when
+        List<PostDto> actualDtos = postService.getPostsByAuthorIds(authorIds, startPostId, batchSize);
+
+        //then
+        assertEquals(List.of(), actualDtos);
     }
 
     private List<Post> createPosts() {

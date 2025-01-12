@@ -17,9 +17,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaConsumerConfig {
-    @Value(value = "${spring.kafka.bootstrap-servers:localhost:29092}")
-    private String bootstrapAddress;
+public class KafkaConsumerConfig extends DefaultKafkaConfig {
     @Value(value = "${spring.kafka.consumer.groupId:consumer-group-one}")
     private String groupId;
     @Value(value = "${spring.kafka.consumer.deserializer-trusted-packages}")

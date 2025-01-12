@@ -20,7 +20,10 @@ public class KafkaCommentConsumer {
             postCacheService.addCommentToPostCache(event.getPostId(), event.getCommentDto());
             acknowledgment.acknowledge();
         } catch (Exception e) {
-            log.error("Comment is not added to post with id: " + event.getPostId());
+            log.error("Comment with id:{} author id:{} is not added to post with id:{}.",
+                    event.getCommentDto().getId(),
+                    event.getCommentDto().getAuthorId(),
+                    event.getPostId());
             throw e;
         }
     }
