@@ -12,20 +12,36 @@ import feign.FeignException;
 import feign.Request;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 @Log4j2
 @ExtendWith(MockitoExtension.class)
@@ -40,6 +56,9 @@ public class PostServiceTest {
     @Mock
     private UserServiceClient userServiceClient;
 
+    @Mock
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
     @InjectMocks
     private PostService postService;
     @Mock
@@ -49,11 +68,13 @@ public class PostServiceTest {
     @Mock
     private UserContext userContext;
 
-    private final PostDto postDtoForUser = new PostDto("Test", 1L, null);
+    private final PostDto postDtoForUser = new PostDto("Test", 1L, null, null);
 
     @Captor
     ArgumentCaptor<PostViewEvent> postViewEventArgumentCaptor;
 
+    @Captor
+    ArgumentCaptor<List<Post>> postsCaptor;
 
     @Test
     void createDraftPostByUserSuccessTest() {
@@ -168,7 +189,7 @@ public class PostServiceTest {
     void updatePostSuccessTest() {
         Long postId = 1L;
         String updatedContent = "Updated content";
-        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null);
+        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null, null);
 
         Post existingPost = new Post();
         existingPost.setId(postId);
@@ -195,7 +216,7 @@ public class PostServiceTest {
     void updatePostNotFoundFailTest() {
         Long postId = 100L;
         String updatedContent = "Updated content";
-        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null);
+        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null, null);
 
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
@@ -276,7 +297,7 @@ public class PostServiceTest {
         existingPost.setContent("Sample content");
         existingPost.setAuthorId(2L);
 
-        PostDto postDto = new PostDto("Sample content", 1L, null);
+        PostDto postDto = new PostDto("Sample content", 1L, null, null);
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(existingPost));
         when(postMapper.toDto(existingPost)).thenReturn(postDto);
@@ -330,8 +351,8 @@ public class PostServiceTest {
         draftPost2.setDeleted(false);
         draftPost2.setCreatedAt(LocalDateTime.now());
 
-        PostDto draftPostDto1 = new PostDto("Dto 1", 1L, null);
-        PostDto draftPostDto2 = new PostDto("Dto 2", 2L, null);
+        PostDto draftPostDto1 = new PostDto("Dto 1", 1L, null, null);
+        PostDto draftPostDto2 = new PostDto("Dto 2", 2L, null, null);
 
         when(postRepository.findByAuthorId(userId)).thenReturn(List.of(draftPost1, draftPost2));
         when(postMapper.toDto(draftPost1)).thenReturn(draftPostDto1);
@@ -424,5 +445,56 @@ public class PostServiceTest {
         verify(postRepository).findAll();
     }
 
+    @Test
+    void publishScheduledPostsSuccessTest() {
+        ReflectionTestUtils.setField(postService, "batchSize", 5);
+        threadPoolTaskExecutor = Mockito.mock(ThreadPoolTaskExecutor.class);
+
+        Long userId = 1L;
+        LocalDateTime now = LocalDateTime.now();
+        List<Post> posts = getPosts(userId, now);
+
+        when(postRepository.findReadyToPublish()).thenReturn(posts);
+
+        postService.publishScheduledPosts();
+
+        verify(postRepository, times(1)).findReadyToPublish();
+    }
+
+    @Test
+    void publishBatchSuccessTest() {
+        Long userId = 1L;
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nowOther = LocalDateTime.now();
+        List<Post> posts = getPosts(userId, now);
+
+        postService.publishBatch(posts, nowOther);
+
+        verify(postRepository, times(1)).saveAll(postsCaptor.capture());
+        assertThat(postsCaptor.getValue().size()).isEqualTo(posts.size());
+        for (int i = 0; i < postsCaptor.getValue().size(); i++) {
+            assertThat(postsCaptor.getValue().get(i).isPublished()).isEqualTo(posts.get(i).isPublished());
+            assertThat(postsCaptor.getValue().get(i).getPublishedAt()).isEqualTo(nowOther);
+        }
+    }
+
+    private List<Post> getPosts(Long userId, LocalDateTime now) {
+
+        Post post1 = new Post();
+        post1.setId(1L);
+        post1.setAuthorId(userId);
+        post1.setPublished(false);
+        post1.setDeleted(false);
+        post1.setCreatedAt(now.minusMinutes(5));
+
+        Post post2 = new Post();
+        post2.setId(2L);
+        post2.setAuthorId(userId);
+        post2.setPublished(false);
+        post2.setDeleted(false);
+        post2.setCreatedAt(now.minusMinutes(5));
+
+        return List.of(post1, post2);
+    }
 
 }

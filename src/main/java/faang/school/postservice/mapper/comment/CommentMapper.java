@@ -33,7 +33,7 @@ public interface CommentMapper {
     @Mapping(target = "likes", ignore = true)
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true )
     void update(CommentDto commentDto, @MappingTarget Comment comment);
 
     @Named("mapToLikeId")

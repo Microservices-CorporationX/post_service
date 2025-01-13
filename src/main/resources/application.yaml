@@ -18,6 +18,13 @@ spring:
           max-size: 10
           queue-capacity: 25
         thread-name-prefix: checkPostsGrammarExecutor
+  post-task:
+    execution:
+      pool:
+        core-size: 10
+        max-size: 20
+        queue-capacity: 50
+      thread-name-prefix: postPublishExecutor
 
 
   jpa:
@@ -56,6 +63,10 @@ post:
     schedule:
       cron: "0 0 0 * * *"
     unverified-posts-limit: 5
+  publish-post:
+    schedule:
+      cron: "0 * * * * *"
+    batch-size: 1000
 
 user-service:
   host: localhost
