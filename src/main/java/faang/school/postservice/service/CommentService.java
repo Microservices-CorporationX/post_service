@@ -2,6 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,9 @@ public class CommentService {
         if (isUserNotExists(comment.getAuthorId())) {
             String content = comment.getContent();
             checkContent(content);
-            postRepository.findById(comment.getPost().getId())
+            Post post = postRepository.findById(comment.getPost().getId())
                     .orElseThrow(() -> new IllegalArgumentException("any error")); //TODO: уточнить ошибку
+            post.getComments().add(comment);
             LocalDateTime whenCommentCreated = LocalDateTime.now();
             comment.setCreatedAt(whenCommentCreated);
             comment.setUpdatedAt(whenCommentCreated);//TODO: добавить лог
