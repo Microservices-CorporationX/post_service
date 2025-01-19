@@ -2,13 +2,12 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.model.Comment;
-import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.time.LocalDateTime;
 
 @RequiredArgsConstructor
 @Service
@@ -18,11 +17,21 @@ public class CommentService {
     private final PostRepository postRepository;
 
     public Comment createComment(Comment comment) {
-        if (checkUserIsExists(comment.getAuthorId())) {
+        if (isUserNotExists(comment.getAuthorId())) {
             String content = comment.getContent();
             checkContent(content);
-            List<Post> posts = postRepository.findByAuthorId(comment.getAuthorId());
+            postRepository.findById(comment.getPost().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("any error")); //TODO: уточнить ошибку
+            LocalDateTime whenCommentCreated = LocalDateTime.now();
+            comment.setCreatedAt(whenCommentCreated);
+            comment.setUpdatedAt(whenCommentCreated);//TODO: добавить лог
         }
+        return commentRepository.save(comment);
+    }
+
+    public void updateComment(Comment comment) {
+
+
     }
 
     private void checkContent(String content) {
@@ -31,8 +40,8 @@ public class CommentService {
         }
     }
 
-    private boolean checkUserIsExists(Long authorId) {
-        return userServiceClient.getUser(authorId).id() > 0;
+    private boolean isUserNotExists(Long authorId) {
+        return !(userServiceClient.getUser(authorId).id() > 0);
     }
     /*Требования:
 
