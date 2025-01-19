@@ -1,6 +1,39 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.repository.PostRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@RequiredArgsConstructor
+@Service
 public class CommentService {
+    private final UserServiceClient userServiceClient;
+    private final CommentRepository commentRepository;
+    private final PostRepository postRepository;
+
+    public Comment createComment(Comment comment) {
+        if (checkUserIsExists(comment.getAuthorId())) {
+            String content = comment.getContent();
+            checkContent(content);
+            List<Post> posts = postRepository.findByAuthorId(comment.getAuthorId());
+        }
+    }
+
+    private void checkContent(String content) {
+        if (content.isEmpty() || content.length() > 4096) {
+            throw new IllegalArgumentException("Message of comment is empty or contains too much characters");
+        }
+    }
+
+    private boolean checkUserIsExists(Long authorId) {
+        return userServiceClient.getUser(authorId).id() > 0;
+    }
     /*Требования:
 
 Комментарии могут оставлять только конкретные пользователи под любыми постами.
