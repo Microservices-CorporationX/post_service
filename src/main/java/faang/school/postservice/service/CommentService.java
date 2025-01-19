@@ -17,16 +17,18 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
 
-    public Comment createComment(Comment comment) {
+    public Comment createComment(Comment comment, Long postId) {
         if (isUserNotExists(comment.getAuthorId())) {
             String content = comment.getContent();
             checkContent(content);
-            Post post = postRepository.findById(comment.getPost().getId())
+            Post post = postRepository.findById(postId)
                     .orElseThrow(() -> new IllegalArgumentException("any error")); //TODO: уточнить ошибку
-            post.getComments().add(comment);
+
             LocalDateTime whenCommentCreated = LocalDateTime.now();
             comment.setCreatedAt(whenCommentCreated);
             comment.setUpdatedAt(whenCommentCreated);//TODO: добавить лог
+            post.getComments().add(comment);
+            postRepository.save(post);
         }
         return commentRepository.save(comment);
     }

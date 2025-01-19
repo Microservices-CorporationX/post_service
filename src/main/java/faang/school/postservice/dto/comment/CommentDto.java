@@ -1,8 +1,11 @@
 package faang.school.postservice.dto.comment;
 
 
+import lombok.Getter;
+
 import java.time.LocalDateTime;
 
+@Getter
 public class CommentDto {
     private Long id;
     private Long authorId;
@@ -11,3 +14,4 @@ public class CommentDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
+/* пришло автор - его id, id post, content, timedata */
