@@ -23,14 +23,14 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
 
-    @PostMapping("/posts/{postId}/comments")
-    public CommentDto create(@PathVariable long postId, @Valid @RequestBody CreateCommentDto createDto) {
-        return commentService.create(postId, createDto);
+    @PostMapping("/posts/comments")
+    public CommentDto create(@Valid @RequestBody CreateCommentDto createDto) {
+        return commentService.create(createDto);
     }
 
-    @PutMapping("/comments/{commentId}")
-    public CommentDto update(@PathVariable long commentId, @Valid @RequestBody UpdateCommentDto updateDto) {
-        return commentService.update(commentId, updateDto);
+    @PutMapping("/posts/comments")
+    public CommentDto update(@Valid @RequestBody UpdateCommentDto updateDto) {
+        return commentService.update(updateDto);
     }
 
     @GetMapping("/posts/{postId}/comments")
