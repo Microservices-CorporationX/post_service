@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mapstruct.factory.Mappers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -27,12 +28,12 @@ import static org.mockito.Mockito.verify;
 public class PostServiceTest {
     @InjectMocks
     private PostService postService;
-    @Spy
-    private PostMapper postMapper;
     @Mock
     private PostRepository postRepository;
     @Mock
     private PostUtil postUtil;
+    @Spy
+    private PostMapper postMapper = Mappers.getMapper(PostMapper.class);
 
     private static PostCreatingRequest postCreatingRequest;
     private static PostResultResponse postResultResponse;
@@ -44,11 +45,6 @@ public class PostServiceTest {
                 .content("This is a test content")
                 .authorId(1L)
                 .projectId(null)
-                .published(false)
-                .publishedAt(null)
-                .deleted(false)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
                 .build();
 
         postResultResponse = PostResultResponse.builder()
@@ -59,6 +55,7 @@ public class PostServiceTest {
     @Test
     public void createPost_PostWasCreatedSuccessfully() {
         Post post = Post.builder()
+                .id(1L)
                 .content("HeLlO_W0o0oo0orlxD!")
                 .authorId(postCreatingRequest.authorId())
                 .published(false)
