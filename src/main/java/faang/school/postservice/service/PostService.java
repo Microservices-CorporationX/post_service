@@ -1,0 +1,137 @@
+package faang.school.postservice.service;
+
+import faang.school.postservice.dto.posts.PostCreatingRequest;
+import faang.school.postservice.dto.posts.PostResultResponse;
+import faang.school.postservice.excpetions.PostWasNotFoundException;
+import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.utils.PostUtil;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class PostService {
+    private final Logger logger = LoggerFactory.getLogger(PostService.class);
+    private final PostMapper postMapper;
+    private final PostRepository postRepository;
+    private final PostUtil postUtil;
+
+    public PostResultResponse createPost(PostCreatingRequest postCreatingDto) {
+        logger.info("Creating the post with id : {}", postCreatingDto.id());
+        Post post = Post.builder()
+                .content(postCreatingDto.content())
+                .published(false)
+                .deleted(false)
+                .build();
+
+        logger.info("Validating the post creator with id : {}", postCreatingDto.id());
+        int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
+        switch (result) {
+            case 0 : post.setAuthorId(postCreatingDto.authorId());
+            case 1 : post.setProjectId(postCreatingDto.projectId());
+        }
+        logger.info("Success validation for post : {}", postCreatingDto.id());
+
+        post = postRepository.save(post);
+        logger.info("Saved post with id : {}", postCreatingDto.id());
+
+        return postMapper.toDto(post);
+    }
+
+    public PostResultResponse publishPost(Long postId) {
+        logger.info("Publishing post with id : {}", postId);
+        postUtil.checkId(postId);
+        Post post = findPostById(postId);
+        if (post.isPublished()) {
+            throw new IllegalArgumentException("Post already published!");
+        }
+        post.setPublished(true);
+        post.setPublishedAt(LocalDateTime.now());
+
+        postRepository.save(post);
+        logger.info("Successfully published post with id : {}", postId);
+
+        return postMapper.toDto(post);
+    }
+
+    public PostResultResponse updatePost(Long postId, String updatingContent) {
+        logger.info("Updating post with id : {}", postId);
+        postUtil.checkId(postId);
+        if (StringUtils.isBlank(updatingContent)) {
+            throw new IllegalArgumentException("Updating content is blank!");
+        }
+        Post post = findPostById(postId);
+        if (post.isDeleted() || !post.isPublished()) {
+            throw new IllegalArgumentException("Post deleted or not published yet!");
+        }
+        post.setContent(updatingContent);
+
+        postRepository.save(post);
+        logger.info("Successfully updated post with id : {}", postId);
+
+        return postMapper.toDto(post);
+    }
+
+    public PostResultResponse softDelete(Long postId) {
+        logger.info("Soft deleting post with id : {}", postId);
+        postUtil.checkId(postId);
+        Post post = findPostById(postId);
+        if (post.isDeleted()) {
+            throw new IllegalArgumentException("Post already marked as deleted!");
+        }
+        post.setDeleted(true);
+
+        postRepository.save(post);
+        logger.info("Successfully soft deleted post with id : {}", postId);
+        return postMapper.toDto(post);
+    }
+
+    public List<PostResultResponse> getNoPublishedPostsByAuthor(Long authorId) {
+        postUtil.checkId(authorId);
+        return postRepository.findByAuthorId(authorId)
+                .stream()
+                .filter(post -> !post.isPublished())
+                .map(postMapper::toDto)
+                .toList();
+    }
+
+    public List<PostResultResponse> getNoPublishedPostsByProject(Long projectId) {
+        postUtil.checkId(projectId);
+        return postRepository.findByProjectId(projectId)
+                .stream()
+                .filter(post -> !post.isPublished())
+                .map(postMapper::toDto)
+                .toList();
+    }
+
+    public List<PostResultResponse> getPublishedPostsByAuthor(Long authorId) {
+        postUtil.checkId(authorId);
+        return postRepository.findByAuthorId(authorId)
+                .stream()
+                .filter(Post::isPublished)
+                .map(postMapper::toDto)
+                .toList();
+    }
+
+    public List<PostResultResponse> getPublishedPostsByProject(Long projectId) {
+        postUtil.checkId(projectId);
+        return postRepository.findByProjectId(projectId)
+                .stream()
+                .filter(Post::isPublished)
+                .map(postMapper::toDto)
+                .toList();
+    }
+
+    public Post findPostById(long id) {
+        return postRepository.findById(id)
+                .orElseThrow(() -> new PostWasNotFoundException("No posts was found!"));
+    }
+}
