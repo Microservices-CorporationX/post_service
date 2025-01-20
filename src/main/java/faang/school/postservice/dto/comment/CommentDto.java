@@ -8,7 +8,6 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class CommentDto {
-
     private long id;
     private String content;
     private long authorId;
