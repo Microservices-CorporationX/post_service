@@ -56,7 +56,7 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
 
-        postRepository.save(post);
+        post = postRepository.save(post);
         logger.info("Successfully published post with id : {}", postId);
 
         return postMapper.toDto(post);

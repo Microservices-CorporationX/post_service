@@ -9,6 +9,7 @@ import faang.school.postservice.service.PostService;
 import faang.school.postservice.utils.PostUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -19,10 +20,10 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
@@ -64,7 +65,8 @@ public class PostServiceTest {
 
         Mockito.when(postUtil.validateCreator(postCreatingRequest.authorId(), postCreatingRequest.projectId()))
                 .thenReturn(0);
-        Mockito.when(postRepository.save(any(Post.class))).thenReturn(post);
+        Mockito.when(postRepository.save(any(Post.class)))
+                .thenReturn(post);
 
         PostResultResponse result = postService.createPost(postCreatingRequest);
         Assertions.assertNotNull(result);
@@ -72,4 +74,42 @@ public class PostServiceTest {
         verify(postUtil, times(1)).validateCreator(postCreatingRequest.authorId(), postCreatingRequest.projectId());
         verify(postRepository, times(1)).save(any(Post.class));
     }
+
+    @Test
+    public void publishPost_PostSuccessfullyPublished() {
+        Post post = Post.builder()
+                .id(1L)
+                .content("HeLlO_W0o0oo0orlxD!")
+                .authorId(postCreatingRequest.authorId())
+                .published(false)
+                .deleted(false)
+                .build();
+
+        when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
+        when(postRepository.save(any(Post.class))).thenReturn(post);
+
+        PostResultResponse result = postService.publishPost(post.getId());
+
+        Assertions.assertEquals(postResultResponse, result);
+        Assertions.assertDoesNotThrow(() -> postUtil.checkId(post.getId()));
+    }
+
+    @Test
+    @Disabled
+    public void createPost_PostHadNotAuthorOrProject() {
+        Post post = Post.builder()
+                .id(1L)
+                .content("HeLlO_W0o0oo0orlxD!")
+                .authorId(null)
+                .projectId(null)
+                .published(false)
+                .deleted(false)
+                .build();
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> postUtil.validateCreator(
+                null,
+                null));
+    }
+
+
 }
