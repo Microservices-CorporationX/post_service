@@ -13,17 +13,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class PostCorrecterTest {
+class PostCorrecterSchedulerTest {
     @Mock
     private PostService postService;
     @Mock
     private UserContext userContext;
     @InjectMocks
-    private PostCorrecter postCorrecter;
+    private PostCorrecterScheduler postCorrecterScheduler;
 
     @Test
     public void testCorrectContentOfUnpublishedPosts() {
-        postCorrecter.correctContentOfUnpublishedPosts();
+        postCorrecterScheduler.correctContentOfUnpublishedPosts();
 
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
         verify(userContext).setUserId(userIdCaptor.capture());
