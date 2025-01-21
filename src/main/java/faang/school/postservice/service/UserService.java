@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserServiceClient userServiceClient;
 
-    protected void checkUserExists(long userId) {
+    public void checkUserExists(long userId) {
         try {
             userServiceClient.getUser(userId);
         } catch (FeignException.NotFound e) {

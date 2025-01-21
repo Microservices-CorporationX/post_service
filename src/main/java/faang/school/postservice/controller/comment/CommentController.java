@@ -1,6 +1,6 @@
 package faang.school.postservice.controller.comment;
 
-import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.dto.comment.ReadCommentDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
 import faang.school.postservice.service.CommentService;
@@ -24,17 +24,17 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping("/posts/comments")
-    public CommentDto create(@Valid @RequestBody CreateCommentDto createDto) {
+    public ReadCommentDto create(@Valid @RequestBody CreateCommentDto createDto) {
         return commentService.create(createDto);
     }
 
     @PutMapping("/posts/comments")
-    public CommentDto update(@Valid @RequestBody UpdateCommentDto updateDto) {
+    public ReadCommentDto update(@Valid @RequestBody UpdateCommentDto updateDto) {
         return commentService.update(updateDto);
     }
 
     @GetMapping("/posts/{postId}/comments")
-    public List<CommentDto> getCommentsByPostId(@PathVariable long postId) {
+    public List<ReadCommentDto> getCommentsByPostId(@PathVariable long postId) {
         return commentService.getCommentsByPostId(postId);
     }
 

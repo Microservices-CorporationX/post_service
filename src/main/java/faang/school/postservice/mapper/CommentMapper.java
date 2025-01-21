@@ -1,6 +1,6 @@
 package faang.school.postservice.mapper;
 
-import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.dto.comment.ReadCommentDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
 import faang.school.postservice.model.Comment;
@@ -24,12 +24,9 @@ public interface CommentMapper {
     @Mapping(target = "post.id", source = "postId")
     Comment toEntity(CreateCommentDto createDto);
 
-    @Mapping(target = "authorId", source = "editorId")
-    Comment toUpdatedEntity(UpdateCommentDto updateDto);
-
     @Mapping(target = "likesId", source = "likes")
     @Mapping(target = "postId", source = "post.id")
-    CommentDto toDto(Comment comment);
+    ReadCommentDto toDto(Comment comment);
 
     @IterableMapping(elementTargetType = Long.class)
     default List<Long> mapLikesToIds(List<Like> likes) {
