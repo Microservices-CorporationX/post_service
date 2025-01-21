@@ -19,9 +19,11 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final UserService userService;
+    private final PostService postService;
 
     public ReadCommentDto create(CreateCommentDto createDto) {
-        userService.checkUserExists(createDto.getAuthorId());
+        userService.verifyUserExists(createDto.getAuthorId());
+        postService.verifyPostExists(createDto.getPostId());
 
         Comment newComment = commentMapper.toEntity(createDto);
         newComment = commentRepository.save(newComment);

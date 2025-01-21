@@ -47,7 +47,7 @@ public class CommentServiceTest {
     public void testCreateSuccessfully() {
         CreateCommentDto createDto = new CreateCommentDto();
         createDto.setAuthorId(AUTHOR_ID);
-        Mockito.doNothing().when(userService).checkUserExists(createDto.getAuthorId());
+        Mockito.doNothing().when(userService).verifyUserExists(createDto.getAuthorId());
 
         Comment comment = commentMapper.toEntity(createDto);
 
