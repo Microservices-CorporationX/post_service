@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class PostCorrecterScheduler {
     public static final Long DEFAULT_USER_ID = 1L;
-    public static final int maxAttempts = 5;
+    public static final int MAX_ATTEMPTS = 5;
 
     private final PostService postService;
     private final UserContext userContext;
@@ -37,6 +37,6 @@ public class PostCorrecterScheduler {
     @Recover
     public void recover(FeignException e) {
         log.error("All attempts to access the grammar check api have been unsuccessful. Attempts made: {}",
-                maxAttempts, e);
+                MAX_ATTEMPTS, e);
     }
 }
