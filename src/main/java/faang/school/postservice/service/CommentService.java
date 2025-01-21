@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.dto.comment.ReadCommentDto;
 import faang.school.postservice.dto.comment.CreateCommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
 import faang.school.postservice.exception.BusinessException;
@@ -20,7 +20,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserService userService;
 
-    public CommentDto create(CreateCommentDto createDto) {
+    public ReadCommentDto create(CreateCommentDto createDto) {
         userService.checkUserExists(createDto.getAuthorId());
 
         Comment newComment = commentMapper.toEntity(createDto);
@@ -28,7 +28,7 @@ public class CommentService {
         return commentMapper.toDto(newComment);
     }
 
-    public CommentDto update(UpdateCommentDto updateDto) {
+    public ReadCommentDto update(UpdateCommentDto updateDto) {
         Comment comment = getCommentById(updateDto.getId());
 
         validateEditorAndAuthorEquality(updateDto.getEditorId(), comment.getAuthorId());
@@ -39,7 +39,7 @@ public class CommentService {
         return commentMapper.toDto(comment);
     }
 
-    public List<CommentDto> getCommentsByPostId(long postId) {
+    public List<ReadCommentDto> getCommentsByPostId(long postId) {
         List<Comment> comments = commentRepository.findAllByPostId(postId);
 
         return comments.stream()
