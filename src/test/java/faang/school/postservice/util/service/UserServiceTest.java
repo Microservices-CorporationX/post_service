@@ -29,13 +29,13 @@ public class UserServiceTest {
     public void testUserExist() {
         Mockito.when(userServiceClient.getUser(ID)).thenReturn(new UserDto(ID, "Alex", "email"));
 
-        assertDoesNotThrow(() -> userService.checkUserExists(ID));
+        assertDoesNotThrow(() -> userService.verifyUserExists(ID));
     }
 
     @Test
     public void testUserNotExist() {
         Mockito.when(userServiceClient.getUser(ID)).thenThrow(FeignException.NotFound.class);
 
-        assertThrows(EntityNotFoundException.class, () -> userService.checkUserExists(ID));
+        assertThrows(EntityNotFoundException.class, () -> userService.verifyUserExists(ID));
     }
 }
