@@ -5,17 +5,20 @@ import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.service.CommentService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 @RequiredArgsConstructor
-@Controller
+@RestController
 public class CommentController {
     private final CommentService commentService;
     private final CommentMapper mapper;
 
-    public CommentDto createComment(CommentDto dto) {
+    @PostMapping("/comment")
+    public CommentDto createComment(@RequestBody CommentDto dto) {
         Comment rawComment = mapper.toEntity(dto);
-        commentService.createComment(rawComment, dto.getPostId());
-        return dto;
+        Comment result = commentService.createComment(rawComment, dto.getPostId());
+        return mapper.toDto(result);
     }
 }

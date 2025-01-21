@@ -1,15 +1,20 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class CommentService {
@@ -45,6 +50,8 @@ public class CommentService {
     }
 
     private boolean isUserNotExists(Long authorId) {
+        UserDto dto = userServiceClient.getUser(1);
+        log.info(dto.toString());
         return !(userServiceClient.getUser(authorId).id() > 0);
     }
     /*Требования:
