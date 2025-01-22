@@ -25,6 +25,23 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+  cloud:
+    openfeign:
+      client:
+        config:
+          user-service:
+            url: http://localhost:8080/api/
+            connect-timeout: 5000
+            read-timeout: 5000
+          project-service:
+            url: http://localhost:8082/api/
+            connect-timeout: 5000
+            read-timeout: 5000
+          payment-service:
+            url: http://localhost:9080/api/
+            connect-timeout: 5000
+            read-timeout: 5000
+
 server:
   port: 8081
 
