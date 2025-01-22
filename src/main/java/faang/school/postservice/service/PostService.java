@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
@@ -84,6 +86,7 @@ public class PostService {
         logger.info("Soft deleting post with id : {}", postId);
         postUtil.checkId(postId);
         Post post = findPostById(postId);
+        logger.info("{}", post.isDeleted());
         if (post.isDeleted()) {
             throw new IllegalArgumentException("Post already marked as deleted!");
         }
@@ -95,37 +98,26 @@ public class PostService {
     }
 
     public List<PostResultResponse> getNoPublishedPostsByAuthor(Long authorId) {
-        postUtil.checkId(authorId);
-        return postRepository.findByAuthorId(authorId)
-                .stream()
-                .filter(post -> !post.isPublished())
-                .map(postMapper::toDto)
-                .toList();
+        return getPostsByFilter(authorId, postRepository::findByAuthorId, post -> !post.isPublished());
     }
 
     public List<PostResultResponse> getNoPublishedPostsByProject(Long projectId) {
-        postUtil.checkId(projectId);
-        return postRepository.findByProjectId(projectId)
-                .stream()
-                .filter(post -> !post.isPublished())
-                .map(postMapper::toDto)
-                .toList();
+        return getPostsByFilter(projectId, postRepository::findByProjectId, post -> !post.isPublished());
     }
 
     public List<PostResultResponse> getPublishedPostsByAuthor(Long authorId) {
-        postUtil.checkId(authorId);
-        return postRepository.findByAuthorId(authorId)
-                .stream()
-                .filter(Post::isPublished)
-                .map(postMapper::toDto)
-                .toList();
+        return getPostsByFilter(authorId, postRepository::findByAuthorId, Post::isPublished);
     }
 
     public List<PostResultResponse> getPublishedPostsByProject(Long projectId) {
-        postUtil.checkId(projectId);
-        return postRepository.findByProjectId(projectId)
+        return getPostsByFilter(projectId, postRepository::findByProjectId, Post::isPublished);
+    }
+
+    public List<PostResultResponse> getPostsByFilter(Long id, Function<Long, List<Post>> fetcher, Predicate<Post> filter) {
+        postUtil.checkId(id);
+        return fetcher.apply(id)
                 .stream()
-                .filter(Post::isPublished)
+                .filter(filter)
                 .map(postMapper::toDto)
                 .toList();
     }

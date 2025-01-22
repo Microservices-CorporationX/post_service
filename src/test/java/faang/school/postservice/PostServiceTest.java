@@ -8,8 +8,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.utils.PostUtil;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -19,7 +18,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -38,9 +36,10 @@ public class PostServiceTest {
 
     private static PostCreatingRequest postCreatingRequest;
     private static PostResultResponse postResultResponse;
+    private static Post post;
 
-    @BeforeAll
-    public static void setUp() {
+    @BeforeEach
+    public void setUp() {
         postCreatingRequest = PostCreatingRequest.builder()
                 .id(1L)
                 .content("This is a test content")
@@ -51,18 +50,18 @@ public class PostServiceTest {
         postResultResponse = PostResultResponse.builder()
                 .id(postCreatingRequest.authorId())
                 .build();
-    }
 
-    @Test
-    public void createPost_PostWasCreatedSuccessfully() {
-        Post post = Post.builder()
+        post = Post.builder()
                 .id(1L)
                 .content("HeLlO_W0o0oo0orlxD!")
                 .authorId(postCreatingRequest.authorId())
                 .published(false)
                 .deleted(false)
                 .build();
+    }
 
+    @Test
+    public void createPost_PostWasCreatedSuccessfully() {
         Mockito.when(postUtil.validateCreator(postCreatingRequest.authorId(), postCreatingRequest.projectId()))
                 .thenReturn(0);
         Mockito.when(postRepository.save(any(Post.class)))
@@ -77,14 +76,6 @@ public class PostServiceTest {
 
     @Test
     public void publishPost_PostSuccessfullyPublished() {
-        Post post = Post.builder()
-                .id(1L)
-                .content("HeLlO_W0o0oo0orlxD!")
-                .authorId(postCreatingRequest.authorId())
-                .published(false)
-                .deleted(false)
-                .build();
-
         when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
         when(postRepository.save(any(Post.class))).thenReturn(post);
 
@@ -95,21 +86,103 @@ public class PostServiceTest {
     }
 
     @Test
-    @Disabled
-    public void createPost_PostHadNotAuthorOrProject() {
-        Post post = Post.builder()
+    public void publishPost_PostAlreadyPublished() {
+        Post setPost = Post.builder()
                 .id(1L)
                 .content("HeLlO_W0o0oo0orlxD!")
-                .authorId(null)
-                .projectId(null)
+                .authorId(postCreatingRequest.authorId())
+                .published(true)
+                .deleted(false)
+                .build();
+
+        setPost.setPublished(true);
+
+        when(postRepository.findById(setPost.getId())).thenReturn(Optional.of(setPost));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.publishPost(setPost.getId()));
+        Assertions.assertDoesNotThrow(() -> postUtil.checkId(setPost.getId()));
+    }
+
+    @Test
+    public void updatePost_PostWasUpdatedSuccessfully() {
+        Post setPost = Post.builder()
+                .id(1L)
+                .content("HeLlO_W0o0oo0orlxD!")
+                .authorId(postCreatingRequest.authorId())
+                .published(true)
+                .deleted(false)
+                .build();
+
+        Long postId = setPost.getId();
+        String postContent = setPost.getContent() + "New content";
+
+        when(postRepository.findById(postId)).thenReturn(Optional.ofNullable(setPost));
+        when(postRepository.save(any(Post.class))).thenReturn(setPost);
+
+        PostResultResponse result = postService.updatePost(postId, postContent);
+
+        Assertions.assertEquals(result, postResultResponse);
+        Assertions.assertDoesNotThrow(() -> postUtil.checkId(setPost.getId()));
+    }
+
+    @Test
+    public void updatePost_PostWasDeleted() {
+        Post setPost = Post.builder()
+                .id(1L)
+                .content("HeLlO_W0o0oo0orlxD!")
+                .authorId(postCreatingRequest.authorId())
+                .published(true)
+                .deleted(true)
+                .build();
+
+        updatePostWithError(setPost);
+    }
+
+    @Test
+    public void updatePost_PostWasNotPublishedYet() {
+        Post setPost = Post.builder()
+                .id(1L)
+                .content("HeLlO_W0o0oo0orlxD!")
+                .authorId(postCreatingRequest.authorId())
                 .published(false)
                 .deleted(false)
                 .build();
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> postUtil.validateCreator(
-                null,
-                null));
+        updatePostWithError(setPost);
     }
 
+    @Test
+    public void softDeletePost_PostWasSoftDeletedSuccessfully() {
+        Long postId = post.getId();
 
+        Mockito.when(postRepository.findById(postId))
+                .thenReturn(Optional.of(post));
+        Mockito.when(postRepository.save(any(Post.class)))
+                .thenReturn(post);
+
+        PostResultResponse result = postService.softDelete(postId);
+
+        Assertions.assertEquals(result, postResultResponse);
+    }
+
+    @Test
+    public void softDeletePost_ThrowsExceptionWhenAlreadyDeleted() {
+        Long postId = post.getId();
+
+        post.setDeleted(true);
+
+        Mockito.when(postRepository.findById(postId))
+                .thenReturn(Optional.of(post));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.softDelete(postId));
+    }
+
+    private void updatePostWithError(Post setPost) {
+        Long postId = setPost.getId();
+        String postContent = setPost.getContent() + "New content";
+
+        when(postRepository.findById(postId)).thenReturn(Optional.of(setPost));
+
+        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.updatePost(postId, postContent));
+    }
 }
