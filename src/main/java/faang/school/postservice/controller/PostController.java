@@ -3,6 +3,7 @@ package faang.school.postservice.controller;
 import faang.school.postservice.dto.posts.PostCreatingRequest;
 import faang.school.postservice.dto.posts.PostResultResponse;
 import faang.school.postservice.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,7 +16,7 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping("/create")
-    public PostResultResponse createPost(@RequestBody PostCreatingRequest postCreatingDto) {
+    public PostResultResponse createPost(@RequestBody @Valid PostCreatingRequest postCreatingDto) {
         return postService.createPost(postCreatingDto);
     }
 
