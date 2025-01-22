@@ -50,7 +50,7 @@ public class LikeValidator {
     private void verifyCommentLikeExists(Comment comment, LikeDto dto) {
         comment.getLikes()
                 .stream()
-                .filter(likeItem -> likeItem.getPost().getId().equals(dto.commentId()))
+                .filter(likeItem -> likeItem.getComment().getId().equals(dto.commentId()))
                 .findAny()
                 .ifPresent(like -> {
                     throw new BusinessException("Нельзя повторно ставить лайк на комментарий с ID " + dto.commentId());
