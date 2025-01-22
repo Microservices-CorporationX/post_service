@@ -1,5 +1,6 @@
 package faang.school.postservice.dto.post;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotBlank;
@@ -30,8 +31,10 @@ public record PostUpdateDto(
         @Schema(description = "состояние поста,если удалено true")
         @NotNull boolean deleted,
         @Schema(description = "время когда пост был опубликован")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         @Nullable LocalDateTime publishedAt,
         @Schema(description = "время когда пост был создан")
+        @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
         @Nullable LocalDateTime createdAt
 ) {
 }

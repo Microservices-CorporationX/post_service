@@ -2,12 +2,14 @@ package faang.school.postservice.service.impl.like;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.LikeDto;
+import faang.school.postservice.dto.LikeEvent;
 import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -15,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +30,7 @@ public class LikeServiceImpl implements LikeService {
     private final UserServiceClient userServiceClient;
     private final PostRepository postRepository;
     private final LikeMapper likeMapper;
+    private final LikeEventPublisher likeEventPublisher;
 
     @Override
     public LikeDto createLikeComment(long id, LikeDto likeDto) {
@@ -50,13 +54,14 @@ public class LikeServiceImpl implements LikeService {
     @Override
     public LikeDto createLikePost(long id, LikeDto likeDto) {
         Post post = postRepository.findById(id).orElseThrow(() -> new DataValidationException("This post does not exist in repository"));
+        Comment comment = commentRepository.findById(likeDto.idComment()).orElseThrow(() -> new DataValidationException("This comment does not exist in repository"));
         validateUserInRepository(likeDto.userId());
         List<Comment> comments = post.getComments().stream()
                 .filter(comment1 -> comment1.getAuthorId() == likeDto.authorId())
                 .toList();
 
         Optional<Like> existingLikeOnComment = comments.stream()
-                .map(comment -> likeRepository.findByCommentIdAndUserId(comment.getId(), likeDto.userId()))
+                .map(comm -> likeRepository.findByCommentIdAndUserId(comm.getId(), likeDto.userId()))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .findFirst();
@@ -67,8 +72,15 @@ public class LikeServiceImpl implements LikeService {
 
         Like like = likeMapper.toEntity(likeDto);
         like.setPost(post);
-        like.setComment(null);
+        like.setComment(comment);
         likeRepository.save(like);
+
+        likeEventPublisher.publishMessage(
+                new LikeEvent(
+                        likeDto.authorId(),
+                        likeDto.userId(),
+                        likeDto.idPost(),
+                        LocalDateTime.now()));
 
         return likeMapper.toDto(like);
     }
@@ -91,6 +103,7 @@ public class LikeServiceImpl implements LikeService {
 
     private void validateUserInRepository(Long userid) {
         UserDto userDto = userServiceClient.getUser(userid);
+        log.info("validateUserInRepository userDto: {}", userDto);
         if (userDto == null) {
             throw new DataValidationException("User with ID " + userid + " not found");
         }
