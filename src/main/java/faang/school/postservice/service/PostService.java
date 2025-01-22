@@ -66,6 +66,7 @@ public class PostService {
 
         return postMapper.toDto(post);
     }
+
     @Transactional
     public PostResultResponse updatePost(Long postId, String updatingContent) {
         logger.info("Updating post with id : {}", postId);
