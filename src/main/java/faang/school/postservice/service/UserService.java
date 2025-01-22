@@ -18,7 +18,7 @@ public class UserService {
             userContext.setUserId(userId);
             userServiceClient.getUser(userId);
         } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден");
+            throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден " + e.getMessage());
         }
     }
 }

@@ -11,15 +11,15 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-public class CreateCommentDto {
+public class CommentUpdateDto {
+    @NotNull
+    @Positive
+    private Long id;
     @NotBlank
     @Size(max = 4096)
     private String content;
     @NotNull
     @Positive
-    private Long authorId;
-    @NotNull
-    @Positive
-    private Long postId;
-    private LocalDateTime createdAt;
+    private Long editorId;
+    private LocalDateTime updatedAt;
 }

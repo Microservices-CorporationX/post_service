@@ -1,8 +1,8 @@
 package faang.school.postservice.mapper;
 
-import faang.school.postservice.dto.comment.ReadCommentDto;
-import faang.school.postservice.dto.comment.CreateCommentDto;
-import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
+import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import org.mapstruct.BeanMapping;
@@ -22,11 +22,11 @@ import java.util.stream.Collectors;
 public interface CommentMapper {
 
     @Mapping(target = "post.id", source = "postId")
-    Comment toEntity(CreateCommentDto createDto);
+    Comment toEntity(CommentCreateDto createDto);
 
     @Mapping(target = "likesId", source = "likes")
     @Mapping(target = "postId", source = "post.id")
-    ReadCommentDto toDto(Comment comment);
+    CommentReadDto toDto(Comment comment);
 
     @IterableMapping(elementTargetType = Long.class)
     default List<Long> mapLikesToIds(List<Like> likes) {
@@ -38,6 +38,6 @@ public interface CommentMapper {
     }
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntityFromDto(UpdateCommentDto updateDto, @MappingTarget Comment comment);
+    void updateEntityFromDto(CommentUpdateDto updateDto, @MappingTarget Comment comment);
 
 }
