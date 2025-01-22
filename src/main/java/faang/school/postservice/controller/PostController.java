@@ -56,7 +56,7 @@ public class PostController {
             return postService.getAllDraftsByProject(id);
         }
         if (type.equalsIgnoreCase("author")) {
-            return postService.getAllPublishedPostsByAuthor(id);
+            return postService.getAllDraftsByAuthor(id);
         }
         throw new DataValidationException("Неверный тип владельца поста.");
     }
