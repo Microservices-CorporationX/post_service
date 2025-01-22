@@ -87,4 +87,10 @@ public class PostServiceImpl implements PostService {
         List<Post> posts = postRepository.findByProjectId(id, published);
         return postMapper.toDto(posts);
     }
+
+    @Transactional
+    @Override
+    public int publishingPostsOnSchedule() {
+        return postRepository.publishingPostsOnSchedule();
+    }
 }

@@ -22,10 +22,14 @@ public class PostController {
     private static final String ID_PATH = "/{id}";
     private static final String AUTHOR_ID_PATH = "/{authorId}";
     private static final String PROJECT_ID_PATH = "/{projectId}";
-    private static final String NOT_PUBLISHED_BY_PROJECT_ID_PATH = PROJECT_ID_PATH + "/saved";
-    private static final String PUBLISHED_BY_PROJECT_ID_PATH = PROJECT_ID_PATH + "/published";
-    private static final String NOT_PUBLISHED_BY_AUTHOR_ID_PATH = AUTHOR_ID_PATH + "/saved";
-    private static final String PUBLISHED_BY_AUTHOR_ID_PATH = AUTHOR_ID_PATH + "/published";
+    private static final String USERS_PATH = "/users";
+    private static final String PROJECTS_PATH = "/projects";
+    private static final String SAVED_PATH = "/saved";
+    private static final String PUBLISHED_PATH = "/published";
+    private static final String NOT_PUBLISHED_BY_PROJECT_ID_PATH = PROJECTS_PATH + PROJECT_ID_PATH + SAVED_PATH;
+    private static final String PUBLISHED_BY_PROJECT_ID_PATH = PROJECTS_PATH + PROJECT_ID_PATH + PUBLISHED_PATH;
+    private static final String NOT_PUBLISHED_BY_AUTHOR_ID_PATH = USERS_PATH + AUTHOR_ID_PATH + SAVED_PATH;
+    private static final String PUBLISHED_BY_AUTHOR_ID_PATH = USERS_PATH + AUTHOR_ID_PATH + PUBLISHED_PATH;
     private static final String PUBLISH_ID_PATH = ID_PATH + "/publish";
 
     @PostMapping

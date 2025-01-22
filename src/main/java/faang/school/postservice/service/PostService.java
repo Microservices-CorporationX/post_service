@@ -19,4 +19,6 @@ public interface PostService {
     List<PostDto> getPostsByAuthorId(long id, boolean published);
 
     List<PostDto> getPostsByProjectId(long id, boolean published);
+
+    int publishingPostsOnSchedule();
 }
