@@ -52,6 +52,7 @@ payment-service:
 schedule:
   banUser:
     cron: 0 0 * * * *
+
 services:
   s3:
     endpoint: http://127.0.0.1:9000
@@ -60,3 +61,6 @@ services:
     bucketName: corpbucket
     isMocked: true
     region: Monte
+cache:
+  post:
+    ttl:
