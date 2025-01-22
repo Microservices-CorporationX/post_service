@@ -67,6 +67,7 @@ spring:
         update_post_comments_likes: post_comment_likes_update
       user:
         feed_update: feed_update
+        ban: user_ban
 
 server:
   port: 8081
@@ -185,4 +186,3 @@ springdoc:
 redis:
   banner:
     schedule: "0 0 0 * * ?"
-    topic: "user_ban"

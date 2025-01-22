@@ -34,8 +34,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     @Query("SELECT p FROM Post p WHERE p.published = false AND p.deleted = false AND (p.scheduledAt IS NULL OR p.updatedAt > p.scheduledAt)")
     List<Post> findDraftsPaginate(Pageable pageable);
 
-    @Query("SELECT p.authorId FROM Post p WHERE p.verificationStatus = :status GROUP BY p.authorId HAVING COUNT(*) > 5")
-    List<Long> findAllUsersBorBan(VerificationPostStatus status);
+    @Query("""
+            SELECT p.authorId
+            FROM Post p
+            WHERE p.verificationStatus = :status
+            GROUP BY p.authorId
+            HAVING COUNT(*) > 5
+            """)
+    List<Long> findAllUsersForBan(VerificationPostStatus status);
 
     @Query(nativeQuery = true, value = """
             SELECT * FROM post
