@@ -12,6 +12,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,7 @@ public class PostService {
     private final PostRepository postRepository;
     private final PostUtil postUtil;
 
+    @Transactional
     public PostResultResponse createPost(PostCreatingRequest postCreatingDto) {
         logger.info("Creating the post with id : {}", postCreatingDto.id());
         Post post = Post.builder()
@@ -48,6 +50,7 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @Transactional
     public PostResultResponse publishPost(Long postId) {
         logger.info("Publishing post with id : {}", postId);
         postUtil.checkId(postId);
@@ -63,7 +66,7 @@ public class PostService {
 
         return postMapper.toDto(post);
     }
-
+    @Transactional
     public PostResultResponse updatePost(Long postId, String updatingContent) {
         logger.info("Updating post with id : {}", postId);
         postUtil.checkId(postId);
@@ -82,6 +85,7 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @Transactional
     public PostResultResponse softDelete(Long postId) {
         logger.info("Soft deleting post with id : {}", postId);
         postUtil.checkId(postId);
@@ -113,7 +117,9 @@ public class PostService {
         return getPostsByFilter(projectId, postRepository::findByProjectId, Post::isPublished);
     }
 
-    public List<PostResultResponse> getPostsByFilter(Long id, Function<Long, List<Post>> fetcher, Predicate<Post> filter) {
+    public List<PostResultResponse> getPostsByFilter(Long id,
+                                                     Function<Long, List<Post>> fetcher,
+                                                     Predicate<Post> filter) {
         postUtil.checkId(id);
         return fetcher.apply(id)
                 .stream()
