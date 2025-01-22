@@ -10,8 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.util.Optional;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -24,13 +22,13 @@ public class PostServiceValidator {
         Long authorId = postRequestDto.authorId();
         Long projectId = postRequestDto.projectId();
 
-        checkAuthority(authorId, projectId);
+        checkAuthorship(authorId, projectId);
         checkAuthorExists(authorId);
         checkProjectExists(projectId);
     }
 
-    public void validatePostExists(Long postId, Optional<Post> optionalPost) {
-        if (optionalPost.isEmpty()) {
+    public void validatePostExists(Long postId, Post post) {
+        if (post.getId() == null) {
             log.error("Unable to find post with id = {}", postId);
             throw new IllegalArgumentException("Unable to find post with id = " + postId);
         }
@@ -43,7 +41,22 @@ public class PostServiceValidator {
         }
     }
 
-    private void checkAuthority(Long authorId, Long projectId) {
+    public void validatePostBeforeUpdate(Post sourcePost, Post targetPost) {
+        if (sourcePost.getAuthorId() != null && !sourcePost.getAuthorId().equals(targetPost.getAuthorId())) {
+            log.error("Unable to change author id to post id {}", sourcePost.getId());
+            throw new IllegalArgumentException("Unable to change author id to post!");
+        }
+        if (sourcePost.getProjectId() != null && !sourcePost.getProjectId().equals(targetPost.getProjectId())) {
+            log.error("Unable to change project id to post id {}", sourcePost.getId());
+            throw new IllegalArgumentException("Unable to change project id to post!");
+        }
+        if (sourcePost.getAuthorId() == null && sourcePost.getProjectId() == null) {
+            log.error("Unable to clear authorship of the post with id {}", sourcePost.getId());
+            throw new IllegalArgumentException("Unable to clear authorship of the post!");
+        }
+    }
+
+    private void checkAuthorship(Long authorId, Long projectId) {
         if ((null == authorId || authorId <= 0) && (null == projectId || projectId <= 0)) {
             log.error("Either the author or the project of the post must be provided. AuthorId: {}, ProjectId: {}",
                     authorId, projectId);
