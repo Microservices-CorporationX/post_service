@@ -7,7 +7,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-public class ReadCommentDto {
+public class CommentReadDto {
     private long id;
     private String content;
     private long authorId;

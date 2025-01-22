@@ -1,8 +1,8 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.dto.comment.ReadCommentDto;
-import faang.school.postservice.dto.comment.CreateCommentDto;
-import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
+import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.CommentMapper;
@@ -21,7 +21,7 @@ public class CommentService {
     private final UserService userService;
     private final PostService postService;
 
-    public ReadCommentDto create(CreateCommentDto createDto) {
+    public CommentReadDto create(CommentCreateDto createDto) {
         userService.verifyUserExists(createDto.getAuthorId());
         postService.verifyPostExists(createDto.getPostId());
 
@@ -30,7 +30,7 @@ public class CommentService {
         return commentMapper.toDto(newComment);
     }
 
-    public ReadCommentDto update(UpdateCommentDto updateDto) {
+    public CommentReadDto update(CommentUpdateDto updateDto) {
         Comment comment = getCommentById(updateDto.getId());
 
         validateEditorAndAuthorEquality(updateDto.getEditorId(), comment.getAuthorId());
@@ -41,7 +41,7 @@ public class CommentService {
         return commentMapper.toDto(comment);
     }
 
-    public List<ReadCommentDto> getCommentsByPostId(long postId) {
+    public List<CommentReadDto> getCommentsByPostId(long postId) {
         List<Comment> comments = commentRepository.findAllByPostId(postId);
 
         return comments.stream()

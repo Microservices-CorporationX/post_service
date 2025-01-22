@@ -1,8 +1,8 @@
 package faang.school.postservice.util.service;
 
-import faang.school.postservice.dto.comment.ReadCommentDto;
-import faang.school.postservice.dto.comment.CreateCommentDto;
-import faang.school.postservice.dto.comment.UpdateCommentDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
+import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
@@ -45,7 +45,7 @@ public class CommentServiceTest {
 
     @Test
     public void testCreateSuccessfully() {
-        CreateCommentDto createDto = new CreateCommentDto();
+        CommentCreateDto createDto = new CommentCreateDto();
         createDto.setAuthorId(AUTHOR_ID);
         Mockito.doNothing().when(userService).verifyUserExists(createDto.getAuthorId());
 
@@ -57,7 +57,7 @@ public class CommentServiceTest {
 
     @Test
     public void testUpdateSuccessfully() {
-        UpdateCommentDto updateDto = new UpdateCommentDto();
+        CommentUpdateDto updateDto = new CommentUpdateDto();
         updateDto.setEditorId(AUTHOR_ID);
         updateDto.setId(COMMENT_ID);
 
@@ -73,7 +73,7 @@ public class CommentServiceTest {
 
     @Test
     public void testUpdateFailsIfEditorIsNotTheAuthor() {
-        UpdateCommentDto updateDto = new UpdateCommentDto();
+        CommentUpdateDto updateDto = new CommentUpdateDto();
         updateDto.setEditorId(NOT_AUTHOR_ID);
         updateDto.setId(COMMENT_ID);
 
@@ -91,7 +91,7 @@ public class CommentServiceTest {
 
         Mockito.when(commentRepository.findAllByPostId(POST_ID)).thenReturn(comments);
 
-        List<ReadCommentDto> commentDtos = commentService.getCommentsByPostId(POST_ID);
+        List<CommentReadDto> commentDtos = commentService.getCommentsByPostId(POST_ID);
 
         assertEquals(2, commentDtos.size());
     }
