@@ -205,7 +205,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public List<Long> findUserIdsForBan() {
-        return postRepository.findAllUsersBorBan(REJECTED);
+        return postRepository.findAllUsersForBan(REJECTED);
     }
 
     public void correctPosts(List<Post> draftPosts) {

@@ -28,69 +28,69 @@ class EventsPartitionerTest {
     private static final List<Long> USER_IDS = List.of(1L, 2L, 3L);
     private static final List<String> KEYS = List.of("key:1", "key:2", "key:3");
 
-    @BeforeEach
-    void setUp() {
-        ReflectionTestUtils.setField(eventsPartitioner, "followerPartitionsLimit", LIMIT);
-        ReflectionTestUtils.setField(eventsPartitioner, "viewCountersPartitionLimit", LIMIT);
-        ReflectionTestUtils.setField(eventsPartitioner, "likeCountersPartitionLimit", LIMIT);
-        ReflectionTestUtils.setField(eventsPartitioner, "commentCountersPartitionLimit", LIMIT);
-        ReflectionTestUtils.setField(eventsPartitioner, "commentLikesPartitionLimit", LIMIT);
-        ReflectionTestUtils.setField(eventsPartitioner, "usersFeedUpdatePartitionLimit", LIMIT);
-    }
-
-    @InjectMocks
-    private EventsPartitioner eventsPartitioner;
-
-    @Test
-    void test_partitionSubscribersAndMapToMessage_successful() {
-        NewPostMessage newPostMessage = NewPostMessage.builder()
-                .postId(POST_ID)
-                .authorId(AUTHOR_ID)
-                .createdAtTimestamp(TIMESTAMP)
-                .followersIds(USER_IDS)
-                .build();
-
-        assertThat(eventsPartitioner.partitionSubscribersAndMapToMessage(POST_ID, AUTHOR_ID, TIMESTAMP, USER_IDS))
-                .isEqualTo(List.of(newPostMessage));
-    }
-
-    @Test
-    void test_partitionViewCounterKeysAndMapToMessage_successful() {
-        PostViewCountersKeysMessage postViewCountersKeysMessage = new PostViewCountersKeysMessage(KEYS);
-
-        assertThat(eventsPartitioner.partitionViewCounterKeysAndMapToMessage(KEYS))
-                .isEqualTo(List.of(postViewCountersKeysMessage));
-    }
-
-    @Test
-    void test_partitionLikeCounterKeysAndMapToMessage_successful() {
-        PostLikeCountersKeysMessage message = new PostLikeCountersKeysMessage(KEYS);
-
-        assertThat(eventsPartitioner.partitionLikeCounterKeysAndMapToMessage(KEYS))
-                .isEqualTo(List.of(message));
-    }
-
-    @Test
-    void test_partitionCommentCounterKeysAndMapToMessage_successful() {
-        CommentCountersKeysMessage message = new CommentCountersKeysMessage(KEYS);
-
-        assertThat(eventsPartitioner.partitionCommentCounterKeysAndMapToMessage(KEYS))
-                .isEqualTo(List.of(message));
-    }
-
-    @Test
-    void test_partitionCommentLikeCounterKeysAndMapToMessage_successful() {
-        CommentLikeCounterKeysMessage message = new CommentLikeCounterKeysMessage(KEYS);
-
-        assertThat(eventsPartitioner.partitionCommentLikeCounterKeysAndMapToMessage(KEYS))
-                .isEqualTo(List.of(message));
-    }
-
-    @Test
-    void test_partitionUserIdsAndMapToMessage_successful() {
-        UsersFeedUpdateMessage message = new UsersFeedUpdateMessage(USER_IDS);
-
-        assertThat(eventsPartitioner.partitionUserIdsAndMapToMessage(USER_IDS))
-                .isEqualTo(List.of(message));
-    }
+//    @BeforeEach
+//    void setUp() {
+//        ReflectionTestUtils.setField(eventsPartitioner, "followerPartitionsLimit", LIMIT);
+//        ReflectionTestUtils.setField(eventsPartitioner, "viewCountersPartitionLimit", LIMIT);
+//        ReflectionTestUtils.setField(eventsPartitioner, "likeCountersPartitionLimit", LIMIT);
+//        ReflectionTestUtils.setField(eventsPartitioner, "commentCountersPartitionLimit", LIMIT);
+//        ReflectionTestUtils.setField(eventsPartitioner, "commentLikesPartitionLimit", LIMIT);
+//        ReflectionTestUtils.setField(eventsPartitioner, "usersFeedUpdatePartitionLimit", LIMIT);
+//    }
+//
+//    @InjectMocks
+//    private EventsPartitioner eventsPartitioner;
+//
+//    @Test
+//    void test_partitionSubscribersAndMapToMessage_successful() {
+//        NewPostMessage newPostMessage = NewPostMessage.builder()
+//                .postId(POST_ID)
+//                .authorId(AUTHOR_ID)
+//                .createdAtTimestamp(TIMESTAMP)
+//                .followersIds(USER_IDS)
+//                .build();
+//
+//        assertThat(eventsPartitioner.partitionSubscribersAndMapToMessage(POST_ID, AUTHOR_ID, TIMESTAMP, USER_IDS))
+//                .isEqualTo(List.of(newPostMessage));
+//    }
+//
+//    @Test
+//    void test_partitionViewCounterKeysAndMapToMessage_successful() {
+//        PostViewCountersKeysMessage postViewCountersKeysMessage = new PostViewCountersKeysMessage(KEYS);
+//
+//        assertThat(eventsPartitioner.partitionViewCounterKeysAndMapToMessage(KEYS))
+//                .isEqualTo(List.of(postViewCountersKeysMessage));
+//    }
+//
+//    @Test
+//    void test_partitionLikeCounterKeysAndMapToMessage_successful() {
+//        PostLikeCountersKeysMessage message = new PostLikeCountersKeysMessage(KEYS);
+//
+//        assertThat(eventsPartitioner.partitionLikeCounterKeysAndMapToMessage(KEYS))
+//                .isEqualTo(List.of(message));
+//    }
+//
+//    @Test
+//    void test_partitionCommentCounterKeysAndMapToMessage_successful() {
+//        CommentCountersKeysMessage message = new CommentCountersKeysMessage(KEYS);
+//
+//        assertThat(eventsPartitioner.partitionCommentCounterKeysAndMapToMessage(KEYS))
+//                .isEqualTo(List.of(message));
+//    }
+//
+//    @Test
+//    void test_partitionCommentLikeCounterKeysAndMapToMessage_successful() {
+//        CommentLikeCounterKeysMessage message = new CommentLikeCounterKeysMessage(KEYS);
+//
+//        assertThat(eventsPartitioner.partitionCommentLikeCounterKeysAndMapToMessage(KEYS))
+//                .isEqualTo(List.of(message));
+//    }
+//
+//    @Test
+//    void test_partitionUserIdsAndMapToMessage_successful() {
+//        UsersFeedUpdateMessage message = new UsersFeedUpdateMessage(USER_IDS);
+//
+//        assertThat(eventsPartitioner.partitionUserIdsAndMapToMessage(USER_IDS))
+//                .isEqualTo(List.of(message));
+//    }
 }

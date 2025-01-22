@@ -459,27 +459,27 @@ public class PostServiceTest {
 
     @Test
     void testFindUserIdsForBan_emptyResult() {
-        when(postRepository.findAllUsersBorBan(REJECTED)).thenReturn(List.of());
+        when(postRepository.findAllUsersForBan(REJECTED)).thenReturn(List.of());
         List<Long> result = postService.findUserIdsForBan();
         assertEquals(0, result.size());
-        verify(postRepository, times(1)).findAllUsersBorBan(REJECTED);
+        verify(postRepository, times(1)).findAllUsersForBan(REJECTED);
     }
 
     @Test
     void testFindUserIdsForBan_nonEmptyResult() {
         List<Long> expectedUserIds = List.of(1L, 2L, 3L);
-        when(postRepository.findAllUsersBorBan(REJECTED)).thenReturn(expectedUserIds);
+        when(postRepository.findAllUsersForBan(REJECTED)).thenReturn(expectedUserIds);
         List<Long> result = postService.findUserIdsForBan();
         assertEquals(expectedUserIds, result);
-        verify(postRepository, times(1)).findAllUsersBorBan(REJECTED);
+        verify(postRepository, times(1)).findAllUsersForBan(REJECTED);
     }
 
     @Test
     void testFindUserIdsForBan_nullResult() {
-        when(postRepository.findAllUsersBorBan(REJECTED)).thenReturn(null);
+        when(postRepository.findAllUsersForBan(REJECTED)).thenReturn(null);
         List<Long> result = postService.findUserIdsForBan();
         Assertions.assertNull(result);
-        verify(postRepository, times(1)).findAllUsersBorBan(REJECTED);
+        verify(postRepository, times(1)).findAllUsersForBan(REJECTED);
     }
 
     @Test
