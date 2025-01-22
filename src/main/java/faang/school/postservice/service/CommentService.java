@@ -10,9 +10,11 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -20,20 +22,20 @@ import java.time.LocalDateTime;
 public class CommentService {
     private final UserServiceClient userServiceClient;
     private final CommentRepository commentRepository;
-    private final PostRepository postRepository;
+    private final PostService postService;
 
+    @Transactional
     public Comment createComment(Comment comment, Long postId) {
         if (isUserNotExists(comment.getAuthorId())) {
             String content = comment.getContent();
             checkContent(content);
-            Post post = postRepository.findById(postId)
-                    .orElseThrow(() -> new IllegalArgumentException("any error")); //TODO: уточнить ошибку
+            Post post = postService.getPostById(postId);
 
             LocalDateTime whenCommentCreated = LocalDateTime.now();
             comment.setCreatedAt(whenCommentCreated);
             comment.setUpdatedAt(whenCommentCreated);//TODO: добавить лог
             post.getComments().add(comment);
-            postRepository.save(post);
+            postService.savePost(post);
         }
         return commentRepository.save(comment);
     }
@@ -50,9 +52,12 @@ public class CommentService {
     }
 
     private boolean isUserNotExists(Long authorId) {
-        UserDto dto = userServiceClient.getUser(1);
-        log.info(dto.toString());
-        return !(userServiceClient.getUser(authorId).id() > 0);
+        try {
+            UserDto dto = userServiceClient.getUser(authorId);
+            return !(dto.id() > 0);
+        } catch (Exception e) {
+            throw new NoSuchElementException(String.format("User with ID#%s not found", authorId));
+        }
     }
     /*Требования:
 
