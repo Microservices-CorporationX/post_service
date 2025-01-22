@@ -64,6 +64,13 @@ dependencies {
      * Kafka
      */
     implementation ("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
+    /**
+     * Metrics
+     */
+    implementation("io.micrometer:micrometer-core")
+    implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 tasks.test {

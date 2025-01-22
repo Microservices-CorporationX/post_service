@@ -65,3 +65,13 @@ side-api:
     key: ${secrets.text-gears-api-key}
     base-url: https://api.textgears.com
     auto-correct: /correct
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+    metrics:
+      export:
+        prometheus:
+          enabled: true
