@@ -2,6 +2,7 @@ package faang.school.postservice.service.impl.like;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.LikeDto;
+import faang.school.postservice.dto.LikeEvent;
 import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.LikeMapper;
@@ -15,14 +16,17 @@ import faang.school.postservice.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -37,8 +41,7 @@ public class LikeSeviceTest {
     UserServiceClient userServiceClient = Mockito.mock(UserServiceClient.class);
     PostRepository postRepository = Mockito.mock(PostRepository.class);
     LikeMapper likeMapper = Mockito.mock(LikeMapper.class);
-    LikeEventPublisher likeEventPublisher;
-
+    LikeEventPublisher likeEventPublisher = Mockito.mock(LikeEventPublisher.class);
 
     long id;
     LikeDto likeDto;
@@ -49,10 +52,17 @@ public class LikeSeviceTest {
     Post post;
     Post post1;
     List<Comment> commentList;
+    LikeEvent likeEvent;
 
     @BeforeEach
     void setUp() {
-        likeService = new LikeServiceImpl(likeRepository, commentRepository, userServiceClient, postRepository, likeMapper, likeEventPublisher);
+        likeService = new LikeServiceImpl(
+                likeRepository,
+                commentRepository,
+                userServiceClient,
+                postRepository,
+                likeMapper,
+                likeEventPublisher);
         id = 1;
         likeDto = LikeDto.builder().userId(2L).authorId(6L).build();
         post = Post.builder().id(4L).build();
@@ -66,6 +76,13 @@ public class LikeSeviceTest {
         commentList = new ArrayList<>();
         commentList.add(comment);
         post1 = Post.builder().id(4L).comments(commentList).build();
+
+        likeEvent = new LikeEvent(
+                likeDto.authorId(),
+                likeDto.userId(),
+                likeDto.idPost(),
+                LocalDateTime.now()
+        );
     }
 
     @Test
@@ -93,13 +110,24 @@ public class LikeSeviceTest {
     @Test
     public void testcreateLikePost() {
         when(postRepository.findById(id)).thenReturn(Optional.of(post1));
+        when(commentRepository.findById(likeDto.idComment())).thenReturn(Optional.of(comment));
         when(userServiceClient.getUser(likeDto.userId())).thenReturn(userDto);
         when(likeRepository.findByCommentIdAndUserId(comment.getId(), likeDto.userId())).thenReturn(Optional.of(like));
         when(likeRepository.findByPostIdAndUserId(post1.getId(), likeDto.userId())).thenReturn(Optional.empty());
         when(likeMapper.toEntity(likeDto)).thenReturn(like);
         when(likeRepository.save(like)).thenReturn(like);
         when(likeMapper.toDto(like)).thenReturn(likeDto);
+
         LikeDto result = likeService.createLikePost(id, likeDto);
+
+        ArgumentCaptor<LikeEvent> eventCaptor = ArgumentCaptor.forClass(LikeEvent.class);
+        verify(likeEventPublisher, times(1)).publishMessage(eventCaptor.capture());
+
+        LikeEvent capturedEvent = eventCaptor.getValue();
+        assertEquals(likeDto.authorId(), capturedEvent.getAuthorPostId());
+        assertEquals(likeDto.userId(), capturedEvent.getAuthorLikeId());
+        assertEquals(likeDto.idPost(), capturedEvent.getPostId());
+        assertNotNull(capturedEvent.getCreatedAt());
         assertEquals(result, likeDto);
     }
 

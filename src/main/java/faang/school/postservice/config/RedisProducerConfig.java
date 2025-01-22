@@ -2,9 +2,6 @@ package faang.school.postservice.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import faang.school.postservice.publisher.CommentEventPublisher;
-import faang.school.postservice.publisher.LikeEventPublisher;
-import faang.school.postservice.publisher.MessagePublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -62,15 +59,5 @@ public class RedisProducerConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         return objectMapper;
-    }
-
-    @Bean
-    MessagePublisher likePublisher() {
-        return new LikeEventPublisher(redisTemplate(), likeTopic(), objectMapper() );
-    }
-
-    @Bean
-    MessagePublisher redisPublisher() {
-        return new CommentEventPublisher(redisTemplate(), commentTopic(), objectMapper() );
     }
 }

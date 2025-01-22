@@ -33,8 +33,6 @@ public class CommentService {
     public CommentDto createComment(CommentDto commentDto) {
         log.info("Creating a comment for post ID: {} by user ID: {}", commentDto.getPostId(), commentDto.getAuthorId());
 
-        validateCommentDto(commentDto);
-
         Post post = postRepository.findById(commentDto.getPostId())
                 .orElseThrow(() -> new IllegalStateException("Post not found with ID: " + commentDto.getPostId()));
 
@@ -47,7 +45,6 @@ public class CommentService {
 
         Comment comment = commentMapper.toEntity(commentDto);
         comment.setPost(post);
-        comment.setCreatedAt(LocalDateTime.now());
 
         Comment savedComment = commentRepository.save(comment);
         log.info("Comment created with ID: {}", savedComment.getId());
@@ -61,15 +58,6 @@ public class CommentService {
                         LocalDateTime.now()));
 
         return commentMapper.toDto(savedComment);
-    }
-
-    private static void validateCommentDto(CommentDto commentDto) {
-        if (commentDto.getContent() == null || commentDto.getContent().isBlank()) {
-            throw new IllegalArgumentException("Comment content cannot be empty.");
-        }
-        if (commentDto.getContent().length() > 4096) {
-            throw new IllegalArgumentException("Comment content cannot exceed 4096 characters.");
-        }
     }
 
     @Transactional
