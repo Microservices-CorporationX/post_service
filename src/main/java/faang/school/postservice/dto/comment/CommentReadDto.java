@@ -1,16 +1,13 @@
 package faang.school.postservice.dto.comment;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-@NoArgsConstructor
-public class CommentReadDto {
-    private long id;
-    private String content;
-    private long authorId;
-    private List<Long> likesId;
-    private long postId;
-}
+public record CommentReadDto(
+        long id,
+        String content,
+        long authorId,
+        List<Long> likesId,
+        long postId,
+        LocalDateTime updatedAt
+) {}

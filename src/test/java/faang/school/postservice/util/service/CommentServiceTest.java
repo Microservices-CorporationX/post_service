@@ -1,13 +1,14 @@
 package faang.school.postservice.util.service;
 
-import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.PostService;
 import faang.school.postservice.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,14 +41,17 @@ public class CommentServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private PostService postService;
+
     @InjectMocks
     private CommentService commentService;
 
     @Test
     public void testCreateSuccessfully() {
-        CommentCreateDto createDto = new CommentCreateDto();
-        createDto.setAuthorId(AUTHOR_ID);
-        Mockito.doNothing().when(userService).verifyUserExists(createDto.getAuthorId());
+        CommentCreateDto createDto = CommentCreateDto.builder()
+                        .authorId(AUTHOR_ID).postId(POST_ID)
+                        .build();
 
         Comment comment = commentMapper.toEntity(createDto);
 
@@ -57,9 +61,9 @@ public class CommentServiceTest {
 
     @Test
     public void testUpdateSuccessfully() {
-        CommentUpdateDto updateDto = new CommentUpdateDto();
-        updateDto.setEditorId(AUTHOR_ID);
-        updateDto.setId(COMMENT_ID);
+        CommentUpdateDto updateDto = CommentUpdateDto.builder()
+                        .id(COMMENT_ID).editorId(AUTHOR_ID)
+                        .build();
 
         Comment comment = Comment.builder().id(COMMENT_ID).authorId(AUTHOR_ID).build();
         Mockito.when(commentRepository.findById(COMMENT_ID)).thenReturn(Optional.ofNullable(comment));
@@ -73,9 +77,9 @@ public class CommentServiceTest {
 
     @Test
     public void testUpdateFailsIfEditorIsNotTheAuthor() {
-        CommentUpdateDto updateDto = new CommentUpdateDto();
-        updateDto.setEditorId(NOT_AUTHOR_ID);
-        updateDto.setId(COMMENT_ID);
+        CommentUpdateDto updateDto = CommentUpdateDto.builder()
+                .editorId(NOT_AUTHOR_ID).id(COMMENT_ID)
+                .build();
 
         Comment comment = Comment.builder().id(COMMENT_ID).authorId(AUTHOR_ID).build();
         Mockito.when(commentRepository.findById(COMMENT_ID)).thenReturn(Optional.ofNullable(comment));
