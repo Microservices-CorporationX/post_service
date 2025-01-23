@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 public class PostValidator {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
-    private final UserContext userContext;
 
 
     private static final String INTEGRATION_ERR_MSG = "Ошибка взаимодействия с сервисом: %s";
@@ -43,7 +42,6 @@ public class PostValidator {
     }
 
     public void userExist(long authorId) {
-        userContext.setUserId(authorId);
         try {
             UserDto userResponse = userServiceClient.getUser(authorId);
             log.debug("userResponse response: {}", new ObjectMapper().writeValueAsString(userResponse));
@@ -57,11 +55,9 @@ public class PostValidator {
             log.error(e.getMessage(), e);
             throw new IllegalArgumentException(String.format(INTEGRATION_ERR_MSG, "user-service"));
         }
-        userContext.clear();
     }
 
     public void projectExist(long projectId) {
-        userContext.setUserId(projectId);
         try {
             ProjectDto projectResponse = projectServiceClient.getProject(projectId);
             log.debug("projectResponse response: {}", new ObjectMapper().writeValueAsString(projectResponse));
@@ -75,6 +71,5 @@ public class PostValidator {
             log.error(e.getMessage(), e);
             throw new IllegalArgumentException(String.format(INTEGRATION_ERR_MSG, "project-service"));
         }
-        userContext.clear();
     }
 }
