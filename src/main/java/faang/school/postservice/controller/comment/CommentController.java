@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -21,6 +22,7 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RequestMapping("/comment")
+@Validated
 @RestController
 public class CommentController {
     private final CommentService commentService;
@@ -40,14 +42,14 @@ public class CommentController {
         return mapper.toDto(result);
     }
 
-    @GetMapping("/comments/{post-id}")
-    public List<CommentDto> getAllCommentsToPost(@Valid @NotNull @Positive @PathVariable("post-id") Long id) {
-        List<Comment> comments = commentService.getAllCommentsToPost(id);
+    @GetMapping("/comments/{postId}")
+    public List<CommentDto> getAllCommentsToPost(@NotNull @Positive @PathVariable long postId) {
+        List<Comment> comments = commentService.getAllCommentsToPost(postId);
         return mapper.toDtoList(comments);
     }
 
-    @DeleteMapping("/delete/{comment-id}")
-    public void deleteComment(@Valid @NotNull @Positive @PathVariable("comment-id") Long id) {
-        commentService.deleteComment(id);
+    @DeleteMapping("/delete/{commentId}")
+    public void deleteComment(@NotNull @Positive @PathVariable long commentId) {
+        commentService.deleteComment(commentId);
     }
 }
