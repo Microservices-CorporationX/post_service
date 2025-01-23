@@ -16,6 +16,9 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import static faang.school.postservice.constant.PostErrorMessages.POST_WITH_ID_NOT_FOUND;
+import static faang.school.postservice.constant.PostErrorMessages.USER_WITH_ID_NOT_FOUND;
+
 @Service
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -34,10 +37,10 @@ public class PostServiceImpl implements PostService {
             try {
                 userServiceClient.getUser(postDto.getAuthorId());
 
-                return postMapper.toDto(postRepository.save(post));
+                return savePostAndMapToDto(post);
             } catch (FeignException exception) {
                 if (exception.status() == 404) {
-                    throw new PostValidationException(String.format("User with ID %d not found", postDto.getAuthorId()));
+                    throw new PostValidationException(String.format(USER_WITH_ID_NOT_FOUND, postDto.getAuthorId()));
                 } else {
                     throw new PostValidationException("Error occurred while fetching user information: " + exception.getMessage());
                 }
@@ -46,7 +49,7 @@ public class PostServiceImpl implements PostService {
             try {
                 projectServiceClient.getProject(postDto.getProjectId());
 
-                return postMapper.toDto(postRepository.save(post));
+                return savePostAndMapToDto(post);
             } catch (FeignException exception) {
                 if (exception.status() == 404) {
                     throw new PostValidationException(String.format("Project with ID %d not found", postDto.getProjectId()));
@@ -60,22 +63,43 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto publish(Long postId) {
-        return postRepository.findById(postId)
-                .map(post -> {
-                            if (post.isPublished()) {
-                                throw new PostValidationException
-                                        (String.format("Post with ID %s is already published", postId));
-                            }
-                            post.setPublishedAt(LocalDateTime.now());
-                            post.setPublished(true);
-                            return postMapper.toDto(postRepository.save(post));
-                        }
-                )
-                .orElseThrow(() -> new PostNotFoundException(String.format("Post with id %s not found", postId)));
+        return postRepository.findById(postId).map(post -> {
+            if (post.isPublished()) {
+                throw new PostValidationException(String.format("Post with ID %s is already published", postId));
+            }
+            post.setPublishedAt(LocalDateTime.now());
+            post.setPublished(true);
+
+            return savePostAndMapToDto(post);
+        }).orElseThrow(() -> new PostNotFoundException(String.format(POST_WITH_ID_NOT_FOUND, postId)));
     }
 
     @Override
-    public PostDto update(PostDto postDto) {
-        return null;
+    public PostDto update(Long id, String content) {
+        return postRepository.findById(id).map(post -> {
+            post.setContent(content);
+            post.setUpdatedAt(LocalDateTime.now());
+
+            return savePostAndMapToDto(post);
+        }).orElseThrow(() -> new PostNotFoundException(String.format(POST_WITH_ID_NOT_FOUND, id)));
+    }
+
+    @Override
+    public PostDto softDelete(Long id) {
+        return postRepository.findById(id).map(post -> {
+            post.setDeleted(true);
+            return savePostAndMapToDto(post);
+        }).orElseThrow(() -> new PostNotFoundException(String.format(POST_WITH_ID_NOT_FOUND, id)));
+    }
+
+    @Override
+    public PostDto getById(Long id) {
+        return postRepository.findById(id)
+                .map(postMapper::toDto)
+                .orElseThrow(() -> new PostNotFoundException(String.format(POST_WITH_ID_NOT_FOUND, id)));
+    }
+
+    private PostDto savePostAndMapToDto(Post post) {
+        return postMapper.toDto(postRepository.save(post));
     }
 }

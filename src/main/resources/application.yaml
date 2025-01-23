@@ -35,9 +35,11 @@ logging:
 user-service:
   host: localhost
   port: 8080
+  api-version: /api/v1
 project-service:
   host: localhost
   port: 8082
+  api-version: /api/v1
 payment-service:
   host: localhost
   port: 9080

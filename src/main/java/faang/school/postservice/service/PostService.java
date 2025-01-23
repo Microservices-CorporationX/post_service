@@ -7,5 +7,9 @@ public interface PostService {
 
     PostDto publish(Long postId);
 
-    PostDto update(PostDto postDto);
+    PostDto update(Long id, String content);
+
+    PostDto softDelete(Long id);
+
+    PostDto getById(Long id);
 }

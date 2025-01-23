@@ -1,8 +1,8 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.ErrorResponse;
-import faang.school.postservice.exception.PostNotFoundException;
-import faang.school.postservice.exception.PostValidationException;
+import faang.school.postservice.exception.*;
+import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
@@ -17,12 +17,6 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class ControllerExceptionHandler {
-
-    @ExceptionHandler(RuntimeException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleRuntimeException(RuntimeException e) {
-        return new ErrorResponse(e.getMessage());
-    }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
@@ -39,15 +33,11 @@ public class ControllerExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String message = e.getBindingResult()
-                .getAllErrors()
-                .stream()
-                .map(error -> {
-                    String field = ((FieldError) error).getField();
-                    String errorMessage = Objects.requireNonNullElse(error.getDefaultMessage(), "Invalid value");
-                    return field + ": " + errorMessage;
-                })
-                .collect(Collectors.joining("; "));
+        String message = e.getBindingResult().getAllErrors().stream().map(error -> {
+            String field = ((FieldError) error).getField();
+            String errorMessage = Objects.requireNonNullElse(error.getDefaultMessage(), "Invalid value");
+            return field + ": " + errorMessage;
+        }).collect(Collectors.joining("; "));
 
         return new ErrorResponse(message);
     }
@@ -57,8 +47,7 @@ public class ControllerExceptionHandler {
     public ErrorResponse handleConstraintViolationException(ConstraintViolationException e) {
         String errorMessage = e.getConstraintViolations()
                 .stream()
-                .map(violation -> String.format("Field '%s': %s",
-                        violation.getPropertyPath(), violation.getMessage()))
+                .map(violation -> String.format("Field '%s': %s", violation.getPropertyPath(), violation.getMessage()))
                 .collect(Collectors.joining("; ")); // Собираем все сообщения об ошибках в одну строку
 
         return new ErrorResponse(errorMessage);
@@ -74,6 +63,37 @@ public class ControllerExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handlePostNotFoundException(PostNotFoundException e) {
         return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(PostBadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handlePostBadRequestException(PostBadRequestException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(ServiceNotAvailableException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleServiceNotAvailableException(ServiceNotAvailableException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleRuntimeException(RuntimeException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(ExternalErrorException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleExternalErrorException(ExternalErrorException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(FeignException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleFeignException(FeignException e) {
+        String message = e.contentUTF8(); // Извлекаем текстовое тело ответа
+        return new ErrorResponse(message != null && !message.isEmpty() ? message : "Resource not found");
     }
 
 }
