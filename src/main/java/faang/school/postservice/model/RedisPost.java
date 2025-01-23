@@ -17,4 +17,5 @@ public class RedisPost {
     private Long projectId;
     private LocalDateTime CreatedAt;
     private LocalDateTime updatedAt;
+    private long views;
 }

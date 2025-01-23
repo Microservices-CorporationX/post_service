@@ -32,6 +32,19 @@ spring:
         ban_user_topic:
           name: user_ban
 
+  kafka:
+    consumer:
+      enable-auto-commit: false
+    producer:
+      acks: 1
+      retries: 10
+    listener:
+      ack-mode: manual
+    bootstrap_servers: "localhost:29092"
+    topic-name:
+      likes: "likes"
+      comments: "comments"
+
 server:
   port: 8081
 

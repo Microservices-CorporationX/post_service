@@ -72,7 +72,7 @@ public class PostService {
         savePost(post);
 
         log.info("calling cache service to add new post to redis");
-        cacheService.publishPostAtRedis(post);
+        cacheService.publishPostAndAuthorAtRedis(post);
 
         log.info("mapping entity to dto");
         return postMapper.toDto(post);
