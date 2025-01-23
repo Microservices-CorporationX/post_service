@@ -72,9 +72,6 @@ public class PostService {
         String updatingContent = postUpdatingDto.updatingContent();
         logger.info("Updating post with id : {}", postId);
         postUtil.checkId(postId);
-        if (StringUtils.isBlank(updatingContent)) {
-            throw new IllegalArgumentException("Updating content is blank!");
-        }
         Post post = findPostById(postId);
         if (post.isDeleted() || !post.isPublished()) {
             throw new IllegalArgumentException("Post deleted or not published yet!");
