@@ -5,6 +5,8 @@ spring:
     username: user
     password: password
 
+
+
   profiles:
     active: dev
 
@@ -38,6 +40,16 @@ spring:
           name: calculations_channel
         ad-bought-channel:
           name: ad_bought_channel
+        post-channel:
+          name: post_channel
+
+    kafka:
+      producer:
+        bootstrap-servers: localhost:9092,localhost:9094
+        acks: all
+        delivery-timeout-ms: 30000
+        linger-ms: 1
+        request-timeout-ms: 30000
 
   task:
     execution:

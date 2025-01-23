@@ -4,11 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json.student.DtoBanShema;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.user.UserNFDto;
+import faang.school.postservice.event.PostPublishedEvent;
 import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
 import faang.school.postservice.dto.post.*;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.publisher.kafka.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.album.AlbumService;
 import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
@@ -28,6 +31,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.apache.commons.collections4.ListUtils;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +67,8 @@ public class PostService {
     private final GingerCorrector gingerCorrector;
     private final MessageSenderForUserBanImpl messageSenderForUserBan;
     private final ObjectMapper objectMapper;
+    private final KafkaPostProducer kafkaPostProducer;
+    private final UserServiceClient userServiceClient;
 
     @Value("${size.not-verified-posts-for-users}")
     private int sizeNotVerifiedPostsForUsers;
@@ -104,7 +110,22 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        return postMapper.toDtoFromPost(postRepository.save(post));
+        Post savedPost = postRepository.save(post);
+        sendPostEventForNewsFeed(savedPost);
+
+        return postMapper.toDtoFromPost(savedPost);
+    }
+
+    private void sendPostEventForNewsFeed(Post savedPost) {
+        List<Long> followerIds = userServiceClient.getUserFollowers(savedPost.getAuthorId()).stream()
+                .map(UserNFDto::getId)
+                .toList();
+        PostPublishedEvent event = PostPublishedEvent.builder()
+                .postId(savedPost.getId())
+                .authorId(savedPost.getAuthorId())
+                .followersId(followerIds)
+                .build();
+        kafkaPostProducer.publish(event);
     }
 
     public PostResponseDto updatePost(@Positive long postId, @NotNull @Valid PostUpdateDto dto) {
