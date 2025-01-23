@@ -2,7 +2,6 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.RedisPostDto;
-import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.exception.DataValidationException;
@@ -23,30 +22,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
-
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-
-
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;

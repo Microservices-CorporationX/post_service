@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PostService {
+
     private final PostRepository postRepository;
     private final PostMapper postMapper;
     private final PostValidator postValidator;
