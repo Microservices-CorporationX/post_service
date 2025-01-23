@@ -43,10 +43,14 @@ logging:
 post:
   publisher:
     scheduler:
-      cron: "0 0/1 * 1/1 * ?" # every minute
+      cron: "0 0/1 * 1/1 * ?"
   ad-remover:
     scheduler:
-      cron: "0 0/1 * 1/1 * ?" # every minute
+      cron: "0 0/1 * 1/1 * ?"
+
+cache:
+  post-ttl-duration: 86400
+
 
 user-service:
   host: localhost

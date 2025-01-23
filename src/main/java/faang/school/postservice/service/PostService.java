@@ -6,6 +6,7 @@ import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
@@ -31,6 +32,7 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
+    private final PostCacheRepository postCacheRepository;
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -56,6 +58,7 @@ public class PostService {
         }
 
         postRepository.save(entity);
+        postCacheRepository.savePostToCache(postMapper.toRedisPostDto(entity));
 
         return postMapper.toDto(entity);
     }

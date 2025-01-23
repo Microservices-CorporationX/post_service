@@ -1,12 +1,14 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.dto.post.CreatePostDto;
+import faang.school.postservice.dto.post.RedisPostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
@@ -18,6 +20,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashSet;
@@ -25,6 +28,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -52,6 +56,9 @@ class PostServiceTest {
     @Mock
     private HashtagService hashtagService;
 
+    @Mock
+    private PostCacheRepository postCacheRepository;
+
     @InjectMocks
     private PostService postService;
 
@@ -61,6 +68,8 @@ class PostServiceTest {
     Post secondPost = new Post();
 
     Post post = createTestPost();
+
+    RedisPostDto redisPostDto = createTestRedisPostDto();
 
     ResponsePostDto firstResponsePostDto = new ResponsePostDto();
     ResponsePostDto secondResponsePostDto = new ResponsePostDto();
@@ -85,6 +94,8 @@ class PostServiceTest {
 
         when(postMapper.toEntity(createPostDto)).thenReturn(post);
         when(postMapper.toDto(post)).thenReturn(responseDto);
+        when(postMapper.toRedisPostDto(post)).thenReturn(redisPostDto);
+
 
         Hashtag tag1 = Hashtag
                 .builder()
@@ -111,6 +122,7 @@ class PostServiceTest {
         verify(postMapper, times(1)).toEntity(createPostDto);
         verify(postRepository, times(1)).save(post);
         verify(postMapper, times(1)).toDto(post);
+        verify(postCacheRepository, times(1)).savePostToCache(redisPostDto);
         assertNotNull(result);
     }
 
@@ -392,5 +404,20 @@ class PostServiceTest {
                 .id(1L)
                 .content("Test content")
                 .build();
+    }
+
+    private RedisPostDto createTestRedisPostDto() {
+        RedisPostDto redisPost = new RedisPostDto(
+                1L,
+                "Test content",
+                101L,
+                202L,
+                10,
+                List.of(),
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                Set.of(1L, 2L)
+        );
+        return redisPost;
     }
 }
