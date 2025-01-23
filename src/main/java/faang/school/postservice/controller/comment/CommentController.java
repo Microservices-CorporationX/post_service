@@ -5,6 +5,8 @@ import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.service.CommentService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,13 +41,13 @@ public class CommentController {
     }
 
     @GetMapping("/comments/{post-id}")
-    public List<CommentDto> getAllCommentsToPost(@Valid @PathVariable("post-id") Long id) {
+    public List<CommentDto> getAllCommentsToPost(@Valid @NotNull @Positive @PathVariable("post-id") Long id) {
         List<Comment> comments = commentService.getAllCommentsToPost(id);
         return mapper.toDtoList(comments);
     }
 
     @DeleteMapping("/delete/{comment-id}")
-    public void deleteComment(@Valid @PathVariable("comment-id") Long id) {
+    public void deleteComment(@Valid @NotNull @Positive @PathVariable("comment-id") Long id) {
         commentService.deleteComment(id);
     }
 }

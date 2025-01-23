@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.exception.UserUnauthorizedAccessException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,19 +31,24 @@ public class CommentService {
         post.getComments().add(comment);
         postService.savePost(post);
         comment.setPost(post);
+
+        log.info("Comment #{} to post #{} successfully created", comment.getId(), post.getId());
         return commentRepository.save(comment);
     }
 
+    @Transactional
     public Comment updateComment(Comment comment) {
-        Comment savedComment = commentRepository.findById(comment.getId())
-                .orElseThrow(() -> new NoSuchElementException("Comment not found or deleted"));
+        Comment savedComment = getComment(comment.getId());
+        checkUserIsOwnerComment(comment.getAuthorId(), savedComment.getAuthorId());
 
         savedComment.setContent(comment.getContent());
         savedComment.setUpdatedAt(LocalDateTime.now());
 
+        log.info("Comment #{} successfully updated", savedComment.getId());
         return savedComment;
     }
 
+    @Transactional(readOnly = true)
     public List<Comment> getAllCommentsToPost(Long postId) {
         Post post = postService.getPostById(postId);
         return post.getComments().stream()
@@ -49,8 +56,22 @@ public class CommentService {
                 .toList();
     }
 
+    @Transactional
     public void deleteComment(Long commentId) {
-        commentRepository.deleteById(commentId);
+        if (getComment(commentId) != null) {
+            commentRepository.deleteById(commentId);
+            log.info("Comment #{} successfully deleted", commentId);
+        }
+    }
+
+    private void checkUserIsOwnerComment(Long savedId, Long transferredId) {
+        if (Objects.equals(savedId, transferredId)) {
+            throw new UserUnauthorizedAccessException("User cannot change comments the other users");
+        }
+    }
+    private Comment getComment(Long id) {
+        return commentRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException(String.format("Comment #%s not found or deleted", id)));
     }
 
     private void getUser(Long authorId) {
