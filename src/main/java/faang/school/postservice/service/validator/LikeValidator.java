@@ -24,7 +24,7 @@ public class LikeValidator {
     private final UserContext userContext;
 
     public void verifyDtoParams(LikeDto dto) {
-        var user = findUserById(dto.userId());
+        findUserById(dto.userId());
 
         if (dto.postId() != null) {
             var post = findPostById(dto.postId());
@@ -37,7 +37,7 @@ public class LikeValidator {
 
     }
 
-    private void verifyPostLikeExists(Post post, LikeDto dto) {
+    public void verifyPostLikeExists(Post post, LikeDto dto) {
         post.getLikes()
                 .stream()
                 .filter(likeItem -> likeItem.getPost().getId().equals(dto.postId()))
@@ -47,7 +47,7 @@ public class LikeValidator {
                 });
     }
 
-    private void verifyCommentLikeExists(Comment comment, LikeDto dto) {
+    public void verifyCommentLikeExists(Comment comment, LikeDto dto) {
         comment.getLikes()
                 .stream()
                 .filter(likeItem -> likeItem.getComment().getId().equals(dto.commentId()))
