@@ -13,15 +13,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class PostControllerTest {
-
     @Mock
-    PostService postService;
+    private PostService postServiceMock;
+    @Mock
+    private PostControllerValidator postControllerValidator;
     @InjectMocks
-    PostController postController;
-    PostRequestDto validPostRequestDto;
-    PostRequestDto validUpdatedPostRequestDto;
+    private PostController postController;
+    private PostRequestDto validPostRequestDto;
+    private PostRequestDto validUpdatedPostRequestDto;
+
     @BeforeEach
     void setUp() {
+        postController = new PostController(postServiceMock, postControllerValidator);
         validPostRequestDto = PostRequestDto.builder()
                 .id(1L)
                 .content("test content")
@@ -40,7 +43,7 @@ class PostControllerTest {
     @DisplayName("Test create draft")
     void testCreatePostDraftByValidDto() {
         postController.createPostDraft(validPostRequestDto);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .createPostDraft(validPostRequestDto);
     }
 
@@ -49,7 +52,7 @@ class PostControllerTest {
     void testPublishPostDraft() {
         Long postId = 123L;
         postController.publishPostDraft(postId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .publishPostDraft(postId);
     }
 
@@ -57,7 +60,7 @@ class PostControllerTest {
     @DisplayName("Test update post")
     void testUpdatePost() {
         postController.updatePost(validUpdatedPostRequestDto);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .updatePost(validUpdatedPostRequestDto);
     }
 
@@ -66,7 +69,7 @@ class PostControllerTest {
     void testDeletePost() {
         Long postId = 123L;
         postController.deletePost(postId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .deletePost(postId);
     }
 
@@ -75,7 +78,7 @@ class PostControllerTest {
     void testGetPost() {
         Long postId = 123L;
         postController.getPost(postId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .getPost(postId);
     }
 
@@ -84,7 +87,7 @@ class PostControllerTest {
     void testGetProjectPostDrafts() {
         Long projectId = 123L;
         postController.getProjectPostDrafts(projectId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .getProjectPostDrafts(projectId);
     }
 
@@ -93,7 +96,7 @@ class PostControllerTest {
     void testGetUserPostDrafts() {
         Long userId = 123L;
         postController.getUserPostDrafts(userId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .getUserPostDrafts(userId);
     }
 
@@ -102,7 +105,7 @@ class PostControllerTest {
     void testGetProjectPosts() {
         Long projectId = 123L;
         postController.getProjectPosts(projectId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .getProjectPosts(projectId);
     }
 
@@ -111,7 +114,7 @@ class PostControllerTest {
     void testGetUserPosts() {
         Long userId = 123L;
         postController.getUserPosts(userId);
-        Mockito.verify(postService, Mockito.times(1))
+        Mockito.verify(postServiceMock, Mockito.times(1))
                 .getUserPosts(userId);
     }
 }

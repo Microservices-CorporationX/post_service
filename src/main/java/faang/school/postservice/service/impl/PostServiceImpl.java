@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -39,7 +40,6 @@ public class PostServiceImpl implements PostService {
         postToPublish.setPublished(true);
         postToPublish.setPublishedAt(LocalDateTime.now());
         Post publishedPost = postRepository.save(postToPublish);
-
         return postMapper.toPostResponseDto(publishedPost);
     }
 
@@ -70,7 +70,7 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getProjectPostDrafts(Long projectId) {
         List<Post> posts = postRepository.findByProjectId(projectId);
         return posts.stream()
-                .filter(post -> !post.isPublished())
+                .filter(post -> (Objects.equals(post.getProjectId(), projectId) && !post.isPublished()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -80,7 +80,7 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getUserPostDrafts(Long userId) {
         List<Post> posts = postRepository.findByAuthorId(userId);
         return posts.stream()
-                .filter(post -> !post.isPublished())
+                .filter(post -> (Objects.equals(post.getAuthorId(), userId) && !post.isPublished()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -90,7 +90,7 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getProjectPosts(Long projectId) {
         List<Post> posts = postRepository.findByProjectId(projectId);
         return posts.stream()
-                .filter(Post::isPublished)
+                .filter(post -> (Objects.equals(post.getProjectId(), projectId) && post.isPublished()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -100,7 +100,7 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getUserPosts(Long userId) {
         List<Post> posts = postRepository.findByAuthorId(userId);
         return posts.stream()
-                .filter(Post::isPublished)
+                .filter(post -> (Objects.equals(post.getAuthorId(), userId) && post.isPublished()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();

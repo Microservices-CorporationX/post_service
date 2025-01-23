@@ -11,5 +11,6 @@ public record PostResponseDto(
         Long authorId,
         Long projectId,
         boolean isPublished,
+        LocalDateTime createdAt,
         LocalDateTime publishedAt) {
 }

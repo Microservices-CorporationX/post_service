@@ -1,49 +1,174 @@
 package faang.school.postservice.service.impl;
 
+import faang.school.postservice.dto.post.PostRequestDto;
+import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.mapper.PostMapperImpl;
+import faang.school.postservice.model.Post;
+import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.PostService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
+@ExtendWith(MockitoExtension.class)
 class PostServiceImplTest {
+
+    @Mock
+    private PostServiceValidator postServiceValidatorMock;
+    @Mock
+    private PostRepository postRepositoryMock;
+    @Spy
+    private PostMapperImpl postMapper;
+    private PostService postService;
+    private PostRequestDto postRequestDto;
+    private final List<Post> somePosts = TestData.getSomePosts();
 
     @BeforeEach
     void setUp() {
+        postService = new PostServiceImpl(postRepositoryMock, postServiceValidatorMock, postMapper);
+
+        postRequestDto = PostRequestDto.builder()
+                .content("Test content")
+                .authorId(111L)
+                .build();
+
+        postRequestDto = PostRequestDto.builder()
+                .id(123L)
+                .content("Test content")
+                .authorId(111L)
+                .build();
     }
 
     @Test
-    void createPostDraft() {
+    @DisplayName("Test create draft")
+    void testCreatePostDraft() {
+        Post post = Post.builder()
+                .id(123L)
+                .content(postRequestDto.content())
+                .authorId(postRequestDto.authorId())
+                .projectId(postRequestDto.projectId())
+                .build();
+        Mockito.when(postRepositoryMock.save(Mockito.any())).thenReturn(post);
+        PostResponseDto resultPostResponseDto = postService.createPostDraft(postRequestDto);
+        Assertions.assertEquals(postRequestDto.authorId(), resultPostResponseDto.authorId());
+        Assertions.assertEquals(postRequestDto.projectId(), resultPostResponseDto.projectId());
+        Assertions.assertEquals(postRequestDto.content(), resultPostResponseDto.content());
     }
 
     @Test
-    void publishPostDraft() {
+    @DisplayName("Test publish draft")
+    void testPublishPostDraft() {
+        Long postId = 123L;
+        Post postBefore = Post.builder()
+                .id(postId)
+                .content(postRequestDto.content())
+                .authorId(postRequestDto.authorId())
+                .projectId(postRequestDto.projectId())
+                .build();
+        Post postAfter = Post.builder()
+                .id(postId)
+                .content(postRequestDto.content())
+                .authorId(postRequestDto.authorId())
+                .projectId(postRequestDto.projectId())
+                .published(true)
+                .publishedAt(LocalDateTime.now())
+                .build();
+        Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.ofNullable(postBefore));
+        Mockito.when(postRepositoryMock.save(Mockito.any())).thenReturn(postAfter);
+        PostResponseDto publishedPostResponseDto = postService.publishPostDraft(postId);
+        Mockito.verify(postRepositoryMock, Mockito.times(1)).save(Mockito.any());
+        Assertions.assertTrue(publishedPostResponseDto.isPublished());
+        Assertions.assertNotNull(publishedPostResponseDto.publishedAt());
     }
 
     @Test
-    void updatePost() {
+    @DisplayName("Test update post")
+    void testUpdatePost() {
+        Long postId = 123L;
+        String newContent = "edited content";
+        Post postBefore = Post.builder()
+                .id(postId)
+                .content(postRequestDto.content())
+                .authorId(postRequestDto.authorId())
+                .projectId(postRequestDto.projectId())
+                .build();
+        Post postAfter = Post.builder()
+                .id(postId)
+                .content(newContent)
+                .authorId(postRequestDto.authorId())
+                .projectId(postRequestDto.projectId())
+                .published(true)
+                .publishedAt(LocalDateTime.now())
+                .build();
+        Mockito.when(postRepositoryMock.findById(postId)).thenReturn(Optional.ofNullable(postBefore));
+        Mockito.when(postRepositoryMock.save(Mockito.any())).thenReturn(postAfter);
+        PostResponseDto updatedPostResponseDto = postService.updatePost(postRequestDto);
+        Mockito.verify(postRepositoryMock, Mockito.times(1)).save(Mockito.any());
+        Assertions.assertEquals(newContent, updatedPostResponseDto.content());
     }
 
     @Test
-    void deletePost() {
+    @DisplayName("Test delete post")
+    void testDeletePost() {
+        postService.deletePost(123L);
+        Mockito.verify(postRepositoryMock, Mockito.times(1)).save(Mockito.any());
     }
 
     @Test
-    void getPost() {
+    @DisplayName("Test get post")
+    void testGetPost() {
+        Long postId = 123L;
+        postService.getPost(postId);
+        Mockito.verify(postRepositoryMock, Mockito.times(1)).findById(postId);
     }
 
     @Test
-    void getProjectPostDrafts() {
+    @DisplayName("Test get post drafts by project")
+    void testGetProjectPostDrafts() {
+        long projectId = 222L;
+        Mockito.when(postRepositoryMock.findByProjectId(projectId)).thenReturn(somePosts);
+        List<PostResponseDto> resultDtos = postService.getProjectPostDrafts(projectId);
+        Assertions.assertEquals(1, resultDtos.size());
     }
 
     @Test
-    void getUserPostDrafts() {
+    @DisplayName("Test get post drafts by author")
+    void testGetUserPostDrafts() {
+        long userId = 111L;
+        Mockito.when(postRepositoryMock.findByAuthorId(userId)).thenReturn(somePosts);
+        List<PostResponseDto> resultDtos = postService.getUserPostDrafts(userId);
+        Assertions.assertEquals(1, resultDtos.size());
     }
 
     @Test
-    void getProjectPosts() {
+    @DisplayName("Test get posts by project")
+    void testGetProjectPosts() {
+        long projectId = 222L;
+        Mockito.when(postRepositoryMock.findByProjectId(projectId)).thenReturn(somePosts);
+        List<PostResponseDto> resultDtos = postService.getProjectPosts(projectId);
+        Assertions.assertEquals(2, resultDtos.size());
+        Assertions.assertEquals(5, resultDtos.stream().filter(dto -> dto.id() == 5).toList().get(0).id());
+        Assertions.assertEquals(6, resultDtos.stream().filter(dto -> dto.id() == 6).toList().get(0).id());
     }
 
     @Test
-    void getUserPosts() {
+    @DisplayName("Test get posts by user")
+    void testGetUserPosts() {
+        long userId = 111L;
+        Mockito.when(postRepositoryMock.findByAuthorId(userId)).thenReturn(somePosts);
+        List<PostResponseDto> resultDtos = postService.getUserPosts(userId);
+        Assertions.assertEquals(2, resultDtos.size());
+        Assertions.assertEquals(1, resultDtos.stream().filter(dto -> dto.id() == 1).toList().get(0).id());
+        Assertions.assertEquals(2, resultDtos.stream().filter(dto -> dto.id() == 2).toList().get(0).id());
     }
 }

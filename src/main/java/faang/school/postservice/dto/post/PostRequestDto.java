@@ -11,5 +11,6 @@ public record PostRequestDto(
         Long authorId,
         Long projectId,
         boolean isPublished,
+        LocalDateTime createdAt,
         LocalDateTime publishedAt) {
 }
