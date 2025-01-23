@@ -2,6 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.dto.posts.PostCreatingRequest;
 import faang.school.postservice.dto.posts.PostResultResponse;
+import faang.school.postservice.dto.posts.PostUpdatingDto;
 import faang.school.postservice.exceptions.PostWasNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
@@ -66,7 +67,9 @@ public class PostService {
     }
 
     @Transactional
-    public PostResultResponse updatePost(Long postId, String updatingContent) {
+    public PostResultResponse updatePost(PostUpdatingDto postUpdatingDto) {
+        Long postId = postUpdatingDto.postId();
+        String updatingContent = postUpdatingDto.updatingContent();
         logger.info("Updating post with id : {}", postId);
         postUtil.checkId(postId);
         if (StringUtils.isBlank(updatingContent)) {

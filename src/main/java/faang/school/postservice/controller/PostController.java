@@ -2,6 +2,7 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.posts.PostCreatingRequest;
 import faang.school.postservice.dto.posts.PostResultResponse;
+import faang.school.postservice.dto.posts.PostUpdatingDto;
 import faang.school.postservice.service.PostService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +27,8 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}/update")
-    public PostResultResponse updatePost(@PathVariable Long postId, @RequestBody String updatingContent) {
-        return postService.updatePost(postId, updatingContent);
+    public PostResultResponse updatePost(@RequestBody PostUpdatingDto postUpdatingDto) {
+        return postService.updatePost(postUpdatingDto);
     }
 
     @DeleteMapping("/{postId}")
