@@ -5,6 +5,7 @@ import faang.school.postservice.dto.posts.PostResultResponse;
 import faang.school.postservice.dto.posts.PostUpdatingDto;
 import faang.school.postservice.service.PostService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,7 +23,7 @@ public class PostController {
     }
 
     @PatchMapping("/{postId}/publish")
-    public PostResultResponse publishPost(@PathVariable Long postId) {
+    public PostResultResponse publishPost(@PathVariable @NotNull Long postId) {
         return postService.publishPost(postId);
     }
 
@@ -32,27 +33,27 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}")
-    public PostResultResponse softDelete(@PathVariable Long postId) {
+    public PostResultResponse softDelete(@PathVariable @NotNull Long postId) {
         return postService.softDelete(postId);
     }
 
     @GetMapping("/author/{authorId}/no-published")
-    public List<PostResultResponse> getNoPublishedPostsByAuthor(@PathVariable Long authorId) {
+    public List<PostResultResponse> getNoPublishedPostsByAuthor(@PathVariable @NotNull Long authorId) {
         return postService.getNoPublishedPostsByAuthor(authorId);
     }
 
     @GetMapping("/project/{projectId}/no-published")
-    public List<PostResultResponse> getNoPublishedPostsByProject(@PathVariable Long projectId) {
+    public List<PostResultResponse> getNoPublishedPostsByProject(@PathVariable @NotNull Long projectId) {
         return postService.getNoPublishedPostsByProject(projectId);
     }
 
     @GetMapping("/author/{authorId}/published")
-    public List<PostResultResponse> getPublishedPostsByAuthor(@PathVariable Long authorId) {
+    public List<PostResultResponse> getPublishedPostsByAuthor(@PathVariable @NotNull Long authorId) {
         return postService.getPublishedPostsByAuthor(authorId);
     }
 
     @GetMapping("/project/{projectId}/published")
-    public List<PostResultResponse> getPublishedPostsByProject(@PathVariable Long projectId) {
+    public List<PostResultResponse> getPublishedPostsByProject(@PathVariable @NotNull Long projectId) {
         return postService.getPublishedPostsByProject(projectId);
     }
 }

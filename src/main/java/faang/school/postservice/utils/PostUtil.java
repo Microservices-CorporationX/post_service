@@ -26,12 +26,6 @@ public class PostUtil {
         throw new IllegalArgumentException("User or project was not found!");
     }
 
-    public void checkId(Long postId) {
-        if (postId == null) {
-            throw new IllegalArgumentException("Id is null!");
-        }
-    }
-
     public ProjectDto getProject(Long id) {
         return projectServiceClient.getProject(id);
     }

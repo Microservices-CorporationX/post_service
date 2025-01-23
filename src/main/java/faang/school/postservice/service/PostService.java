@@ -55,7 +55,6 @@ public class PostService {
     @Transactional
     public PostResultResponse publishPost(Long postId) {
         logger.info("Publishing post with id : {}", postId);
-        postUtil.checkId(postId);
         Post post = findPostById(postId);
         if (post.isPublished()) {
             throw new IllegalArgumentException("Post already published!");
@@ -71,7 +70,6 @@ public class PostService {
         Long postId = postUpdatingDto.postId();
         String updatingContent = postUpdatingDto.updatingContent();
         logger.info("Updating post with id : {}", postId);
-        postUtil.checkId(postId);
         Post post = findPostById(postId);
         if (post.isDeleted() || !post.isPublished()) {
             throw new IllegalArgumentException("Post deleted or not published yet!");
@@ -84,7 +82,6 @@ public class PostService {
     @Transactional
     public PostResultResponse softDelete(Long postId) {
         logger.info("Soft deleting post with id : {}", postId);
-        postUtil.checkId(postId);
         Post post = findPostById(postId);
         logger.info("{}", post.isDeleted());
         if (post.isDeleted()) {
@@ -118,7 +115,6 @@ public class PostService {
     public List<PostResultResponse> getPostsByFilter(Long id,
                                                      Function<Long, List<Post>> fetcher,
                                                      Predicate<Post> filter) {
-        postUtil.checkId(id);
         return fetcher.apply(id)
                 .stream()
                 .filter(filter)
