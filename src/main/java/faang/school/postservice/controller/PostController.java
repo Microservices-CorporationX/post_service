@@ -7,6 +7,7 @@ import faang.school.postservice.service.PostService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,11 +15,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/posts")
 @RequiredArgsConstructor
+@Validated
 public class PostController {
     private final PostService postService;
 
     @PostMapping("/create")
-    public PostResultResponse createPost(@RequestBody @Valid PostCreatingRequest postCreatingDto) {
+    public PostResultResponse createPost(@RequestBody PostCreatingRequest postCreatingDto) {
         return postService.createPost(postCreatingDto);
     }
 

@@ -9,6 +9,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.utils.PostUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +23,8 @@ import java.util.function.Predicate;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PostService {
-    private final Logger logger = LoggerFactory.getLogger(PostService.class);
     private final PostMapper postMapper;
     private final PostRepository postRepository;
     private final PostUtil postUtil;
@@ -36,32 +37,32 @@ public class PostService {
                 .deleted(false)
                 .build();
 
-        logger.info("Creating the post with id : {}", post.getId());
+        log.info("Creating the post with id : {}", post.getId());
 
-        logger.info("Validating the post creator with id : {}", post.getId());
+        log.info("Validating the post creator with id : {}", post.getId());
         int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
         switch (result) {
             case 0 : post.setAuthorId(postCreatingDto.authorId());
             case 1 : post.setProjectId(postCreatingDto.projectId());
         }
-        logger.info("Success validation for post : {}", post.getId());
+        log.info("Success validation for post : {}", post.getId());
 
         post = postRepository.save(post);
-        logger.info("Saved post with id : {}", post.getId());
+        log.info("Saved post with id : {}", post.getId());
 
         return postMapper.toDto(post);
     }
 
     @Transactional
     public PostResultResponse publishPost(Long postId) {
-        logger.info("Publishing post with id : {}", postId);
+        log.info("Publishing post with id : {}", postId);
         Post post = findPostById(postId);
         if (post.isPublished()) {
             throw new IllegalArgumentException("Post already published!");
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        logger.info("Successfully published post with id : {}", postId);
+        log.info("Successfully published post with id : {}", postId);
         return postMapper.toDto(post);
     }
 
@@ -69,26 +70,26 @@ public class PostService {
     public PostResultResponse updatePost(PostUpdatingDto postUpdatingDto) {
         Long postId = postUpdatingDto.postId();
         String updatingContent = postUpdatingDto.updatingContent();
-        logger.info("Updating post with id : {}", postId);
+        log.info("Updating post with id : {}", postId);
         Post post = findPostById(postId);
         if (post.isDeleted() || !post.isPublished()) {
             throw new IllegalArgumentException("Post deleted or not published yet!");
         }
         post.setContent(updatingContent);
-        logger.info("Successfully updated post with id : {}", postId);
+        log.info("Successfully updated post with id : {}", postId);
         return postMapper.toDto(post);
     }
 
     @Transactional
     public PostResultResponse softDelete(Long postId) {
-        logger.info("Soft deleting post with id : {}", postId);
+        log.info("Soft deleting post with id : {}", postId);
         Post post = findPostById(postId);
-        logger.info("{}", post.isDeleted());
+        log.info("{}", post.isDeleted());
         if (post.isDeleted()) {
             throw new IllegalArgumentException("Post already marked as deleted!");
         }
         post.setDeleted(true);
-        logger.info("Successfully soft deleted post with id : {}", postId);
+        log.info("Successfully soft deleted post with id : {}", postId);
         return postMapper.toDto(post);
     }
 
