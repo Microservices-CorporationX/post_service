@@ -102,18 +102,22 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @Transactional(readOnly = true)
     public List<PostResultResponse> getNoPublishedPostsByAuthor(Long authorId) {
         return getPostsByFilter(authorId, postRepository::findByAuthorId, post -> !post.isPublished());
     }
 
+    @Transactional(readOnly = true)
     public List<PostResultResponse> getNoPublishedPostsByProject(Long projectId) {
         return getPostsByFilter(projectId, postRepository::findByProjectId, post -> !post.isPublished());
     }
 
+    @Transactional(readOnly = true)
     public List<PostResultResponse> getPublishedPostsByAuthor(Long authorId) {
         return getPostsByFilter(authorId, postRepository::findByAuthorId, Post::isPublished);
     }
 
+    @Transactional(readOnly = true)
     public List<PostResultResponse> getPublishedPostsByProject(Long projectId) {
         return getPostsByFilter(projectId, postRepository::findByProjectId, Post::isPublished);
     }
