@@ -22,8 +22,7 @@ public class CommentService {
     private final PostService postService;
 
     public CommentReadDto create(CommentCreateDto createDto) {
-        userService.verifyUserExists(createDto.getAuthorId());
-        postService.verifyPostExists(createDto.getPostId());
+        verifyCommentCreation(createDto);
 
         Comment newComment = commentMapper.toEntity(createDto);
         newComment = commentRepository.save(newComment);
@@ -31,9 +30,9 @@ public class CommentService {
     }
 
     public CommentReadDto update(CommentUpdateDto updateDto) {
-        Comment comment = getCommentById(updateDto.getId());
+        Comment comment = getCommentById(updateDto.id());
 
-        validateEditorAndAuthorEquality(updateDto.getEditorId(), comment.getAuthorId());
+        validateEditorAndAuthorEquality(updateDto.editorId(), comment.getAuthorId());
 
         commentMapper.updateEntityFromDto(updateDto, comment);
         commentRepository.save(comment);
@@ -62,6 +61,11 @@ public class CommentService {
         if (editorId != authorId) {
             throw new BusinessException("Редактировать комментарий может только его автор");
         }
+    }
+
+    private void verifyCommentCreation(CommentCreateDto createDto) {
+        userService.getUserDtoById(createDto.authorId());
+        postService.getPostById(createDto.postId());
     }
 
 }

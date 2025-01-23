@@ -1,6 +1,7 @@
 package faang.school.postservice.util.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.service.UserService;
@@ -20,6 +21,9 @@ public class UserServiceTest {
     public static final long ID = 1L;
 
     @Mock
+    private UserContext userContext;
+
+    @Mock
     UserServiceClient userServiceClient;
 
     @InjectMocks
@@ -29,13 +33,13 @@ public class UserServiceTest {
     public void testUserExist() {
         Mockito.when(userServiceClient.getUser(ID)).thenReturn(new UserDto(ID, "Alex", "email"));
 
-        assertDoesNotThrow(() -> userService.verifyUserExists(ID));
+        assertDoesNotThrow(() -> userService.getUserDtoById(ID));
     }
 
     @Test
     public void testUserNotExist() {
         Mockito.when(userServiceClient.getUser(ID)).thenThrow(FeignException.NotFound.class);
 
-        assertThrows(EntityNotFoundException.class, () -> userService.verifyUserExists(ID));
+        assertThrows(EntityNotFoundException.class, () -> userService.getUserDtoById(ID));
     }
 }

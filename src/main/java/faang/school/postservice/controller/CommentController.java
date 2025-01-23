@@ -18,22 +18,22 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping
+@RequestMapping("/posts")
 @RequiredArgsConstructor
 public class CommentController {
     private final CommentService commentService;
 
-    @PostMapping("/posts/comments")
+    @PostMapping("/comments")
     public CommentReadDto create(@Valid @RequestBody CommentCreateDto createDto) {
         return commentService.create(createDto);
     }
 
-    @PutMapping("/posts/comments")
+    @PutMapping("/comments")
     public CommentReadDto update(@Valid @RequestBody CommentUpdateDto updateDto) {
         return commentService.update(updateDto);
     }
 
-    @GetMapping("/posts/{postId}/comments")
+    @GetMapping("/{postId}/comments")
     public List<CommentReadDto> getCommentsByPostId(@PathVariable long postId) {
         return commentService.getCommentsByPostId(postId);
     }
