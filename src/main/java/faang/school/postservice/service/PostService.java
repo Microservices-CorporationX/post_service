@@ -2,7 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.dto.posts.PostCreatingRequest;
 import faang.school.postservice.dto.posts.PostResultResponse;
-import faang.school.postservice.excpetions.PostWasNotFoundException;
+import faang.school.postservice.exceptions.PostWasNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -29,23 +29,24 @@ public class PostService {
 
     @Transactional
     public PostResultResponse createPost(PostCreatingRequest postCreatingDto) {
-        logger.info("Creating the post with id : {}", postCreatingDto.id());
         Post post = Post.builder()
                 .content(postCreatingDto.content())
                 .published(false)
                 .deleted(false)
                 .build();
 
-        logger.info("Validating the post creator with id : {}", postCreatingDto.id());
+        logger.info("Creating the post with id : {}", post.getId());
+
+        logger.info("Validating the post creator with id : {}", post.getId());
         int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
         switch (result) {
             case 0 : post.setAuthorId(postCreatingDto.authorId());
             case 1 : post.setProjectId(postCreatingDto.projectId());
         }
-        logger.info("Success validation for post : {}", postCreatingDto.id());
+        logger.info("Success validation for post : {}", post.getId());
 
         post = postRepository.save(post);
-        logger.info("Saved post with id : {}", postCreatingDto.id());
+        logger.info("Saved post with id : {}", post.getId());
 
         return postMapper.toDto(post);
     }
@@ -60,10 +61,7 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-
-        post = postRepository.save(post);
         logger.info("Successfully published post with id : {}", postId);
-
         return postMapper.toDto(post);
     }
 
@@ -79,10 +77,7 @@ public class PostService {
             throw new IllegalArgumentException("Post deleted or not published yet!");
         }
         post.setContent(updatingContent);
-
-        postRepository.save(post);
         logger.info("Successfully updated post with id : {}", postId);
-
         return postMapper.toDto(post);
     }
 
@@ -96,8 +91,6 @@ public class PostService {
             throw new IllegalArgumentException("Post already marked as deleted!");
         }
         post.setDeleted(true);
-
-        postRepository.save(post);
         logger.info("Successfully soft deleted post with id : {}", postId);
         return postMapper.toDto(post);
     }
