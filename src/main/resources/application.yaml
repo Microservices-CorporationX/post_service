@@ -21,15 +21,33 @@ spring:
     redis:
       port: 6379
       host: localhost
-      channels:
-        calculations_channel:
-          name: calculations_channel
+      channel:
+        ads-channel: ad-bought-channel
+        calculations-channel: calculations_channel
+        likes-channel: like_event_channel
+        user-bans-channel: user_ban_channel
+        comments-channel: comment_channel
+
+  retry:
+    maxAttempts: 3
+    initialDelay: 1000
+    multiplier: 2
+    maxDelay: 10000
 
   springdoc:
     api-docs:
       path=/api-docs
     swagger-ui:
       path=/swagger-ui.html
+
+moderation:
+  batch-size: 100
+
+async:
+  core-pool-size: 4
+  max-pool-size: 10
+  queue-capacity: 100
+  thread-name-prefix: PostService-Async-
 
 server:
   port: 8081
@@ -43,14 +61,19 @@ logging:
 post:
   publisher:
     scheduler:
-      cron: "0 0/1 * 1/1 * ?"
+      cron: "0 0/1 * 1/1 * ?" # every minute
   ad-remover:
     scheduler:
-      cron: "0 0/1 * 1/1 * ?"
+      cron: "0 0/1 * 1/1 * ?" # every minute
+  ban-authors:
+    scheduler:
+      cron: "0 0 0 * * *" # every day at midnight
+  clean-outbox:
+    scheduler:
+      cron: "0 0 0 * * *" # every day at midnight
 
 cache:
   post-ttl-duration: 86400
-
 
 user-service:
   host: localhost

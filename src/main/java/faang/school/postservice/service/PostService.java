@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.dto.AuthorPostCount;
 import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
@@ -8,22 +9,30 @@ import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.utils.PostSpecifications;
 import faang.school.postservice.validator.HashtagValidator;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PostService {
@@ -32,7 +41,17 @@ public class PostService {
     private final PostValidator postValidator;
     private final HashtagService hashtagService;
     private final HashtagValidator hashtagValidator;
+    private final RedisTemplate<String, Object> redisTemplate;
+    private final ExecutorService executorService;
     private final PostCacheRepository postCacheRepository;
+
+    @Value("${spring.data.redis.channel.user-bans-channel}")
+    private String userBansChannelName;
+    private final PostVerificationService postVerificationService;
+
+    @Value("${ad.batch.size}")
+    private int batchSize;
+
 
     @Transactional
     public ResponsePostDto create(CreatePostDto createPostDto) {
@@ -167,7 +186,7 @@ public class PostService {
     private boolean hasHashtags(List<String> hashtags) {
         return hashtags != null && !hashtags.isEmpty();
     }
-    
+
     private Set<Hashtag> getAndCreateHashtags(List<String> hashtags) {
         Map<String, Hashtag> existingHashtags = hashtagService.findAllByTags(hashtags)
                 .stream()
@@ -180,5 +199,82 @@ public class PostService {
             result.add(hashtag);
         }
         return result;
+    }
+
+    public void banOffensiveAuthors() {
+        List<AuthorPostCount> unverifiedPostsByAuthor = getUnverifiedPostsGroupedByAuthor();
+
+        List<AuthorPostCount> offensiveAuthors = unverifiedPostsByAuthor.stream()
+                .filter(entry -> entry.getPostCount() > 5)
+                .toList();
+
+        log.info("Found {} authors with more than 5 unverified posts", offensiveAuthors.size());
+
+        offensiveAuthors.forEach(entry -> {
+            Long authorId = entry.getAuthorId();
+            redisTemplate.convertAndSend(userBansChannelName, authorId);
+        });
+    }
+
+    private List<AuthorPostCount> getUnverifiedPostsGroupedByAuthor() {
+        List<Object[]> rawResults = postRepository.findUnverifiedPostsGroupedByAuthor();
+
+        return rawResults.stream()
+                .map(result -> new AuthorPostCount((Long) result[0], (Long) result[1]))
+                .collect(Collectors.toList());
+    }
+
+
+    @Transactional
+    public void checkAndVerifyPosts() {
+        List<Post> postsToVerify = postRepository.findAllByVerifiedDateIsNull();
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+
+        for (int i = 0; i < postsToVerify.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToVerify.size());
+            List<Post> batch = postsToVerify.subList(i, end);
+
+            CompletableFuture<Void> future = postVerificationService.checkAndVerifyPostsInBatch(batch);
+            futures.add(future);
+        }
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+    }
+
+    public void publishScheduledPosts() {
+        List<Post> postsToPublish = postRepository.findAll(PostSpecifications.isReadyToPublish());
+
+        if (postsToPublish.isEmpty()) {
+            log.info("No posts to publish at this time");
+            return;
+        }
+
+        log.info("Starting batch processing for {} posts", postsToPublish.size());
+
+        for (int i = 0; i < postsToPublish.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, postsToPublish.size());
+            List<Post> batch = postsToPublish.subList(i, end);
+
+            CompletableFuture.runAsync(() -> {
+                log.info("Processing batch of size {}", batch.size());
+                try {
+                    LocalDateTime now = LocalDateTime.now();
+                    for (Post post : batch) {
+                        post.setPublished(true);
+                        post.setPublishedAt(now);
+                    }
+                    postRepository.saveAll(batch);
+                    log.info("Successfully saved batch of size {}", batch.size());
+                } catch (Exception e) {
+                    log.error("Error while processing batch: {}", batch, e);
+                }
+            }, executorService);
+        }
+
+        log.info("Batch processing completed");
+    }
+
+    public List<Post> getReadyToPublishPosts() {
+        return postRepository.findAll(PostSpecifications.isReadyToPublish());
     }
 }
