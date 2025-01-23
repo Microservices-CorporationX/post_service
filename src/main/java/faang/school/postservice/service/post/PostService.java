@@ -10,7 +10,9 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.model.redis.PostRedis;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.PostRedisRepository;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.service.resource.ResourceService;
@@ -28,6 +30,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
@@ -55,11 +58,13 @@ public class PostService {
     private final SpellingConfig api;
     private final RestTemplate restTemplate;
     private final ResourceMapper resourceMapper;
+    private final PostRedisRepository postRedisRepository;
     private final ResourceValidator resourceValidator;
     private final PostValidator postValidator;
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
 
+    @Transactional
     public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
         postValidator.validateCreate(requestDto);
         Post post = postMapper.toEntity(requestDto);
@@ -84,6 +89,7 @@ public class PostService {
         return responseDto;
     }
 
+    @Transactional
     public PostResponseDto updatePost(Long postId, PostUpdateDto updateDto, List<MultipartFile> images, List<MultipartFile> audio) {
         Post post = postRepository.getPostById(postId);
 
@@ -108,6 +114,7 @@ public class PostService {
         return responseDto;
     }
 
+    @Transactional
     public PostResponseDto getPost(Long postId) {
         Post post = postRepository.getPostById(postId);
         PostResponseDto responseDto = postMapper.toDto(post);
@@ -115,53 +122,21 @@ public class PostService {
         return responseDto;
     }
 
-    private void uploadResourcesToPost(List<MultipartFile> files, String resourceType, Post post) {
-        if (files != null) {
-            log.info("Uploading {} {} resources for post ID {}", files.size(), resourceType, post.getId());
-            List<Resource> resources = resourceService.uploadResources(files, resourceType, post);
-            post.getResources().addAll(resources);
-            log.info("{} {} resources uploaded successfully for post ID {}", resources.size(), resourceType, post.getId());
-        }
-    }
-
-    private void populateResourceUrls(PostResponseDto responseDto, Post post) {
-        List<ResourceResponseDto> imageResources = post.getResources().stream()
-                .filter(resource -> "image".equals(resource.getType()))
-                .map(this::mapResourceToDto)
-                .toList();
-
-        List<ResourceResponseDto> audioResources = post.getResources().stream()
-                .filter(resource -> "audio".equals(resource.getType()))
-                .map(this::mapResourceToDto)
-                .toList();
-
-        responseDto.setImages(imageResources);
-        responseDto.setAudio(audioResources);
-    }
-
-    private ResourceResponseDto mapResourceToDto(Resource resource) {
-        ResourceResponseDto dto = resourceMapper.toDto(resource);
-        dto.setDownloadUrl(s3Service.generatePresignedUrl(resource.getKey()));
-        return dto;
-    }
-
-    private void deleteResourcesFromPost(List<Long> resourceIds) {
-        if (resourceIds != null) {
-            log.info("Deleting {} resources", resourceIds.size());
-            resourceService.deleteResources(resourceIds);
-            log.info("{} resources deleted successfully", resourceIds.size());
-        }
-    }
-
+    @Transactional
     public PostResponseDto publishPost(Long id) {
         Post post = postValidator.validateAndGetPostById(id);
         postValidator.validatePublish(post);
         post.setPublished(true);
         post.setDeleted(false);
+        postRepository.save(post);
+        log.info("Post with id {} published", id);
+        postRedisRepository.save(createPostForRedis(post));
+        log.info("Post with id {} saved in Redis", id);
 
-        return postMapper.toDto(postRepository.save(post));
+        return postMapper.toDto(post);
     }
 
+    @Transactional
     public void deletePost(Long id) {
         Post post = postRepository
                 .findById(id)
@@ -173,12 +148,14 @@ public class PostService {
         postRepository.save(post);
     }
 
+    @Transactional
     public PostResponseDto getPostById(Long id) {
         return postRepository.findById(id)
                 .map(postMapper::toDto)
                 .orElseThrow(EntityNotFoundException::new);
     }
 
+    @Transactional
     public void checkSpelling() {
         List<Post> posts = postRepository.findByPublishedFalse();
         int sizeOfRequests = getSizeOfRequest(posts.size());
@@ -271,6 +248,15 @@ public class PostService {
         }
     }
 
+    public PostRedis createPostForRedis(Post post) {
+        return PostRedis.builder()
+                .id(String.valueOf(post.getId()))
+                .expirationInSeconds(60L)
+                .content(post.getContent())
+                .build();
+    }
+
+
     private int getSizeOfRequest(int sizeOfPosts) {
         if (sizeOfPosts <= 100) {
             return 10;
@@ -303,6 +289,44 @@ public class PostService {
             log.info("Post with id {} has been verified and has status {}", post.getId(), isVerified);
             postRepository.save(post);
         });
+    }
+
+    private void uploadResourcesToPost(List<MultipartFile> files, String resourceType, Post post) {
+        if (files != null) {
+            log.info("Uploading {} {} resources for post ID {}", files.size(), resourceType, post.getId());
+            List<Resource> resources = resourceService.uploadResources(files, resourceType, post);
+            post.getResources().addAll(resources);
+            log.info("{} {} resources uploaded successfully for post ID {}", resources.size(), resourceType, post.getId());
+        }
+    }
+
+    private void populateResourceUrls(PostResponseDto responseDto, Post post) {
+        List<ResourceResponseDto> imageResources = post.getResources().stream()
+                .filter(resource -> "image".equals(resource.getType()))
+                .map(this::mapResourceToDto)
+                .toList();
+
+        List<ResourceResponseDto> audioResources = post.getResources().stream()
+                .filter(resource -> "audio".equals(resource.getType()))
+                .map(this::mapResourceToDto)
+                .toList();
+
+        responseDto.setImages(imageResources);
+        responseDto.setAudio(audioResources);
+    }
+
+    private ResourceResponseDto mapResourceToDto(Resource resource) {
+        ResourceResponseDto dto = resourceMapper.toDto(resource);
+        dto.setDownloadUrl(s3Service.generatePresignedUrl(resource.getKey()));
+        return dto;
+    }
+
+    private void deleteResourcesFromPost(List<Long> resourceIds) {
+        if (resourceIds != null) {
+            log.info("Deleting {} resources", resourceIds.size());
+            resourceService.deleteResources(resourceIds);
+            log.info("{} resources deleted successfully", resourceIds.size());
+        }
     }
 
 }

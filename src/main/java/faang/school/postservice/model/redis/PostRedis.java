@@ -18,12 +18,10 @@ import java.util.SortedSet;
 public class PostRedis {
 
     @Id
-    private Long id;
+    private String id;
     @TimeToLive
     private Long expirationInSeconds;
 
     private String content;
-
-
 
 }
