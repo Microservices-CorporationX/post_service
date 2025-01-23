@@ -2,11 +2,11 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.service.PostService;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import static faang.school.postservice.constant.PostErrorMessages.POST_CANNOT_BE_NULL;
 
 @RestController
 @RequiredArgsConstructor
@@ -14,8 +14,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class PostController {
     private final PostService postService;
 
-    @PostMapping(value = "create-draft")
-    PostDto createDraft(@RequestBody PostDto postDto){
+    @PostMapping(value = "/create-draft")
+    PostDto createDraft(@RequestBody PostDto postDto) {
         return postService.createDraft(postDto);
     }
+
+    @PutMapping(value = "/publish/{postId}")
+    PostDto publish(@PathVariable @NotNull(message = POST_CANNOT_BE_NULL) Long postId) {
+        return postService.publish(postId);
+    }
+
+    @PatchMapping(value = "/update")
+    PostDto update(@RequestBody PostDto postDto) {
+        return postService.update(postDto);
+    }
+
 }
