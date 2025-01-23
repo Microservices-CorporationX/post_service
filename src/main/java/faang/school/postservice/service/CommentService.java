@@ -5,15 +5,15 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
-import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.scope.ScopedObject;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Slf4j
@@ -26,35 +26,38 @@ public class CommentService {
 
     @Transactional
     public Comment createComment(Comment comment, Long postId) {
-        if (isUserNotExists(comment.getAuthorId())) {
-            String content = comment.getContent();
-            checkContent(content);
-            Post post = postService.getPostById(postId);
-
-            LocalDateTime whenCommentCreated = LocalDateTime.now();
-            comment.setCreatedAt(whenCommentCreated);
-            comment.setUpdatedAt(whenCommentCreated);//TODO: добавить лог
-            post.getComments().add(comment);
-            postService.savePost(post);
-        }
+        getUser(comment.getAuthorId());
+        Post post = postService.getPostById(postId);
+        post.getComments().add(comment);
+        postService.savePost(post);
+        comment.setPost(post);
         return commentRepository.save(comment);
     }
 
-    public void updateComment(Comment comment) {
+    public Comment updateComment(Comment comment) {
+        Comment savedComment = commentRepository.findById(comment.getId())
+                .orElseThrow(() -> new NoSuchElementException("Comment not found or deleted"));
 
+        savedComment.setContent(comment.getContent());
+        savedComment.setUpdatedAt(LocalDateTime.now());
 
+        return savedComment;
     }
 
-    private void checkContent(String content) {
-        if (content.isEmpty() || content.length() > 4096) {
-            throw new IllegalArgumentException("Message of comment is empty or contains too much characters");
-        }
+    public List<Comment> getAllCommentsToPost(Long postId) {
+        Post post = postService.getPostById(postId);
+        return post.getComments().stream()
+                .sorted(Comparator.comparing(Comment::getUpdatedAt).reversed())
+                .toList();
     }
 
-    private boolean isUserNotExists(Long authorId) {
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteById(commentId);
+    }
+
+    private void getUser(Long authorId) {
         try {
-            UserDto dto = userServiceClient.getUser(authorId);
-            return !(dto.id() > 0);
+            userServiceClient.getUser(authorId);
         } catch (Exception e) {
             throw new NoSuchElementException(String.format("User with ID#%s not found", authorId));
         }
