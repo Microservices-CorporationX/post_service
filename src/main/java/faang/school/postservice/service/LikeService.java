@@ -61,6 +61,7 @@ public class LikeService {
         return ResponseEntity.ok().build();
     }
 
+    @Transactional
     public ResponseEntity<?> toggleLikeComment(LikeCommentRequest request) {
         Comment comment;
         UserDto userDto;
