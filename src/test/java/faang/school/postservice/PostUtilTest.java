@@ -78,19 +78,4 @@ public class PostUtilTest {
 
         verifyNoInteractions(userServiceClient, projectServiceClient);
     }
-
-    @Test
-    void checkId_withValidId_shouldNotThrowException() {
-        Long postId = 1L;
-
-        assertDoesNotThrow(() -> postUtil.checkId(postId));
-    }
-
-    @Test
-    void checkId_withNullId_shouldThrowException() {
-        Long postId = null;
-
-        assertThrows(IllegalArgumentException.class, () -> postUtil.checkId(postId));
-    }
-
 }

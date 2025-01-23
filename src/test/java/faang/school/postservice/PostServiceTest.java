@@ -2,6 +2,7 @@ package faang.school.postservice;
 
 import faang.school.postservice.dto.posts.PostCreatingRequest;
 import faang.school.postservice.dto.posts.PostResultResponse;
+import faang.school.postservice.dto.posts.PostUpdatingDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -41,7 +42,6 @@ public class PostServiceTest {
     @BeforeEach
     public void setUp() {
         postCreatingRequest = PostCreatingRequest.builder()
-                .id(1L)
                 .content("This is a test content")
                 .authorId(1L)
                 .projectId(null)
@@ -77,12 +77,10 @@ public class PostServiceTest {
     @Test
     public void publishPost_PostSuccessfullyPublished() {
         when(postRepository.findById(post.getId())).thenReturn(Optional.of(post));
-        when(postRepository.save(any(Post.class))).thenReturn(post);
 
         PostResultResponse result = postService.publishPost(post.getId());
 
         Assertions.assertEquals(postResultResponse, result);
-        Assertions.assertDoesNotThrow(() -> postUtil.checkId(post.getId()));
     }
 
     @Test
@@ -100,7 +98,6 @@ public class PostServiceTest {
         when(postRepository.findById(setPost.getId())).thenReturn(Optional.of(setPost));
 
         Assertions.assertThrows(IllegalArgumentException.class, () -> postService.publishPost(setPost.getId()));
-        Assertions.assertDoesNotThrow(() -> postUtil.checkId(setPost.getId()));
     }
 
     @Test
@@ -113,16 +110,20 @@ public class PostServiceTest {
                 .deleted(false)
                 .build();
 
+        PostUpdatingDto postUpdatingDto = PostUpdatingDto.builder()
+                .postId(1L)
+                .updatingContent("New content")
+                .build();
+
         Long postId = setPost.getId();
         String postContent = setPost.getContent() + "New content";
 
         when(postRepository.findById(postId)).thenReturn(Optional.ofNullable(setPost));
-        when(postRepository.save(any(Post.class))).thenReturn(setPost);
 
-        PostResultResponse result = postService.updatePost(postId, postContent);
+
+        PostResultResponse result = postService.updatePost(postUpdatingDto);
 
         Assertions.assertEquals(result, postResultResponse);
-        Assertions.assertDoesNotThrow(() -> postUtil.checkId(setPost.getId()));
     }
 
     @Test
@@ -157,8 +158,6 @@ public class PostServiceTest {
 
         Mockito.when(postRepository.findById(postId))
                 .thenReturn(Optional.of(post));
-        Mockito.when(postRepository.save(any(Post.class)))
-                .thenReturn(post);
 
         PostResultResponse result = postService.softDelete(postId);
 
@@ -178,11 +177,16 @@ public class PostServiceTest {
     }
 
     private void updatePostWithError(Post setPost) {
+        PostUpdatingDto postUpdatingDto = PostUpdatingDto.builder()
+                .postId(1L)
+                .updatingContent("New content")
+                .build();
+
         Long postId = setPost.getId();
         String postContent = setPost.getContent() + "New content";
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(setPost));
 
-        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.updatePost(postId, postContent));
+        Assertions.assertThrows(IllegalArgumentException.class, () -> postService.updatePost(postUpdatingDto));
     }
 }
