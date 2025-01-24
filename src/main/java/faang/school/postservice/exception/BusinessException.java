@@ -1,5 +1,7 @@
 package faang.school.postservice.exception;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * Это исключение выбрасывается при нарушении бизнес-правила или ограничения бизнес-логики.
  * Оно служит в качестве общего исключения для обработки ошибок, связанных с бизнес-слоем,
@@ -11,9 +13,9 @@ package faang.school.postservice.exception;
  * которые не всегда могут быть восстановлены, и должно быть обработано на более высоком уровне в приложении.
  * </p>
  */
-public class BusinessException extends RuntimeException {
+public class BusinessException extends ErrorResponse {
 
     public BusinessException(String message) {
-        super(message);
+        super(message, "Business", HttpStatus.BAD_REQUEST);
     }
 }
