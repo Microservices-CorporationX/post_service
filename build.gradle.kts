@@ -1,5 +1,3 @@
-import java.math.RoundingMode
-
 plugins {
     jacoco
     java
