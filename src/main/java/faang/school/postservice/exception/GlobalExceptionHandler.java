@@ -13,20 +13,32 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public BusinessException handleException(BusinessException ex) {
-        return ex;
+    public ErrorResponse handleException(BusinessException ex) {
+        return new ErrorResponse(
+                ex.getMessage(),
+                "Business",
+                HttpStatus.BAD_REQUEST
+        );
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public DataValidationException handleException(DataValidationException ex) {
-        return ex;
+    public ErrorResponse handleException(DataValidationException ex) {
+        return new ErrorResponse(
+                ex.getMessage(),
+                "DataValidation",
+                HttpStatus.BAD_REQUEST
+        );
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public EntityNotFoundException handleException(EntityNotFoundException ex) {
-        return ex;
+    public ErrorResponse handleException(EntityNotFoundException ex) {
+        return new ErrorResponse(
+                ex.getMessage(),
+                "Entity not found",
+                HttpStatus.NOT_FOUND
+        );
     }
 
     @ExceptionHandler

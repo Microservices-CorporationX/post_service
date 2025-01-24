@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
-public class ErrorResponse extends RuntimeException {
+public class ErrorResponse {
     private int status;
     private String error;
     private String message;

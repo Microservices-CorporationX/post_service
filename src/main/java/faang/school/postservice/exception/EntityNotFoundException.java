@@ -1,7 +1,5 @@
 package faang.school.postservice.exception;
 
-import org.springframework.http.HttpStatus;
-
 /**
  * Исключение, выбрасываемое в случае, когда сущность не найдена в системе.
  * Это исключение наследует {@link RuntimeException} и используется для
@@ -10,8 +8,8 @@ import org.springframework.http.HttpStatus;
  * Обычно это исключение применяется, когда операция требует существования
  * сущности (например, поиск по ID), но сущность не была найдена.
  */
-public class EntityNotFoundException extends ErrorResponse {
+public class EntityNotFoundException extends RuntimeException {
     public EntityNotFoundException(String message) {
-        super(message, "Entity not found", HttpStatus.NOT_FOUND);
+        super(message);
     }
 }
