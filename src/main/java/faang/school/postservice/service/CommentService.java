@@ -64,8 +64,8 @@ public class CommentService {
         }
     }
 
-    private void checkUserIsOwnerComment(Long savedId, Long transferredId) {
-        if (Objects.equals(savedId, transferredId)) {
+    private void checkUserIsOwnerComment(Long savedId, Long receivedId) {
+        if (Objects.equals(savedId, receivedId)) {
             throw new UserUnauthorizedAccessException("User cannot change comments the other users");
         }
     }

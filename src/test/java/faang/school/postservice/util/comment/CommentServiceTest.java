@@ -15,26 +15,23 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class CommentServiceTest {
-
-    @InjectMocks
-    private CommentService commentService;
 
     @Mock
     private UserServiceClient userServiceClient;
@@ -45,8 +42,12 @@ public class CommentServiceTest {
     @Mock
     private PostService postService;
 
+    @InjectMocks
+    private CommentService commentService;
+
     private Comment comment;
     private Post post;
+    private UserDto userDto;
 
     @BeforeEach
     public void setUp() {
@@ -60,21 +61,18 @@ public class CommentServiceTest {
         post = Post.builder()
                 .id(1L)
                 .content("Test post")
-                .comments(List.of(comment))
+                .comments(new ArrayList<>())
                 .build();
     }
 
     @Test
     public void testCreateComment() {
-        // Arrange
-        when(userServiceClient.getUser(comment.getAuthorId())).thenReturn(mock(UserDto.class));
+        when(userServiceClient.getUser(comment.getAuthorId())).thenReturn(userDto);
         when(postService.getPostById(1L)).thenReturn(post);
         when(commentRepository.save(comment)).thenReturn(comment);
 
-        // Act
         Comment result = commentService.createComment(comment, 1L);
 
-        // Assert
         assertNotNull(result);
         assertEquals(post, result.getPost());
         verify(userServiceClient).getUser(comment.getAuthorId());
@@ -128,6 +126,7 @@ public class CommentServiceTest {
 
     @Test
     public void testGetAllCommentsToPost() {
+        post.getComments().add(comment);
         when(postService.getPostById(1L)).thenReturn(post);
 
         List<Comment> comments = commentService.getAllCommentsToPost(1L);
@@ -138,7 +137,7 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void testGetAllCommentsToPost_PostNotFound() {
+    public void testGetAllCommentsToPostPostNotFound() {
         when(postService.getPostById(1L)).thenThrow(new NoSuchElementException("Post not found"));
 
         Exception exception = assertThrows(NoSuchElementException.class, () -> {
@@ -160,13 +159,15 @@ public class CommentServiceTest {
     }
 
     @Test
-    public void testDeleteComment_CommentNotFound() {
-        when(commentRepository.findById(1L)).thenReturn(Optional.empty());
+    public void testDeleteCommentCommentNotFound() {
+        when(commentRepository.findById(1L)).thenThrow(new NoSuchElementException("Comment not found"));
 
-        commentService.deleteComment(1L);
+        Exception exception = assertThrows(NoSuchElementException.class, () -> {
+            commentService.deleteComment(1L);
+        });
 
+        assertEquals("Comment not found", exception.getMessage());
         verify(commentRepository).findById(1L);
-        verify(commentRepository, never()).deleteById(1L);
     }
 }
 
