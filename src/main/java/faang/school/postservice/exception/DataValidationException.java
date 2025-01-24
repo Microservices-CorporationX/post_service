@@ -1,7 +1,5 @@
 package faang.school.postservice.exception;
 
-import org.springframework.http.HttpStatus;
-
 /**
  * Исключение, которое выбрасывается при ошибке валидации данных в приложении.
  * Это исключение используется для указания на то, что предоставленные системе данные
@@ -13,9 +11,9 @@ import org.springframework.http.HttpStatus;
  * которые возникают при обработке ввода пользователя или других операций валидации данных в приложении.
  * </p>
  */
-public class DataValidationException extends ErrorResponse {
+public class DataValidationException extends RuntimeException {
 
     public DataValidationException(String message) {
-        super(message, "DataValidation", HttpStatus.BAD_REQUEST);
+        super(message);
     }
 }
