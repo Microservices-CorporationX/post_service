@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.0.6"
     id("io.spring.dependency-management") version "1.1.0"
     jacoco
+    checkstyle
 }
 
 group = "faang.school"
@@ -75,6 +76,20 @@ tasks.jacocoTestReport {
     }
 }
 
+checkstyle {
+    toolVersion = "10.17.0"
+    configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+    checkstyle.enableExternalDtdLoad.set(true)
+}
+
+tasks.checkstyleMain {
+    source = fileTree("${project.rootDir}/src/main/java")
+    include("**/*.java")
+    exclude("**/resources/**")
+
+    classpath = files()
+}
+
 tasks.jacocoTestCoverageVerification {
     dependsOn(tasks.jacocoTestReport)
     violationRules {
@@ -88,6 +103,7 @@ tasks.jacocoTestCoverageVerification {
         }
     }
 }
+
 
 val test by tasks.getting(Test::class) { testLogging.showStandardStreams = true }
 
