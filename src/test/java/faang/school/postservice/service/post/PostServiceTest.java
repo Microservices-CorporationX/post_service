@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.cache.post.PostCacher;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import faang.school.postservice.dto.post.PostDto;
@@ -64,6 +65,8 @@ class PostServiceTest {
     private ResourceService resourceService;
     @Mock
     private ImageResizeService imageResizeService;
+    @Mock
+    private PostCacher postCacher;
     @InjectMocks
     private PostService postService;
     @Mock

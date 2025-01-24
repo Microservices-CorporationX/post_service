@@ -91,3 +91,7 @@ banner:
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool: 1
+
+cache:
+  executor:
+    pool-size: 1
