@@ -11,7 +11,7 @@ import java.util.List;
 
 @FeignClient(name = "project-service")
 public interface ProjectServiceClient {
-    @GetMapping("/project/{projectId}")
+    @GetMapping("/projects/{projectId}")
     ProjectDto getProject(@PathVariable long projectId);
 
     @PostMapping("/projects")
