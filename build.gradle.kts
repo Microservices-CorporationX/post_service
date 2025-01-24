@@ -14,6 +14,10 @@ repositories {
 
 dependencies {
     /**
+     * Spring Swagger
+     */
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2")
+    /**
      * Spring boot starters
      */
     implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
