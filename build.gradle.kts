@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.0.6"
     id("io.spring.dependency-management") version "1.1.0"
+    id("jacoco")
 }
 
 group = "faang.school"
@@ -56,6 +57,47 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.9.2")
     testImplementation("org.assertj:assertj-core:3.24.2")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+}
+
+jacoco {
+    toolVersion = "0.8.12"
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    classDirectories.setFrom(
+        fileTree(project.buildDir.resolve("classes/java/main")) {
+            include("**/service/PostService.class")
+        }
+    )
+
+    executionData.setFrom(fileTree(project.buildDir).include("jacoco/test.exec"))
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+
+    classDirectories.setFrom(
+        fileTree(project.buildDir.resolve("classes/java/main")) {
+            include("**/service/PostService.class")
+        }
+    )
+
+    violationRules {
+        rule {
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = 0.70.toBigDecimal()
+            }
+        }
+    }
 }
 
 tasks.test {
