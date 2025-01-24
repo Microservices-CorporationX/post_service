@@ -75,9 +75,9 @@ class PostControllerValidatorTest {
     @Test
     void testValidateDto() {
         Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateDto(notValidPostRequestDto1));
+                () -> postControllerValidator.validateUpdateDto(notValidPostRequestDto1));
         Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateDto(notValidPostRequestDto2));
-        postControllerValidator.validateDto(validPostRequestDto);
+                () -> postControllerValidator.validateUpdateDto(notValidPostRequestDto2));
+        postControllerValidator.validateUpdateDto(validPostRequestDto);
     }
 }

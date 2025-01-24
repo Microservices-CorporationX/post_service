@@ -14,21 +14,21 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PostServiceValidator {
+    private final UserServiceClient userServiceClient;
+    private final ProjectServiceClient projectServiceClient;
 
-    UserServiceClient userServiceClient;
-    ProjectServiceClient projectServiceClient;
-
+    //TODO пока убрал обращение к другим сервисам - там нет реализации
     void validatePostDto(PostRequestDto postRequestDto) {
         Long authorId = postRequestDto.authorId();
         Long projectId = postRequestDto.projectId();
 
-        checkAuthorship(authorId, projectId);
+        /*checkAuthorship(authorId, projectId);
         if (authorId != null) {
             checkAuthorExists(authorId);
         }
         if (projectId != null) {
             checkProjectExists(projectId);
-        }
+        }*/
     }
 
     void validatePostExists(Long postId, Post post) {

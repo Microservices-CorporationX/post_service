@@ -49,7 +49,8 @@ public class PostServiceImpl implements PostService {
         Long postId = postRequestDto.id();
         Post postToUpdate = getPostById(postId);
         postServiceValidator.validatePostBeforeUpdate(postToUpdate, postMapper.toPostEntity(postRequestDto));
-        Post updatedPost = postRepository.save(postToUpdate);
+        Post requestPost  = postMapper.toPostEntity(postRequestDto);
+        Post updatedPost = postRepository.save(copyPostData(requestPost, postToUpdate));
         return postMapper.toPostResponseDto(updatedPost);
     }
 
@@ -70,7 +71,9 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getProjectPostDrafts(Long projectId) {
         List<Post> posts = postRepository.findByProjectId(projectId);
         return posts.stream()
-                .filter(post -> (Objects.equals(post.getProjectId(), projectId) && !post.isPublished()))
+                .filter(post -> (Objects.equals(post.getProjectId(), projectId)
+                        && !post.isPublished()
+                        && !post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -80,7 +83,9 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getUserPostDrafts(Long userId) {
         List<Post> posts = postRepository.findByAuthorId(userId);
         return posts.stream()
-                .filter(post -> (Objects.equals(post.getAuthorId(), userId) && !post.isPublished()))
+                .filter(post -> (Objects.equals(post.getAuthorId(), userId)
+                        && !post.isPublished()
+                        && !post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -90,7 +95,9 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getProjectPosts(Long projectId) {
         List<Post> posts = postRepository.findByProjectId(projectId);
         return posts.stream()
-                .filter(post -> (Objects.equals(post.getProjectId(), projectId) && post.isPublished()))
+                .filter(post -> (Objects.equals(post.getProjectId(), projectId)
+                        && post.isPublished()
+                        && !post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -100,7 +107,9 @@ public class PostServiceImpl implements PostService {
     public List<PostResponseDto> getUserPosts(Long userId) {
         List<Post> posts = postRepository.findByAuthorId(userId);
         return posts.stream()
-                .filter(post -> (Objects.equals(post.getAuthorId(), userId) && post.isPublished()))
+                .filter(post -> (Objects.equals(post.getAuthorId(), userId)
+                        && post.isPublished()
+                        && !post.isDeleted()))
                 .sorted(Comparator.comparing(Post::getCreatedAt))
                 .map(postMapper::toPostResponseDto)
                 .toList();
@@ -111,5 +120,11 @@ public class PostServiceImpl implements PostService {
         Post post = optionalPost.orElse(new Post());
         postServiceValidator.validatePostExists(postId, post);
         return post;
+    }
+
+    private Post copyPostData(Post sourcePost, Post targetPost)
+    {
+        targetPost.setContent(sourcePost.getContent());
+        return targetPost;
     }
 }

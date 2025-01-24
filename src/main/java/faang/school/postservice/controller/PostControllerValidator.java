@@ -30,12 +30,19 @@ public class PostControllerValidator {
         }
     }
 
-    void validateDto(PostRequestDto postRequestDto) {
+    void validateUpdateDto(PostRequestDto postRequestDto) {
         if (null == postRequestDto.id() || postRequestDto.id() < 1) {
             log.error("Incorrect Post request DTO, empty id. DTO : {}", postRequestDto);
-            throw new IllegalArgumentException("Incorrect Request DTO, empty id");
+            throw new IllegalArgumentException("Incorrect Post Request DTO, empty id");
         }
 
+        if (StringUtils.isBlank(postRequestDto.content())) {
+            log.error("Incorrect Post request DTO, empty content. DTO : {}", postRequestDto);
+            throw new IllegalArgumentException("Incorrect Post request DTO, empty content");
+        }
+    }
+
+    void validateCreateDto(PostRequestDto postRequestDto) {
         if (StringUtils.isBlank(postRequestDto.content())) {
             log.error("Incorrect Post request DTO, empty content. DTO : {}", postRequestDto);
             throw new IllegalArgumentException("Incorrect Post request DTO, empty content");

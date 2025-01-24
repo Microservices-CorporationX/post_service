@@ -20,59 +20,59 @@ public class PostController {
     private final PostControllerValidator postControllerValidator;
 
     @PutMapping("/create")
-    PostResponseDto createPostDraft(PostRequestDto postRequestDto) {
+    PostResponseDto createPostDraft(@RequestBody PostRequestDto postRequestDto) {
         log.info("Create post draft: {}", postRequestDto);
-        postControllerValidator.validateDto(postRequestDto);
+        postControllerValidator.validateCreateDto(postRequestDto);
         return postService.createPostDraft(postRequestDto);
     }
 
-    @PostMapping("/publish")
-    PostResponseDto publishPostDraft(Long postId) {
+    @PostMapping("/publish/{id}")
+    PostResponseDto publishPostDraft(@PathVariable("id") Long postId) {
         log.info("Publish post id {}", postId);
         postControllerValidator.validatePostId(postId);
         return postService.publishPostDraft(postId);
     }
 
     @PatchMapping("/update")
-    PostResponseDto updatePost(PostRequestDto postRequestDto) {
+    PostResponseDto updatePost(@RequestBody PostRequestDto postRequestDto) {
         log.info("Update post: {}", postRequestDto);
-        postControllerValidator.validateDto(postRequestDto);
+        postControllerValidator.validateUpdateDto(postRequestDto);
         return postService.updatePost(postRequestDto);
     }
 
-    @DeleteMapping("/delete/{Id}")
-    void deletePost(Long postId) {
+    @DeleteMapping("/delete/{id}")
+    void deletePost(@PathVariable("id") Long postId) {
         log.info("Delete post id {}", postId);
         postControllerValidator.validatePostId(postId);
         postService.deletePost(postId);
     }
 
-    @GetMapping("/{Id}")
-    PostResponseDto getPost(Long postId) {
+    @GetMapping("/{id}")
+    PostResponseDto getPost(@PathVariable("id") Long postId) {
         postControllerValidator.validatePostId(postId);
         return postService.getPost(postId);
     }
 
-    @GetMapping("/draftByProject/{Id}")
-    List<PostResponseDto> getProjectPostDrafts(Long projectId) {
+    @GetMapping("/draftByProject/{id}")
+    List<PostResponseDto> getProjectPostDrafts(@PathVariable("id") Long projectId) {
         postControllerValidator.validateProjectId(projectId);
         return postService.getProjectPostDrafts(projectId);
     }
 
-    @GetMapping("/draftByUser/{Id}")
-    List<PostResponseDto> getUserPostDrafts(Long userId) {
+    @GetMapping("/draftByUser/{id}")
+    List<PostResponseDto> getUserPostDrafts(@PathVariable("id") Long userId) {
         postControllerValidator.validateUserId(userId);
         return postService.getUserPostDrafts(userId);
     }
 
-    @GetMapping("/byProject/{Id}")
-    List<PostResponseDto> getProjectPosts(Long projectId) {
+    @GetMapping("/byProject/{id}")
+    List<PostResponseDto> getProjectPosts(@PathVariable("id") Long projectId) {
         postControllerValidator.validateProjectId(projectId);
         return postService.getProjectPosts(projectId);
     }
 
-    @GetMapping("/byUser/{Id}")
-    List<PostResponseDto> getUserPosts(Long userId) {
+    @GetMapping("/byUser/{id}")
+    List<PostResponseDto> getUserPosts(@PathVariable("id") Long userId) {
         postControllerValidator.validateUserId(userId);
         return postService.getUserPosts(userId);
     }
