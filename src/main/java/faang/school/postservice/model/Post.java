@@ -51,6 +51,9 @@ public class Post {
     private List<Comment> comments;
 
     @ManyToMany(mappedBy = "posts")
+    private List<Hashtag> hashtags;
+
+    @ManyToMany(mappedBy = "posts")
     private List<Album> albums;
 
     @OneToOne(mappedBy = "post", cascade = CascadeType.ALL)
