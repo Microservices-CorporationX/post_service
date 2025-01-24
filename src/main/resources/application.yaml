@@ -19,6 +19,8 @@ spring:
 
   data:
     redis:
+      cache:
+        time-to-live: 2
       port: 6379
       host: localhost
       channels:
