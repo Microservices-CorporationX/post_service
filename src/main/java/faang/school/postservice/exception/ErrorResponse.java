@@ -3,24 +3,27 @@ package faang.school.postservice.exception;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Builder
 @AllArgsConstructor
-public class ErrorResponse {
-
-    private String url;
+public class ErrorResponse extends RuntimeException {
     private int status;
     private String error;
     private String message;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime timestamp;
+    private LocalDateTime timestamp = LocalDateTime.now();
 
-    public ErrorResponse(String message) {
+    public ErrorResponse(String message, String error, HttpStatus status) {
         this.message = message;
+        this.error = error;
+        this.status = status.value();
     }
 }
