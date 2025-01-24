@@ -1,17 +1,16 @@
 package faang.school.postservice.validator;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.posts.PostSaveDto;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.DataNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,7 +21,8 @@ public class PostValidator {
     private final ProjectServiceClient projectServiceClient;
 
 
-    private static final String INTEGRATION_ERR_MSG = "Ошибка взаимодействия с сервисом: %s";
+    private static final String USER_NOT_FOUND_ERR_MSG = "Пользователь с id:%s не найден!";
+    private static final String PROJECT_NOT_FOUND_ERR_MSG = "Пользователь с id:%s не найден!";
 
     public void validatePost(PostSaveDto postSaveDto) {
         if (postSaveDto.getAuthorId() == null && postSaveDto.getProjectId() == null) {
@@ -44,32 +44,34 @@ public class PostValidator {
     public void userExist(long authorId) {
         try {
             UserDto userResponse = userServiceClient.getUser(authorId);
-            log.debug("userResponse response: {}", new ObjectMapper().writeValueAsString(userResponse));
+            log.debug("userResponse response: {}", userResponse);
             if (userResponse == null || userResponse.id() == null) {
-                throw new DataValidationException(String.format("Пользователь с id:%s не найден!", authorId));
+                throw new DataNotFoundException(String.format(USER_NOT_FOUND_ERR_MSG, authorId));
             }
         } catch (FeignException e) {
             log.error("userResponse response: {}", e.toString());
-            throw new IllegalArgumentException(String.format(INTEGRATION_ERR_MSG, "user-service"));
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage(), e);
-            throw new IllegalArgumentException(String.format(INTEGRATION_ERR_MSG, "user-service"));
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                throw new DataNotFoundException(String.format(USER_NOT_FOUND_ERR_MSG, authorId));
+            } else {
+                throw new IllegalArgumentException(e.getMessage());
+            }
         }
     }
 
     public void projectExist(long projectId) {
         try {
             ProjectDto projectResponse = projectServiceClient.getProject(projectId);
-            log.debug("projectResponse response: {}", new ObjectMapper().writeValueAsString(projectResponse));
+            log.debug("projectResponse response: {}", projectResponse);
             if (projectResponse == null) {
-                throw new DataValidationException(String.format("Проект с id:%s не найден!", projectId));
+                throw new DataNotFoundException(String.format(PROJECT_NOT_FOUND_ERR_MSG, projectId));
             }
         } catch (FeignException e) {
             log.error("projectResponse response: {}", e.toString());
-            throw new IllegalArgumentException(String.format(INTEGRATION_ERR_MSG, "project-service"));
-        } catch (JsonProcessingException e) {
-            log.error(e.getMessage(), e);
-            throw new IllegalArgumentException(String.format(INTEGRATION_ERR_MSG, "project-service"));
+            if (e.status() == HttpStatus.NOT_FOUND.value()) {
+                throw new DataNotFoundException(String.format(PROJECT_NOT_FOUND_ERR_MSG, projectId));
+            } else {
+                throw new IllegalArgumentException(e.getMessage());
+            }
         }
     }
 }
