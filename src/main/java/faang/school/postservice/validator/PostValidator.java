@@ -23,7 +23,7 @@ public class PostValidator {
 
 
     private static final String USER_NOT_FOUND_ERR_MSG = "Пользователь с id:%s не найден!";
-    private static final String PROJECT_NOT_FOUND_ERR_MSG = "Пользователь с id:%s не найден!";
+    private static final String PROJECT_NOT_FOUND_ERR_MSG = "Проект с id:%s не найден!";
 
     public void validatePost(PostSaveDto postSaveDto) {
         if (postSaveDto.getAuthorId() == null && postSaveDto.getProjectId() == null) {
