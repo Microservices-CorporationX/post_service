@@ -1,16 +1,13 @@
 package faang.school.postservice.service.validator;
 
-import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeDto;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
-import feign.FeignException;
+import faang.school.postservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -19,12 +16,10 @@ import org.springframework.stereotype.Component;
 public class LikeValidator {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
-
-    private final UserServiceClient userServiceClient;
-    private final UserContext userContext;
+    private final UserService userService;
 
     public void verifyDtoParams(LikeDto dto) {
-        findUserById(dto.userId());
+        userService.getUserDtoById(dto.userId());
 
         if (dto.postId() != null) {
             var post = findPostById(dto.postId());
@@ -61,15 +56,6 @@ public class LikeValidator {
         return postRepository
                 .findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + postId + " не найден"));
-    }
-
-    public UserDto findUserById(long userId) {
-        try {
-            userContext.setUserId(userId);
-            return userServiceClient.getUser(userId);
-        } catch (FeignException.NotFound e) {
-            throw new EntityNotFoundException("Пользователь с ID " + userId + " не найден");
-        }
     }
 
     public Comment findCommentById(long commentId) {

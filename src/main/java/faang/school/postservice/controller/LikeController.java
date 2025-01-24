@@ -20,27 +20,27 @@ public class LikeController {
 
     private final LikeService likeService;
 
-    @PostMapping("/post")
+    @PostMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void createPostLike(@Valid @RequestBody LikeDto dto) {
-        likeService.createPostLike(dto);
+    public LikeDto createPostLike(@PathVariable Long postId, @Valid @RequestBody LikeDto dto) {
+        return likeService.createPostLike(postId, dto);
     }
 
-    @DeleteMapping("/{postId}/post")
+    @DeleteMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removePostLike(@PathVariable long postId) {
-        likeService.removePostLike(postId);
+    public void removePostLike(@PathVariable Long postId, @Valid @RequestBody LikeDto dto) {
+        likeService.removePostLike(postId, dto);
     }
 
-    @PostMapping("/comment")
+    @PostMapping("/comment/{commentId}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void createCommentLike(@Valid @RequestBody LikeDto dto) {
-        likeService.createCommentLike(dto);
+    public LikeDto createCommentLike(@PathVariable Long commentId, @Valid @RequestBody LikeDto dto) {
+        return likeService.createCommentLike(commentId, dto);
     }
 
-    @DeleteMapping("/{commentId}/comment")
+    @DeleteMapping("/comment/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void removeCommentLike(@PathVariable long commentId) {
-        likeService.removeCommentLike(commentId);
+    public void removeCommentLike(@PathVariable Long commentId, @Valid @RequestBody LikeDto dto) {
+        likeService.removeCommentLike(commentId, dto);
     }
 }
