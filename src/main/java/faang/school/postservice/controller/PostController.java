@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -91,7 +92,7 @@ public class PostController {
         return new ResponseEntity<>(responsePostDto, HttpStatus.OK);
     }
 
-    @PostMapping("/not-published-posts-by-user/{user-id}")
+    @GetMapping("/not-published-posts-by-user/{user-id}")
     public ResponseEntity<List<ResponsePostDto>> getNotPublishedPostsByUser(
             @PathVariable("user-id") final Long userId
     ) {
@@ -101,7 +102,7 @@ public class PostController {
         return new ResponseEntity<>(responsePostDtos, HttpStatus.OK);
     }
 
-    @PostMapping("/not-published-posts/{project-id}")
+    @GetMapping("/not-published-posts/{project-id}")
     public ResponseEntity<List<ResponsePostDto>> getNotPublishedPostsByProject(
             @PathVariable("project-id") final Long projectId
     ) {
@@ -111,7 +112,7 @@ public class PostController {
         return new ResponseEntity<>(responsePostDtos, HttpStatus.OK);
     }
 
-    @PostMapping("/published-posts-by-user/{user-id}")
+    @GetMapping("/published-posts-by-user/{user-id}")
     public ResponseEntity<List<ResponsePostDto>> getPublishedPostsByUser(
             @PathVariable("user-id") final Long userId
     ) {
@@ -121,7 +122,7 @@ public class PostController {
         return new ResponseEntity<>(responsePostDtos, HttpStatus.OK);
     }
 
-    @PostMapping("/published-posts/{project-id}")
+    @GetMapping("/published-posts/{project-id}")
     public ResponseEntity<List<ResponsePostDto>> getPublishedPostsByProject(
             @PathVariable("project-id") final Long projectId
     ) {

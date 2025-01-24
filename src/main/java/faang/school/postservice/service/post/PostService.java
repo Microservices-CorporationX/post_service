@@ -21,8 +21,6 @@ import java.util.stream.Collectors;
 @Service
 public class PostService {
     private final PostRepository postRepository;
-    private final UserServiceClient userServiceClient;
-    private final ProjectServiceClient projectServiceClient;
 
     @Transactional
     public void createPostByUserId(Long userId, Post post) {
@@ -85,12 +83,6 @@ public class PostService {
         }
     }
 
-    private Post getPost(Long postId) {
-        return postRepository.findById(postId)
-                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
-    }
-
-
     public List<Post> getNotPublishedPostsByUser(Long userId) {
         return postRepository
                 .findByAuthorIdWithLikes(userId)
@@ -118,5 +110,10 @@ public class PostService {
                 .findByProjectIdWithLikes(projectId)
                 .stream().filter(Post::isPublished)
                 .collect(Collectors.toList());
+    }
+
+    private Post getPost(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("Post not found"));
     }
 }
