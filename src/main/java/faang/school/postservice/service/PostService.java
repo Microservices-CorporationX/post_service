@@ -10,9 +10,6 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.utils.PostUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,8 +39,13 @@ public class PostService {
         log.info("Validating the post creator with id : {}", post.getId());
         int result = postUtil.validateCreator(postCreatingDto.authorId(), postCreatingDto.projectId());
         switch (result) {
-            case 0 : post.setAuthorId(postCreatingDto.authorId());
-            case 1 : post.setProjectId(postCreatingDto.projectId());
+            case 0:
+                post.setAuthorId(postCreatingDto.authorId());
+                break;
+            case 1:
+                post.setProjectId(postCreatingDto.projectId());
+                break;
+            default:
         }
         log.info("Success validation for post : {}", post.getId());
 
