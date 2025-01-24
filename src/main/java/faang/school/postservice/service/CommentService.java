@@ -1,0 +1,96 @@
+package faang.school.postservice.service;
+
+import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.comment.CreateCommentRequest;
+import faang.school.postservice.dto.comment.CreateCommentResponse;
+import faang.school.postservice.dto.comment.UpdateCommentRequest;
+import faang.school.postservice.dto.comment.UpdatedCommentResponse;
+import faang.school.postservice.mapper.CommentMapper;
+import faang.school.postservice.model.Comment;
+import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Comparator;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CommentService {
+
+    private final PostService postService;
+    private final UserServiceClient userServiceClient;
+    private final PostRepository postRepository;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
+
+    @Transactional
+    public CreateCommentResponse createComment(CreateCommentRequest createCommentRequest) {
+        verificationCreatingData(createCommentRequest.getAuthorId(),
+                createCommentRequest.getPostId());
+
+        Comment entity = commentMapper.toEntity(createCommentRequest);
+        entity.setPost(postService.getPost(createCommentRequest.getPostId()));
+        commentRepository.save(entity);
+        return commentMapper.toResponse(entity);
+    }
+
+
+    @Transactional
+    public UpdatedCommentResponse updateComment(UpdateCommentRequest updateCommentRequest) {
+        Comment comment = validateForUpdate(updateCommentRequest.getId(),
+                updateCommentRequest.getAuthorId(),
+                updateCommentRequest.getContent());
+
+        commentMapper.updateComment(comment, updateCommentRequest);
+        commentRepository.save(comment);
+        return commentMapper.toUpdatedComment(comment);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<Comment> getListComment(Long postId) {
+        return commentRepository.findAllByPostId(postId).stream()
+                .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())
+                .toList();
+    }
+
+    @Transactional
+    public void deleteComment(Long commentId) {
+        Comment comment = getComment(commentId);
+        commentRepository.deleteById(comment.getId());
+    }
+
+    private Comment getComment(Long commentId) {
+        return commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+    }
+
+    private void verificationCreatingData(Long authorId, Long postId) {
+        if (userServiceClient.getUser(authorId) == null) {
+            throw new EntityNotFoundException(String.format("User with id: %s not found",
+                    authorId));
+        }
+        if (postRepository.findById(postId).isEmpty()) {
+            throw new EntityNotFoundException(String.format("Post with id: %s not found",
+                    postId));
+        }
+    }
+
+    private Comment validateForUpdate(Long commentId, Long authorId, String content) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found"));
+        if (!comment.getAuthorId().equals(authorId)) {
+            throw new IllegalArgumentException("You are not the author of this comment.");
+        }
+        if (comment.getContent().equals(content)) {
+            throw new IllegalArgumentException("The comment has not been changed.");
+        }
+        return comment;
+
+    }
+}
+
