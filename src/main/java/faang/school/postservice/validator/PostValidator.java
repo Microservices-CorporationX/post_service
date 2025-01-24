@@ -7,6 +7,7 @@ import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.exception.IntegrationException;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,7 +54,7 @@ public class PostValidator {
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
                 throw new DataNotFoundException(String.format(USER_NOT_FOUND_ERR_MSG, authorId));
             } else {
-                throw new IllegalArgumentException(e.getMessage());
+                throw new IntegrationException(e.getMessage());
             }
         }
     }
@@ -70,7 +71,7 @@ public class PostValidator {
             if (e.status() == HttpStatus.NOT_FOUND.value()) {
                 throw new DataNotFoundException(String.format(PROJECT_NOT_FOUND_ERR_MSG, projectId));
             } else {
-                throw new IllegalArgumentException(e.getMessage());
+                throw new IntegrationException(e.getMessage());
             }
         }
     }
