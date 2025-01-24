@@ -33,6 +33,7 @@ public class RedisConfig {
     private String userBanChannelTopic;
 
     @Value("${spring.data.redis.cache.time-to-live:2}")
+    private int cacheTimeToLive;
 
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
@@ -62,7 +63,7 @@ public class RedisConfig {
     public CacheManager cacheManager() {
         RedisCacheConfiguration cacheConfig = RedisCacheConfiguration
                 .defaultCacheConfig()
-                .entryTtl(Duration.ofDays(10));
+                .entryTtl(Duration.ofDays(cacheTimeToLive));
 
         return RedisCacheManager.builder(jedisConnectionFactory())
                 .cacheDefaults(cacheConfig)
