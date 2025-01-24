@@ -65,6 +65,7 @@ dependencies {
      */
     implementation ("org.springframework.kafka:spring-kafka")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
 
     /**
      * Metrics

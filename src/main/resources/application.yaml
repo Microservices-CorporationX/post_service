@@ -1,6 +1,22 @@
 spring:
   config:
     import: optional:secrets.yaml
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: post-views-consumer-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    listener:
+      missing-topics-fatal: false
+      ack-mode: batch
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -21,8 +37,8 @@ spring:
 
   data:
     redis:
-      port: 6379
       host: localhost
+      port: 6379
       channels:
         calculations_channel:
           name: calculations_channel
@@ -33,7 +49,6 @@ server:
 logging:
   level:
     root: info
-
 
 post:
   publisher:
@@ -48,15 +63,18 @@ post:
 user-service:
   host: localhost
   port: 8080
+
 project-service:
   host: localhost
   port: 8082
+
 payment-service:
   host: localhost
   port: 9080
 
 thread-pool:
   size: 10
+
 cron:
   spelling-check: 0 0 3 * * *
 
