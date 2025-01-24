@@ -33,43 +33,45 @@ public class LikeService {
     }
 
     public LikePostDto userLikeThePost(LikePostDto dto) {
-        userValidator.validateUser(dto.userId());
         likeValidator.validateLikePost(dto);
+        userValidator.validateUser(dto.userId());
 
         return likeThePost(dto);
     }
 
     public LikeCommentDto userLikeTheComment(LikeCommentDto dto) {
-        userValidator.validateUser(dto.userId());
         likeValidator.validateLikeComment(dto);
+        userValidator.validateUser(dto.userId());
 
         return likeTheComment(dto);
     }
 
     @Transactional
-    public LikePostDto removeLikePost(Long likeId) {
-        Like like = findById(likeId);
-        LikePostDto dto = likeMapper.toPostDto(like);
-
-        userValidator.validateUser(dto.userId());
+    public LikePostDto removeLikePost(Long likeId, LikePostDto dto) {
         likeValidator.validateLikePost(dto);
+        userValidator.validateUser(dto.userId());
+
+        if (!likeMapper.toPostDto(findById(likeId)).equals(dto)) {
+            throw new BusinessException("Пользователь не может удалить лайк на этом посту");
+        }
 
         likeRepository.deleteByPostIdAndUserId(dto.postId(), dto.userId());
 
-        return likeMapper.toPostDto(like);
+        return dto;
     }
 
     @Transactional
-    public LikeCommentDto removeLikeComment(Long likeId) {
-        Like like = findById(likeId);
-        LikeCommentDto dto = likeMapper.toCommentDto(like);
-
-        userValidator.validateUser(dto.userId());
+    public LikeCommentDto removeLikeComment(Long likeId, LikeCommentDto dto) {
         likeValidator.validateLikeComment(dto);
+        userValidator.validateUser(dto.userId());
+
+        if (!likeMapper.toCommentDto(findById(likeId)).equals(dto)) {
+            throw new BusinessException("Пользователь не может удалить лайк на этом комментарии");
+        }
 
         likeRepository.deleteByCommentIdAndUserId(dto.commentId(), dto.userId());
 
-        return likeMapper.toCommentDto(like);
+        return dto;
     }
 
     private LikePostDto likeThePost(LikePostDto dto) {
