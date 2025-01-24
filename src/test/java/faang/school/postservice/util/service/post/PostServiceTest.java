@@ -139,9 +139,7 @@ public class PostServiceTest {
     public void testGetPostById_PostDeleted() {
         when(postRepository.findById(2L)).thenReturn(Optional.of(firstPost));
 
-        assertThrows(PostWasDeletedException.class, () -> {
-            postService.getPostById(2L);
-        });
+        assertThrows(PostWasDeletedException.class, () -> postService.getPostById(2L));
     }
 
     @Test
