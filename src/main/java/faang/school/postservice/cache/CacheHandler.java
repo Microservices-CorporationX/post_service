@@ -1,5 +1,20 @@
 package faang.school.postservice.cache;
 
-public interface CacheHandler<T> {
-    void cache(T entity);
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public abstract class CacheHandler<T> {
+
+    protected abstract void cache(T entity);
+
+    protected <U> void cacheData(U data, Consumer<U> save) {
+        save.accept(data);
+        log.info("{} has been cached, cache: {}", data.getClass().getName(), data);
+    }
 }

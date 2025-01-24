@@ -1,9 +1,12 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.cache.CacheFacade;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.CommentEvent;
+import faang.school.postservice.dto.post.PostCache;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.comment.CommentEventPublisher;
@@ -25,6 +28,8 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final CommentEventPublisher commentEventPublisher;
+    private final CacheFacade<PostCache> postCacheCacheFacade;
+    private final PostMapper postMapper;
 
     public Comment findEntityById(long id) {
         return commentRepository.findById(id)
@@ -44,6 +49,7 @@ public class CommentService {
         comment = commentRepository.save(comment);
 
         publishCommentCreationEvent(comment);
+        postCacheCacheFacade.cacheWithDetails(postMapper.toCache(post));
 
         return commentMapper.toDto(comment);
     }

@@ -19,6 +19,7 @@ public interface CommentMapper {
     void update(@MappingTarget Comment comment, CommentDto commentDto);
 
     @Mapping(target = "likesCount", source = "likes", qualifiedByName = "mapLikeToCount")
+    @BeanMapping(nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
     CommentCache toCache(Comment comment);
 
     @Named("mapLikeToCount")

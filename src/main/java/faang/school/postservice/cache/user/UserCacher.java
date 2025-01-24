@@ -9,7 +9,6 @@ import faang.school.postservice.repository.user.UserCacheRepository;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
@@ -18,10 +17,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class UserCacher implements CacheHandler<PostCache> {
+public class UserCacher extends CacheHandler<PostCache> {
 
-    @Value("${spring.data.redis.cache.time-to-live:2}")
-    private long ttl;
+    private final Long cacheTtl;
     private final UserCacheRepository userCacheRepository;
     private final UserServiceClient userServiceClient;
     private final UserContext userContext;
@@ -34,11 +32,11 @@ public class UserCacher implements CacheHandler<PostCache> {
     public void cache(PostCache postCache) {
         userContext.setUserId(postCache.getAuthorId());
         var user = userServiceClient.getUser(postCache.getAuthorId());
-        userCacheRepository.save(UserCache.builder()
+        var userCache = UserCache.builder()
                 .id(user.getId())
                 .username(user.getUsername())
-                .ttl(ttl)
-                .build());
-        log.info("User by id:{} cached, cache: {}", user.getId(), user);
+                .ttl(cacheTtl)
+                .build();
+        cacheData(userCache, userCacheRepository::save);
     }
 }

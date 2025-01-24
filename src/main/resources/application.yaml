@@ -21,6 +21,8 @@ spring:
     redis:
       cache:
         time-to-live: 2
+        comment:
+          limit: 4
       port: 6379
       host: localhost
       channels:
