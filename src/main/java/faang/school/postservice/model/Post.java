@@ -3,7 +3,6 @@ package faang.school.postservice.model;
 import faang.school.postservice.model.ad.Ad;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-//import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,10 +18,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
-//import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
-//import org.hibernate.type.SqlTypes;
-//import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +28,6 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 @Entity
-//@Convert(attributeName = "jsonb", converter = JsonBinaryType.class)
 @Table(name = "post")
 public class Post {
 
@@ -87,8 +82,4 @@ public class Post {
     @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-   /* @JdbcTypeCode(SqlTypes.JSON)
-    @Column(name = "hashtags")
-    private List<String> hashTags;*/
 }
