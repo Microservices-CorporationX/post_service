@@ -84,7 +84,6 @@ public class PostService {
     public PostResultResponse softDelete(Long postId) {
         log.info("Soft deleting post with id : {}", postId);
         Post post = findPostById(postId);
-        log.info("{}", post.isDeleted());
         if (post.isDeleted()) {
             throw new IllegalArgumentException("Post already marked as deleted!");
         }

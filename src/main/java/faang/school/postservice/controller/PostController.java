@@ -19,7 +19,7 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
 
-    @PostMapping("/create")
+    @PostMapping()
     public PostResultResponse createPost(@RequestBody PostCreatingRequest postCreatingDto) {
         return postService.createPost(postCreatingDto);
     }
