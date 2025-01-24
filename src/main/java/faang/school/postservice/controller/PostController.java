@@ -4,12 +4,12 @@ import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.service.PostService;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static faang.school.postservice.constant.PostErrorMessages.POST_CANNOT_BE_NULL;
 
-@Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${post-service.api-version}/post")
@@ -18,7 +18,6 @@ public class PostController {
 
     @PostMapping(value = "/create-draft")
     public PostDto createDraft(@RequestBody PostDto postDto) {
-        log.info("iim here");
         return postService.createDraft(postDto);
     }
 
@@ -40,5 +39,25 @@ public class PostController {
     @GetMapping(value = "/{id}")
     public PostDto getById(@PathVariable Long id) {
         return postService.getById(id);
+    }
+
+    @GetMapping(value = "/drafts-by-user/{userId}")
+    public List<PostDto> getNotDeletedDraftByUserId(@PathVariable Long userId) {
+        return postService.getNotDeletedDraftsByUserId(userId);
+    }
+
+    @GetMapping(value = "/drafts-by-project/{projectId}")
+    public List<PostDto> getNotDeletedDraftsByProjectId(@PathVariable Long projectId) {
+        return postService.getNotDeletedDraftsByProjectId(projectId);
+    }
+
+    @GetMapping(value = "/published-by-user/{userId}")
+    public List<PostDto> getNotDeletedPublishedPostsByUserId(@PathVariable Long userId) {
+        return postService.getNotDeletedPublishedPostsByUserId(userId);
+    }
+
+    @GetMapping(value = "/published-by-project/{projectId}")
+    public List<PostDto> getNotDeletedPublishedPostsByProjectId(@PathVariable Long projectId) {
+        return postService.getNotDeletedPublishedPostsByProjectId(projectId);
     }
 }
