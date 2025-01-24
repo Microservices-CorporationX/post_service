@@ -1,8 +1,9 @@
 package faang.school.postservice.service.post;
 
-import faang.school.postservice.cache.post.PostCacher;
+import faang.school.postservice.cache.CacheFacade;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
+import faang.school.postservice.dto.post.PostCache;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.user.BanUsersDto;
@@ -19,11 +20,7 @@ import faang.school.postservice.validator.post.PostValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -34,18 +31,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PostServiceTest {
@@ -66,7 +54,7 @@ class PostServiceTest {
     @Mock
     private ImageResizeService imageResizeService;
     @Mock
-    private PostCacher postCacher;
+    private CacheFacade<PostCache> postCacheFacade;
     @InjectMocks
     private PostService postService;
     @Mock
