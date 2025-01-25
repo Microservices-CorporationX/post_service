@@ -3,6 +3,7 @@ package faang.school.postservice.controller.comment;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.UpdateCommentDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.comment.UpdateCommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.service.CommentService;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ import java.util.List;
 public class CommentController {
     private final CommentService commentService;
     private final CommentMapper mapper;
+    private final UpdateCommentMapper updateMapper;
 
     @PostMapping("/comments")
     public CommentDto createComment(@RequestBody @Valid CommentDto dto) {
@@ -35,7 +37,7 @@ public class CommentController {
 
     @PatchMapping("/comments")
     public CommentDto updateComment(@RequestBody @Valid UpdateCommentDto dto) {
-        Comment rawComment = mapper.toEntity(dto);
+        Comment rawComment = updateMapper.toEntity(dto);
         Comment result = commentService.updateComment(rawComment);
         return mapper.toDto(result);
     }

@@ -110,7 +110,7 @@ public class CommentServiceTest {
     public void testUpdateComment() {
         Comment updatedComment = Comment.builder()
                 .id(1L)
-                .authorId(1L)
+                .authorId(10L)
                 .content("Updated content")
                 .updatedAt(LocalDateTime.now())
                 .build();
