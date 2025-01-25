@@ -1,12 +1,11 @@
 package faang.school.postservice.service.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.comment.CommentEventPublisher;
+import faang.school.postservice.producer.comment.KafkaCommentProducer;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
@@ -24,7 +23,7 @@ public class CommentService {
     private final PostService postService;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final CommentEventPublisher commentEventPublisher;
+    private final KafkaCommentProducer commentProducer;
 
     public Comment findEntityById(long id) {
         return commentRepository.findById(id)
@@ -42,9 +41,7 @@ public class CommentService {
         comment.setPost(post);
 
         comment = commentRepository.save(comment);
-
-        publishCommentCreationEvent(comment);
-
+        commentProducer.sendMessage(commentMapper.toEvent(comment));
         return commentMapper.toDto(comment);
     }
 
@@ -71,14 +68,5 @@ public class CommentService {
 
     public void deleteComment(long commentId) {
         commentRepository.deleteById(commentId);
-    }
-
-    private void publishCommentCreationEvent(Comment comment) {
-        commentEventPublisher.publish(new CommentEvent(
-                comment.getAuthorId(),
-                comment.getPost().getId(),
-                comment.getId(),
-                comment.getContent()
-        ));
     }
 }

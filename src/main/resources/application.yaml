@@ -31,6 +31,15 @@ spring:
         comment_channel:
           name: comment_channel
 
+    kafka:
+      bootstrap-servers: localhost:9093
+      group-id: news_feed_consumer_group
+      topics:
+        comments:
+          name: comments
+          partitions: 3
+          replicas: 1
+
   servlet:
     multipart:
       max-file-size: 5MB

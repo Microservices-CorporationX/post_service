@@ -1,12 +1,11 @@
 package faang.school.postservice.service.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.publisher.comment.CommentEventPublisher;
+import faang.school.postservice.producer.comment.KafkaCommentProducer;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
@@ -21,7 +20,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
@@ -37,7 +39,7 @@ class CommentServiceTest {
     @Mock
     CommentMapper commentMapper;
     @Mock
-    CommentEventPublisher commentEventPublisher;
+    KafkaCommentProducer commentProducer;
     @InjectMocks
     CommentService commentService;
 
@@ -55,7 +57,7 @@ class CommentServiceTest {
 
         commentService.createComment(commentDto);
         Mockito.verify(commentRepository, times(1)).save(any());
-        Mockito.verify(commentEventPublisher, times(1)).publish(any());
+        Mockito.verify(commentProducer, times(1)).sendMessage(any());
     }
 
     @Test
