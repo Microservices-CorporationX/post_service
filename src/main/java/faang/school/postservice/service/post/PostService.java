@@ -4,20 +4,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json.student.DtoBanShema;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.post.PostDraftCreateDto;
+import faang.school.postservice.dto.post.PostDraftResponseDto;
+import faang.school.postservice.dto.post.PostDraftWithFilesCreateDto;
+import faang.school.postservice.dto.post.PostRedis;
+import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.user.UserNFDto;
 import faang.school.postservice.event.PostPublishedEvent;
-import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
-import faang.school.postservice.dto.post.*;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.publisher.kafka.KafkaPostProducer;
+import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.album.AlbumService;
 import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
 import faang.school.postservice.service.amazons3.processing.KeyKeeper;
-import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
+import faang.school.postservice.service.redis.RedisCacheService;
 import faang.school.postservice.service.resource.ResourceServiceImpl;
+import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
 import faang.school.postservice.validator.dto.project.ProjectDtoValidator;
 import faang.school.postservice.validator.dto.user.UserDtoValidator;
 import faang.school.postservice.validator.file.FileValidator;
@@ -29,9 +35,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.apache.commons.collections4.ListUtils;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,8 +48,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 @Setter
 @Slf4j
@@ -67,8 +72,9 @@ public class PostService {
     private final GingerCorrector gingerCorrector;
     private final MessageSenderForUserBanImpl messageSenderForUserBan;
     private final ObjectMapper objectMapper;
-    private final KafkaPostProducer kafkaPostProducer;
+    private final RedisCacheService redisCacheService;
     private final UserServiceClient userServiceClient;
+    private final KafkaPostProducer kafkaPostProducer;
 
     @Value("${size.not-verified-posts-for-users}")
     private int sizeNotVerifiedPostsForUsers;
@@ -110,19 +116,22 @@ public class PostService {
         }
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        Post savedPost = postRepository.save(post);
-        sendPostEventForNewsFeed(savedPost);
+        Post publishedPost = postRepository.save(post);
+        PostRedis postRedis = postMapper.toRedisPost(publishedPost);
+        redisCacheService.savePost(postRedis);
 
-        return postMapper.toDtoFromPost(savedPost);
+        UserNFDto author = userServiceClient.getUserNF(publishedPost.getAuthorId());
+        redisCacheService.saveUser(author);
+
+        sendPostEventForNewsFeed(publishedPost);
+        return postMapper.toDtoFromPost(publishedPost);
     }
 
-    private void sendPostEventForNewsFeed(Post savedPost) {
-        List<Long> followerIds = userServiceClient.getUserFollowers(savedPost.getAuthorId()).stream()
-                .map(UserNFDto::getId)
-                .toList();
+    private void sendPostEventForNewsFeed(Post post) {
+        List<Long> followerIds = userServiceClient.getFollowersByAuthorNF(post.getAuthorId());
         PostPublishedEvent event = PostPublishedEvent.builder()
-                .postId(savedPost.getId())
-                .authorId(savedPost.getAuthorId())
+                .postId(post.getId())
+                .authorId(post.getAuthorId())
                 .followersId(followerIds)
                 .build();
         kafkaPostProducer.publish(event);
@@ -290,7 +299,7 @@ public class PostService {
     @Transactional
     public void publishScheduledPosts(@Positive int subListSize) {
         List<Post> posts = postRepository.findReadyToPublish();
-        if (posts.isEmpty()){
+        if (posts.isEmpty()) {
             log.info("No posts to publish");
             return;
         }

@@ -1,7 +1,6 @@
 package faang.school.postservice.config.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.dto.post.PostRedis;
 import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,8 +31,12 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, Object> redisTemplate() {
         final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        Jackson2JsonRedisSerializer<Object> jsonRedisSerializer = new Jackson2JsonRedisSerializer<>(Object.class);
         redisTemplate.setConnectionFactory(jedisConnectionFactory());
-        redisTemplate.setDefaultSerializer(new StringRedisSerializer());
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setValueSerializer(jsonRedisSerializer);
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(jsonRedisSerializer);
         redisTemplate.afterPropertiesSet();
         return redisTemplate;
     }
@@ -61,22 +64,5 @@ public class RedisConfig {
     public ChannelTopic adBoughtEventTopic() {
         String topic = redisProperties.getAdBoughtEvent();
         return new ChannelTopic(topic);
-    }
-
-    @Bean
-    public RedisTemplate<String, PostRedis> postRedisRedisTemplate() {
-        return configureTemplateByValue(PostRedis.class);
-    }
-
-    private <T> RedisTemplate<String, T> configureTemplateByValue(Class<T> clazz){
-        RedisTemplate<String, T> template = new RedisTemplate<>();
-        Jackson2JsonRedisSerializer<T> jsonRedisSerializer =
-                new Jackson2JsonRedisSerializer<>(objectMapper, clazz);
-        template.setConnectionFactory(jedisConnectionFactory());
-        template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(jsonRedisSerializer);
-        template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(jsonRedisSerializer);
-        return template;
     }
 }

@@ -43,13 +43,25 @@ spring:
         post-channel:
           name: post_channel
 
-    kafka:
-      producer:
-        bootstrap-servers: localhost:9092,localhost:9094
-        acks: all
-        delivery-timeout-ms: 30000
-        linger-ms: 1
-        request-timeout-ms: 30000
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092, localhost:9094
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      retries: 10
+      acks: all
+      properties:
+        delivery-timeout-ms: 10000
+        linger-ms: 0
+        request-timeout-ms: 5000
+        enable-idempotence: true
+        max-in-flight-requests-per-connection: 5
+    channels:
+      post-channel:
+        name: post-published-events-topic
+        partitions: 3
+        replicasCount: 3
+        min-insync-replicas: 2
 
   task:
     execution:
@@ -62,12 +74,12 @@ spring:
     comment:
       moderator:
         path-curse-words: src/main/resources/curse-words.txt
-        cron: 0 * * * * *
+        cron: 0 0 * * * *
         partition-size: 1000
         treads-count: 10
     post:
       publisher:
-        cron: 1/5 * * * * *
+        cron: 0 0 * * * *
         partition-size: 1000
         threads-count: 10
 
@@ -87,7 +99,7 @@ services:
 
 user-service:
   host: localhost
-  port: 8080
+  port: 8087
 project-service:
   host: localhost
   port: 8082

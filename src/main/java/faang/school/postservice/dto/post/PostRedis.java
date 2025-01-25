@@ -12,10 +12,9 @@ import java.util.LinkedHashSet;
 @NoArgsConstructor
 public class PostRedis {
     private long id;
-    private String title;
     private String content;
-    private Long authorId;
-    private Long likes;
+    private long authorId;
+    private long likes;
     private LinkedHashSet<PostCommentEvent> comments;
-    private Long views;
+    private long views;
 }

@@ -16,12 +16,16 @@ public interface UserServiceClient {
     @GetMapping("/api/v1/users/{userId}")
     UserDto getUser(@PathVariable long userId);
 
+    @GetMapping("/api/v1/users/{userId}/nf")
+    UserNFDto getUserNF(@PathVariable long userId);
+
     @PostMapping("/users")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
 
     @GetMapping("/api/v1/users/subscribers/{userId}")
     List<UserDto> getUserSubscribers(@PathVariable long userId);
 
-    @GetMapping("/api/v1/users/followers/{userId}")
-    List<UserNFDto> getUserFollowers(@PathVariable long userId);
+    @GetMapping("/api/v1/users/followers/{userId}/nf")
+    List<Long> getFollowersByAuthorNF(@PathVariable("userId") long authorId);
 }
+
