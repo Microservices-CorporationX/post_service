@@ -37,42 +37,7 @@ class PostControllerValidatorTest {
     }
 
     @Test
-    @DisplayName("Test post id")
-    void testValidatePostId() {
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validatePostId(null));
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validatePostId(0L));
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validatePostId(-1L));
-        postControllerValidator.validatePostId(100L);
-    }
-
-    @Test
-    @DisplayName("Test user id")
-    void testValidateUserId() {
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateUserId(null));
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateUserId(0L));
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateUserId(-1L));
-        postControllerValidator.validateUserId(100L);
-    }
-
-    @Test
-    @DisplayName("Test project id")
-    void validateProjectId() {
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateProjectId(null));
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateProjectId(0L));
-        Assert.assertThrows(IllegalArgumentException.class,
-                () -> postControllerValidator.validateProjectId(-1L));
-        postControllerValidator.validateProjectId(100L);
-    }
-
-    @Test
+    @DisplayName("Test validate Dto")
     void testValidateDto() {
         Assert.assertThrows(IllegalArgumentException.class,
                 () -> postControllerValidator.validateUpdateDto(notValidPostRequestDto1));

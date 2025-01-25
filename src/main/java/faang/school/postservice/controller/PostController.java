@@ -16,6 +16,7 @@ import static faang.school.postservice.utils.Constants.API_VERSION_1;
 @RequiredArgsConstructor
 @RequestMapping(API_VERSION_1 + "/post")
 public class PostController {
+
     private final PostService postService;
     private final PostControllerValidator postControllerValidator;
 
@@ -29,7 +30,6 @@ public class PostController {
     @PostMapping("/publish/{id}")
     PostResponseDto publishPostDraft(@PathVariable("id") Long postId) {
         log.info("Publish post id {}", postId);
-        postControllerValidator.validatePostId(postId);
         return postService.publishPostDraft(postId);
     }
 
@@ -43,37 +43,31 @@ public class PostController {
     @DeleteMapping("/delete/{id}")
     void deletePost(@PathVariable("id") Long postId) {
         log.info("Delete post id {}", postId);
-        postControllerValidator.validatePostId(postId);
         postService.deletePost(postId);
     }
 
     @GetMapping("/{id}")
     PostResponseDto getPost(@PathVariable("id") Long postId) {
-        postControllerValidator.validatePostId(postId);
         return postService.getPost(postId);
     }
 
     @GetMapping("/draftByProject/{id}")
     List<PostResponseDto> getProjectPostDrafts(@PathVariable("id") Long projectId) {
-        postControllerValidator.validateProjectId(projectId);
         return postService.getProjectPostDrafts(projectId);
     }
 
     @GetMapping("/draftByUser/{id}")
     List<PostResponseDto> getUserPostDrafts(@PathVariable("id") Long userId) {
-        postControllerValidator.validateUserId(userId);
         return postService.getUserPostDrafts(userId);
     }
 
     @GetMapping("/byProject/{id}")
     List<PostResponseDto> getProjectPosts(@PathVariable("id") Long projectId) {
-        postControllerValidator.validateProjectId(projectId);
         return postService.getProjectPosts(projectId);
     }
 
     @GetMapping("/byUser/{id}")
     List<PostResponseDto> getUserPosts(@PathVariable("id") Long userId) {
-        postControllerValidator.validateUserId(userId);
         return postService.getUserPosts(userId);
     }
 }

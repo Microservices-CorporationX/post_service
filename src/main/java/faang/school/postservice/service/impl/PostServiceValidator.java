@@ -14,21 +14,21 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class PostServiceValidator {
+
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
 
-    //TODO пока убрал обращение к другим сервисам - там нет реализации
     void validatePostDto(PostRequestDto postRequestDto) {
         Long authorId = postRequestDto.authorId();
         Long projectId = postRequestDto.projectId();
 
-        /*checkAuthorship(authorId, projectId);
+        checkAuthorship(authorId, projectId);
         if (authorId != null) {
             checkAuthorExists(authorId);
         }
         if (projectId != null) {
             checkProjectExists(projectId);
-        }*/
+        }
     }
 
     void validatePostExists(Long postId, Post post) {
@@ -69,6 +69,7 @@ public class PostServiceValidator {
     }
 
     private void checkAuthorExists(Long authorId) {
+        //TODO в сервисе User_service необходимо разработать метод getUser
         UserDto userDto = userServiceClient.getUser(authorId);
         if (!authorId.equals(userDto.id())) {
             log.error("Unable to find user with id = {}", authorId);
@@ -77,6 +78,7 @@ public class PostServiceValidator {
     }
 
     private void checkProjectExists(Long projectId) {
+        //TODO в сервисе Project_service необходимо разработать метод getProject
         ProjectDto projectDto = projectServiceClient.getProject(projectId);
         if (!projectId.equals(projectDto.id())) {
             log.error("Unable to find project with id = {}", projectId);

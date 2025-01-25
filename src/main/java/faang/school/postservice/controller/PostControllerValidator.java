@@ -11,25 +11,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PostControllerValidator {
 
-    void validatePostId(Long postId) {
-        validateEntityId("Post", postId);
-    }
-
-    void validateUserId(Long userId) {
-        validateEntityId("User", userId);
-    }
-
-    void validateProjectId(Long projectId) {
-        validateEntityId("Project", projectId);
-    }
-
-    private void validateEntityId(String checkedEntity, Long id) {
-        if (null == id || id < 1) {
-            log.error("{} id is incorrect or empty : {}", checkedEntity, id);
-            throw new IllegalArgumentException(checkedEntity + " id is incorrect or empty");
-        }
-    }
-
     void validateUpdateDto(PostRequestDto postRequestDto) {
         if (null == postRequestDto.id() || postRequestDto.id() < 1) {
             log.error("Incorrect Post request DTO, empty id. DTO : {}", postRequestDto);
