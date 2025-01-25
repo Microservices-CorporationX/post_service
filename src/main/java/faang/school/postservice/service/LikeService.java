@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -41,7 +42,7 @@ public class LikeService {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        List<Like> likes = new ArrayList<>(post.getLikes());
+        List<Like> likes = new ArrayList<>(post.getLikes() == null ? Collections.emptyList() : post.getLikes());
         boolean likeAlreadyExists = likes.stream().anyMatch(like -> like.getUserId() == userDto.id());
 
         if (likeAlreadyExists) {
@@ -74,7 +75,7 @@ public class LikeService {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
-        List<Like> likes = new ArrayList<>(comment.getLikes());
+        List<Like> likes = new ArrayList<>(comment.getLikes() == null ? Collections.emptyList() : comment.getLikes());
         boolean likeAlreadyExists = likes.stream().anyMatch(like -> like.getUserId() == userDto.id());
 
         if (likeAlreadyExists) {
