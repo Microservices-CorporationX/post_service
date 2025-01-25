@@ -1,5 +1,6 @@
 package faang.school.postservice.client;
 
+import faang.school.postservice.dto.user.ShortUserWithAvatarDto;
 import faang.school.postservice.dto.user.UserDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,4 +18,7 @@ public interface UserServiceClient {
 
     @PostMapping("/users")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
+
+    @GetMapping("/users/with-avatar/{userId}")
+    ShortUserWithAvatarDto getShortUserWithAvatarById(@PathVariable long userId);
 }

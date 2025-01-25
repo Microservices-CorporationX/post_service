@@ -63,6 +63,10 @@ dependencies {
      */
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
 
+    /**
+     * Kafka
+     */
+    implementation("org.springframework.kafka:spring-kafka:3.3.2")
 
     /**
      * Test containers
@@ -94,9 +98,9 @@ tasks.bootJar {
     archiveFileName.set("service.jar")
 }
 
-    /**
-     * Jacoco
-     */
+/**
+ * Jacoco
+ */
 jacoco {
     toolVersion = "0.8.9"
     reportsDirectory.set(layout.buildDirectory.dir("$buildDir/reports/jacoco"))

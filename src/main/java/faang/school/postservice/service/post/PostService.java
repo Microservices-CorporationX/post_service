@@ -1,25 +1,33 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
 import faang.school.postservice.dto.user.BanUsersDto;
+import faang.school.postservice.dto.user.ShortUserWithAvatarDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.user.ShortUserWithAvatar;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.user.UserCacheRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.validator.post.ContentValidator;
 import faang.school.postservice.validator.post.PostValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -29,6 +37,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
@@ -51,6 +61,12 @@ public class PostService {
     private final ImageResizeService imageResizeService;
     private final UserBanPublisher userBanPublisher;
     private final ContentValidator contentValidator;
+    private final UserServiceClient userServiceClient;
+    private final UserCacheRepository userCacheRepository;
+
+    @Autowired
+    @Qualifier("writeToCacheThreadPool")
+    private ExecutorService writeToCacheThreadPool;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -72,13 +88,26 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
+    @Transactional
     public PostDto publish(long postId) {
         Post post = findEntityById(postId);
 
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+        CompletableFuture.runAsync(() -> {
+            userContext.setUserId(1L);
+            ShortUserWithAvatarDto userDto = getShortUserWithAvatarDtoFromUserService(post.getAuthorId());
+            ShortUserWithAvatar user = ShortUserWithAvatar
+                    .builder()
+                    .id(userDto.getId())
+                    .username(userDto.getUsername())
+                    .smallAvatarId(userDto.getSmallAvatarId())
+                    .build();
+            log.info("Saving user {} to cache", user);
+            userCacheRepository.save(user);
+        }, writeToCacheThreadPool);
+        return postMapper.toDto(post);
     }
 
     public PostDto update(PostDto postDto) {
@@ -219,5 +248,11 @@ public class PostService {
         List<Post> nonPublishedPosts = postRepository.findReadyToPublish();
         nonPublishedPosts.forEach(contentValidator::processPost);
         postRepository.saveAll(nonPublishedPosts);
+    }
+
+    @Retryable(maxAttemptsExpression = "${retry.maxAttempts}",
+            backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
+    private ShortUserWithAvatarDto getShortUserWithAvatarDtoFromUserService(long userId) {
+        return userServiceClient.getShortUserWithAvatarById(userId);
     }
 }

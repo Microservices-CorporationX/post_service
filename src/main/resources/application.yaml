@@ -96,3 +96,20 @@ banner:
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool: 1
+
+kafka:
+  bootstrap-server: localhost:9092
+  acknowledgement: all
+  topics:
+    post-like:
+      name: post-like
+      partitions: 1
+      replication-factor: 1
+
+retry:
+  maxAttempts: 3
+  maxDelay: 1500
+
+multithreading:
+  write-to-cache:
+    pool-size: 4
