@@ -42,6 +42,11 @@ spring:
           name: ad_bought_channel
         post-channel:
           name: post_channel
+      key-hash-users: users
+      key-hash-posts: posts
+      ttl-users: 1
+      ttl-posts: 1
+
 
   kafka:
     producer:
