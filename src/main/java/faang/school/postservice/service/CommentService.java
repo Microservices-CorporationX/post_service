@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,6 +29,11 @@ public class CommentService {
     public Comment createComment(Comment comment, Long postId) {
         getUser(comment.getAuthorId());
         Post post = postService.getPostById(postId);
+
+        if (post.getComments() == null) {
+            post.setComments(new ArrayList<>());
+        }
+
         post.getComments().add(comment);
         postService.savePost(post);
         comment.setPost(post);
@@ -65,20 +71,21 @@ public class CommentService {
     }
 
     private void checkUserIsOwnerComment(Long savedId, Long receivedId) {
-        if (Objects.equals(savedId, receivedId)) {
+        if (!Objects.equals(savedId, receivedId)) {
             throw new UserUnauthorizedAccessException("User cannot change comments the other users");
         }
     }
+
     private Comment getComment(Long id) {
         return commentRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException(String.format("Comment #%s not found or deleted", id)));
+                .orElseThrow(() -> new NoSuchElementException(String.format("Comment #%d not found or deleted", id)));
     }
 
     private void getUser(Long authorId) {
         try {
             userServiceClient.getUser(authorId);
         } catch (Exception e) {
-            throw new NoSuchElementException(String.format("User with ID#%s not found", authorId));
+            throw new NoSuchElementException(String.format("User with ID#%d not found", authorId));
         }
     }
 }

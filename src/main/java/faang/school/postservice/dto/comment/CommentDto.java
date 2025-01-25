@@ -13,11 +13,9 @@ import java.time.LocalDateTime;
 public class CommentDto {
     private Long id;
 
-    @NotNull
     @Positive
     private Long authorId;
 
-    @NotNull
     @Positive
     private Long postId;
 
