@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.dto.comment.CommentRedisDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.dto.post.PostRequestDto;
@@ -38,6 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -250,8 +253,10 @@ public class PostService {
 
     public PostRedis createPostForRedis(Post post) {
         return PostRedis.builder()
-                .id(String.valueOf(post.getId()))
+                .id(post.getId())
                 .expirationInSeconds(60L)
+                .tags(new TreeSet<>())
+                .publishAt(LocalDateTime.now())
                 .content(post.getContent())
                 .build();
     }
