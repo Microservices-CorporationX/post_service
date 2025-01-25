@@ -159,6 +159,7 @@ public class LikeServiceTest {
     @Test
     public void toggleLikePost_WrongUserId() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
+        when(userServiceClient.getUser(1L)).thenReturn(null);
 
         ResponseEntity<?> response = likeService.toggleLikePost(new LikePostRequest(1L, 1L));
 
@@ -168,7 +169,7 @@ public class LikeServiceTest {
     @Test
     public void toggleLikeComment_WrongUserId() {
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
-        when(userServiceClient.getUser(1L)).thenReturn()
+        when(userServiceClient.getUser(1L)).thenReturn(null);
 
         ResponseEntity<?> response = likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
 

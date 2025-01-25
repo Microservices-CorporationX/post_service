@@ -69,7 +69,8 @@ public class LikeService {
 
         try {
             comment = commentRepository.findById(request.commentId())
-                    .orElseThrow(() -> new EntityNotFoundException("Комментарий с id " + request.commentId() + " не был найден"));
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Комментарий с id " + request.commentId() + " не был найден"));
             userDto = getUserDto(request.userId());
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
