@@ -35,6 +35,8 @@ spring:
   kafka:
     consumer:
       enable-auto-commit: false
+      properties:
+        spring.json.trusted.packages: faang.school.postservice.dto
     producer:
       acks: 1
       retries: 10
@@ -44,6 +46,7 @@ spring:
     topic-name:
       likes: "likes"
       comments: "comments"
+      post: "postView"
 
 server:
   port: 8081
