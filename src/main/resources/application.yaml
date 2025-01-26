@@ -109,6 +109,10 @@ kafka:
       name: post-view
       partitions: 1
       replication-factor: 1
+    post-publish:
+      name: post-publish
+      partitions: 1
+      replication-factor: 1
 
 retry:
   maxAttempts: 3
@@ -116,6 +120,8 @@ retry:
 
 multithreading:
   write-to-cache:
+    pool-size: 4
+  send-events:
     pool-size: 4
 
 caching:

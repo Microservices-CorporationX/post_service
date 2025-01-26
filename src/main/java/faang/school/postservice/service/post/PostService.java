@@ -4,16 +4,20 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.event.PublishPostEvent;
 import faang.school.postservice.dto.post.event.ViewPostEvent;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
 import faang.school.postservice.dto.user.BanUsersDto;
+import faang.school.postservice.dto.user.ShortUserDto;
 import faang.school.postservice.dto.user.ShortUserWithAvatarDto;
+import faang.school.postservice.dto.user.UserFilterDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.user.ShortUserWithAvatar;
+import faang.school.postservice.publisher.postpublish.PublishPostEventPublisher;
 import faang.school.postservice.publisher.postview.KafkaViewPostEventPublisher;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.publisher.user.UserBanPublisher;
@@ -33,14 +37,10 @@ import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
@@ -70,10 +70,15 @@ public class PostService {
     private final UserServiceClient userServiceClient;
     private final UserCacheRepository userCacheRepository;
     private final KafkaViewPostEventPublisher kafkaViewPostEventPublisher;
+    private final PublishPostEventPublisher publishPostEventPublisher;
 
     @Autowired
     @Qualifier("writeToCacheThreadPool")
     private ExecutorService writeToCacheThreadPool;
+
+    @Autowired
+    @Qualifier("sendEventsThreadPool")
+    private ExecutorService sendEventsThreadPool;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -102,18 +107,14 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
+        CompletableFuture.runAsync(() -> cacheUser(post.getAuthorId()), writeToCacheThreadPool);
         CompletableFuture.runAsync(() -> {
-            userContext.setUserId(1L);
-            ShortUserWithAvatarDto userDto = getShortUserWithAvatarDtoFromUserService(post.getAuthorId());
-            ShortUserWithAvatar user = ShortUserWithAvatar
-                    .builder()
-                    .id(userDto.getId())
-                    .username(userDto.getUsername())
-                    .smallAvatarId(userDto.getSmallAvatarId())
-                    .build();
-            log.info("Saving user {} to cache", user);
-            userCacheRepository.save(user);
-        }, writeToCacheThreadPool);
+            UserFilterDto userFilterDto = new UserFilterDto();
+            List<Long> followerIds = userServiceClient.getFollowers(post.getAuthorId(), userFilterDto).stream()
+                    .map(ShortUserDto::getId).toList();
+            PublishPostEvent publishPostEvent = PublishPostEvent.builder().postId(post.getId()).build();
+
+        }, sendEventsThreadPool);
         return postMapper.toDto(post);
     }
 
@@ -230,7 +231,7 @@ public class PostService {
         long userId = userContext.getUserId();
         batches.forEach(batch -> CompletableFuture.runAsync(
                 () -> publishViewPostEventBatchToKafka(batch, userId),
-                writeToCacheThreadPool)
+                sendEventsThreadPool)
         );
     }
 
@@ -286,5 +287,18 @@ public class PostService {
             backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
     private ShortUserWithAvatarDto getShortUserWithAvatarDtoFromUserService(long userId) {
         return userServiceClient.getShortUserWithAvatarById(userId);
+    }
+
+    private void cacheUser(long userId) {
+        userContext.setUserId(1L);
+        ShortUserWithAvatarDto userDto = getShortUserWithAvatarDtoFromUserService(userId);
+        ShortUserWithAvatar user = ShortUserWithAvatar
+                .builder()
+                .id(userDto.getId())
+                .username(userDto.getUsername())
+                .smallAvatarId(userDto.getSmallAvatarId())
+                .build();
+        log.info("Saving user {} to cache", user);
+        userCacheRepository.save(user);
     }
 }
