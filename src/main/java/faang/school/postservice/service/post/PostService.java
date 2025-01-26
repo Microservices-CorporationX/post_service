@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.json.student.DtoBanShema;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDraftCreateDto;
 import faang.school.postservice.dto.post.PostDraftResponseDto;
 import faang.school.postservice.dto.post.PostDraftWithFilesCreateDto;
@@ -11,16 +12,15 @@ import faang.school.postservice.dto.post.PostRedis;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.user.UserNFDto;
-import faang.school.postservice.event.PostPublishedEvent;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
-import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.album.AlbumService;
 import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
 import faang.school.postservice.service.amazons3.processing.KeyKeeper;
+import faang.school.postservice.service.kafka.KafkaService;
 import faang.school.postservice.service.redis.RedisCacheService;
 import faang.school.postservice.service.resource.ResourceServiceImpl;
 import faang.school.postservice.sheduler.postcorrector.ginger.GingerCorrector;
@@ -59,7 +59,7 @@ import java.util.stream.Collectors;
 public class PostService {
     private final PostMapper postMapper;
     private final PostRepository postRepository;
-    private final UserServiceClient userService;
+    private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectService;
     private final AlbumService albumService;
     private final ResourceServiceImpl resourceServiceImpl;
@@ -73,8 +73,8 @@ public class PostService {
     private final MessageSenderForUserBanImpl messageSenderForUserBan;
     private final ObjectMapper objectMapper;
     private final RedisCacheService redisCacheService;
-    private final UserServiceClient userServiceClient;
-    private final KafkaPostProducer kafkaPostProducer;
+    private final KafkaService kafkaService;
+    private final UserContext userContext;
 
     @Value("${size.not-verified-posts-for-users}")
     private int sizeNotVerifiedPostsForUsers;
@@ -109,6 +109,7 @@ public class PostService {
         return postMapper.toDraftDtoFromPost(postRepository.save(post));
     }
 
+    @Transactional
     public PostResponseDto publishPost(@Positive long postId) {
         Post post = getPostById(postId);
         if (post.isPublished()) {
@@ -117,24 +118,14 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         Post publishedPost = postRepository.save(post);
+
         PostRedis postRedis = postMapper.toRedisPost(publishedPost);
         redisCacheService.savePost(postRedis);
-
         UserNFDto author = userServiceClient.getUserNF(publishedPost.getAuthorId());
         redisCacheService.saveUser(author);
-
-        sendPostEventForNewsFeed(publishedPost);
+        kafkaService.sendPostEvent(publishedPost, userContext.getUserId());
+        log.info("Published post id: {}", publishedPost.getId());
         return postMapper.toDtoFromPost(publishedPost);
-    }
-
-    private void sendPostEventForNewsFeed(Post post) {
-        List<Long> followerIds = userServiceClient.getFollowersByAuthorNF(post.getAuthorId());
-        PostPublishedEvent event = PostPublishedEvent.builder()
-                .postId(post.getId())
-                .authorId(post.getAuthorId())
-                .followersId(followerIds)
-                .build();
-        kafkaPostProducer.publish(event);
     }
 
     public PostResponseDto updatePost(@Positive long postId, @NotNull @Valid PostUpdateDto dto) {
@@ -256,7 +247,7 @@ public class PostService {
 
     private void validateUserOrProject(Long userId, Long projectId) {
         if (userId != null) {
-            userDtoValidator.validateUserDto(userService.getUser(userId));
+            userDtoValidator.validateUserDto(userServiceClient.getUser(userId));
         }
         if (projectId != null) {
             projectDtoValidator.validateProjectDto(projectService.getProject(projectId));

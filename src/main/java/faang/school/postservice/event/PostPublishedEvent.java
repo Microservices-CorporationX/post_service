@@ -13,6 +13,5 @@ import java.util.List;
 @NoArgsConstructor
 public class PostPublishedEvent {
     private long postId;
-    private long authorId;
     private List<Long> followersId;
 }
