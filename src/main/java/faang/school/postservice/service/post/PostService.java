@@ -113,7 +113,7 @@ public class PostService {
             List<Long> followerIds = userServiceClient.getFollowers(post.getAuthorId(), userFilterDto).stream()
                     .map(ShortUserDto::getId).toList();
             PublishPostEvent publishPostEvent = PublishPostEvent.builder().postId(post.getId()).build();
-
+            log.info("sending post publish events to kafka");
         }, sendEventsThreadPool);
         return postMapper.toDto(post);
     }
