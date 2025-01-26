@@ -2,9 +2,7 @@ package faang.school.postservice.controller.comment;
 
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
-import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.service.comment.CommentService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,8 +34,8 @@ public class CommentController {
 
     @PutMapping("/{commentId}")
     public void updateComment(@PathVariable long commentId,
-                              @RequestBody @Valid CommentUpdateDto commentUpdateDto) {
-        commentService.updateComment(commentId, commentUpdateDto);
+                              @RequestBody CommentRequestDto commentRequestDto) {
+        commentService.updateComment(commentId, commentRequestDto);
     }
 
     @GetMapping("/{postId}")
