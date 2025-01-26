@@ -1,9 +1,16 @@
 package faang.school.postservice.service.post;
 
-import faang.school.postservice.exeption.PostAlreadyPublishedException;
-import faang.school.postservice.exeption.PostWasDeletedException;
+import faang.school.postservice.client.ProjectServiceClient;
+import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.project.ProjectDto;
+import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.PostAlreadyPublishedException;
+import faang.school.postservice.exception.PostWasDeletedException;
+import faang.school.postservice.exception.ProjectNotFoundException;
+import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,9 +24,12 @@ import java.util.stream.Collectors;
 @Service
 public class PostService {
     private final PostRepository postRepository;
+    private final UserServiceClient userServiceClient;
+    private final ProjectServiceClient projectServiceClient;
 
     @Transactional
     public void createPostByUserId(Long userId, Post post) {
+        doesUserExist(userId);
         post.setAuthorId(userId);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
@@ -29,6 +39,7 @@ public class PostService {
 
     @Transactional
     public void createPostByProjectId(Long projectId, Post post) {
+        doesProjectExist(projectId);
         post.setProjectId(projectId);
         post.setCreatedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
@@ -40,12 +51,12 @@ public class PostService {
     public void publishPost(Long postId) {
         Post post = getPost(postId);
 
-        if (post.getPublishedAt() == null) {
-            post.setPublished(true);
-            post.setPublishedAt(LocalDateTime.now());
-        } else {
+        if (post.getPublishedAt() != null) {
             throw new PostAlreadyPublishedException("The post has already been published");
         }
+
+        post.setPublished(true);
+        post.setPublishedAt(LocalDateTime.now());
         postRepository.save(post);
     }
 
@@ -72,40 +83,60 @@ public class PostService {
     public Post getPostById(Long postId) {
         Post post = getPost(postId);
 
-        if (!post.isDeleted()) {
-            return post;
-        } else {
+        if (post.isDeleted()) {
             throw new PostWasDeletedException("The post was deleted");
         }
+
+        return post;
     }
 
     public List<Post> getNotPublishedPostsByUser(Long userId) {
+        doesUserExist(userId);
         return postRepository
-                .findByAuthorIdWithLikes(userId)
-                .stream().filter(post -> !post.isPublished())
+                .findByAuthorId(userId).stream()
+                .filter(post -> !post.isPublished())
                 .collect(Collectors.toList());
     }
 
     public List<Post> getNotPublishedPostsByProject(Long projectId) {
+        doesProjectExist(projectId);
         return postRepository
-                .findByProjectIdWithLikes(projectId)
-                .stream().filter(post -> !post.isPublished())
+                .findByProjectId(projectId).stream()
+                .filter(post -> !post.isPublished())
                 .collect(Collectors.toList());
 
     }
 
     public List<Post> getPublishedPostsByUser(Long userId) {
+        doesUserExist(userId);
         return postRepository
-                .findByAuthorIdWithLikes(userId)
-                .stream().filter(Post::isPublished)
+                .findByAuthorIdWithLikes(userId).stream()
+                .filter(Post::isPublished)
                 .collect(Collectors.toList());
     }
 
     public List<Post> getPublishedPostsByProject(Long projectId) {
+        doesProjectExist(projectId);
         return postRepository
-                .findByProjectIdWithLikes(projectId)
-                .stream().filter(Post::isPublished)
+                .findByProjectIdWithLikes(projectId).stream()
+                .filter(Post::isPublished)
                 .collect(Collectors.toList());
+    }
+
+    private void doesUserExist(Long userId) {
+        try {
+            userServiceClient.getUser(userId);
+        } catch (FeignException.NotFound e) {
+            throw new UserNotFoundException("User with id " + userId + " not found");
+        }
+    }
+
+    private void doesProjectExist(Long projectId) {
+        try {
+            projectServiceClient.getProject(projectId);
+        } catch (FeignException.NotFound e) {
+            throw new ProjectNotFoundException("Project with id " + projectId + " not found");
+        }
     }
 
     private Post getPost(Long postId) {

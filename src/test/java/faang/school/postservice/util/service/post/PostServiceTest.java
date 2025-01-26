@@ -1,6 +1,10 @@
 package faang.school.postservice.util.service.post;
 
-import faang.school.postservice.exeption.PostWasDeletedException;
+import faang.school.postservice.client.ProjectServiceClient;
+import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.project.ProjectDto;
+import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.PostWasDeletedException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.PostService;
@@ -30,12 +34,18 @@ import static org.mockito.Mockito.when;
 public class PostServiceTest {
     @Mock
     private PostRepository postRepository;
+    @Mock
+    private UserServiceClient userServiceClient;
+    @Mock
+    private ProjectServiceClient projectServiceClient;
 
     @InjectMocks
     private PostService postService;
 
     private Long userId;
+    private UserDto user;
     private Long projectId;
+    private ProjectDto project;
     private Post firstPost;
     private Post secondPost;
 
@@ -43,6 +53,13 @@ public class PostServiceTest {
     void setUp() {
         userId = 1L;
         projectId = 1L;
+        user = UserDto.builder()
+                .id(userId)
+                .build();
+
+        project = ProjectDto.builder()
+                .id(projectId)
+                .build();
 
         firstPost = Post.builder()
                 .id(1L)
@@ -70,7 +87,7 @@ public class PostServiceTest {
     @Test
     public void testCreatePostByUserId_Success() {
         when(postRepository.save(any(Post.class))).thenReturn(firstPost);
-
+        userServiceClient.getUser(userId);
         postService.createPostByUserId(userId, firstPost);
 
         verify(postRepository, times(1)).save(any(Post.class));
@@ -82,7 +99,7 @@ public class PostServiceTest {
     @Test
     public void testCreatePostByProjectId_Success() {
         when(postRepository.save(any(Post.class))).thenReturn(firstPost);
-
+        projectServiceClient.getProject(projectId);
         postService.createPostByProjectId(projectId, firstPost);
 
         verify(postRepository, times(1)).save(any(Post.class));
@@ -144,17 +161,21 @@ public class PostServiceTest {
 
     @Test
     public void testGetNotPublishedPostsByUser() {
-        when(postRepository.findByAuthorIdWithLikes(userId)).thenReturn(Arrays.asList(firstPost, secondPost));
+        when(userServiceClient.getUser(userId)).thenReturn(user);
+        when(postRepository.findByAuthorId(userId)).thenReturn(Arrays.asList(firstPost, secondPost));
 
         List<Post> result = postService.getNotPublishedPostsByUser(userId);
 
         assertEquals(1, result.size());
         assertSame(secondPost, result.get(0));
+
+        verify(userServiceClient, times(1)).getUser(userId);
     }
 
     @Test
     public void testGetNotPublishedPostsByProject() {
-        when(postRepository.findByProjectIdWithLikes(projectId)).thenReturn(Arrays.asList(firstPost, secondPost));
+        when(projectServiceClient.getProject(projectId)).thenReturn(project);
+        when(postRepository.findByProjectId(projectId)).thenReturn(Arrays.asList(firstPost, secondPost));
 
         List<Post> result = postService.getNotPublishedPostsByProject(projectId);
 
@@ -164,6 +185,7 @@ public class PostServiceTest {
 
     @Test
     public void testGetPublishedPostsByUser() {
+        when(userServiceClient.getUser(userId)).thenReturn(user);
         when(postRepository.findByAuthorIdWithLikes(userId)).thenReturn(Arrays.asList(firstPost, secondPost));
 
         List<Post> result = postService.getPublishedPostsByUser(userId);
@@ -174,6 +196,7 @@ public class PostServiceTest {
 
     @Test
     public void testGetPublishedPostsByProject() {
+        when(projectServiceClient.getProject(projectId)).thenReturn(project);
         when(postRepository.findByProjectIdWithLikes(projectId)).thenReturn(Arrays.asList(firstPost, secondPost));
 
         List<Post> result = postService.getPublishedPostsByProject(projectId);

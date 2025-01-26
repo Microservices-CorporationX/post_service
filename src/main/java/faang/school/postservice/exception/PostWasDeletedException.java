@@ -1,4 +1,4 @@
-package faang.school.postservice.exeption;
+package faang.school.postservice.exception;
 
 public class PostWasDeletedException extends RuntimeException {
     public PostWasDeletedException(String message) {
