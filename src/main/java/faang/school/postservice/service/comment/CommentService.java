@@ -12,11 +12,14 @@ import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -28,6 +31,9 @@ public class CommentService {
     private final UserServiceClient userServiceClient;
     private final CommentMapper commentMapper;
     private final CommentEventPublisher commentEventPublisher;
+
+    private static final String TOPIC = "comment-created-events-topic";
+    private final KafkaTemplate<String, CommentEvent> kafkaTemplate;
 
     @Transactional
     public CommentDto createComment(CommentDto commentDto) {
@@ -49,13 +55,33 @@ public class CommentService {
         Comment savedComment = commentRepository.save(comment);
         log.info("Comment created with ID: {}", savedComment.getId());
 
-        commentEventPublisher.publishMessage(
-                new CommentEvent(
-                        commentDto.getPostId(),
-                        post.getAuthorId(),
-                        commentDto.getAuthorId(),
-                        comment.getId(),
-                        LocalDateTime.now()));
+        CommentEvent commentEvent = new CommentEvent(
+                commentDto.getPostId(),
+                post.getAuthorId(),
+                commentDto.getAuthorId(),
+                comment.getId(),
+                LocalDateTime.now());
+
+        commentEventPublisher.publishMessage(commentEvent);
+
+        String commentId = Long.toString(savedComment.getId());
+
+        CompletableFuture<SendResult<String, CommentEvent>> future = kafkaTemplate
+                .send(TOPIC, commentId, commentEvent);
+
+        future.whenComplete((result, exception) -> {
+            if (exception != null) {
+                log.error("Failed to send message: {}", exception.getMessage());
+            } else {
+                log.info("Message sent successfully: {}", result.getRecordMetadata());
+                log.info("Topic createComment: {}", result.getRecordMetadata().topic());
+                log.info("Partition createComment: {}", result.getRecordMetadata().partition());
+                log.info("Offset createComment: {}", result.getRecordMetadata().offset());
+            }
+
+        });
+
+        log.info("Return createComment: {} {}", commentId, comment);
 
         return commentMapper.toDto(savedComment);
     }

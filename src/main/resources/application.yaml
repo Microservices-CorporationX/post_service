@@ -27,6 +27,11 @@ spring:
         calculations_channel:
           name: calculations_channel
 
+    kafka:
+      topics:
+        comments:
+          name: comment-created-events-topic
+
 server:
   port: 8081
 
