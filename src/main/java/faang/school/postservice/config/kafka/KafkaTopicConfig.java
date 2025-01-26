@@ -22,6 +22,13 @@ public class KafkaTopicConfig {
     @Value("${kafka.topics.post-like.replication-factor}")
     private int postLikeTopicReplicationFactor;
 
+    @Value("${kafka.topics.post-view.name}")
+    private String postViewTopicName;
+    @Value("${kafka.topics.post-view.partitions}")
+    private int postViewTopicPartitions;
+    @Value("${kafka.topics.post-view.replication-factor}")
+    private int postViewTopicReplicationFactor;
+
     @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
@@ -32,5 +39,10 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic postLikeTopic() {
         return new NewTopic(postLikeTopicName, postLikeTopicPartitions, (short) postLikeTopicReplicationFactor);
+    }
+
+    @Bean
+    public NewTopic postViewTopic() {
+        return new NewTopic(postViewTopicName, postViewTopicPartitions, (short) postViewTopicReplicationFactor);
     }
 }
