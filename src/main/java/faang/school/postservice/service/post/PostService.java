@@ -13,6 +13,7 @@ import faang.school.postservice.dto.user.ShortUserDto;
 import faang.school.postservice.dto.user.ShortUserWithAvatarDto;
 import faang.school.postservice.dto.user.UserFilterDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.helper.UserCacheWriter;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
@@ -68,9 +69,9 @@ public class PostService {
     private final UserBanPublisher userBanPublisher;
     private final ContentValidator contentValidator;
     private final UserServiceClient userServiceClient;
-    private final UserCacheRepository userCacheRepository;
     private final KafkaViewPostEventPublisher kafkaViewPostEventPublisher;
     private final PublishPostEventPublisher publishPostEventPublisher;
+    private final UserCacheWriter userCacheWriter;
 
     @Autowired
     @Qualifier("writeToCacheThreadPool")
@@ -107,7 +108,7 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
-        CompletableFuture.runAsync(() -> cacheUser(post.getAuthorId()), writeToCacheThreadPool);
+        CompletableFuture.runAsync(() -> userCacheWriter.cacheUser(post.getAuthorId()), writeToCacheThreadPool);
         CompletableFuture.runAsync(() -> sendPublishPostEvent(post.getAuthorId(), post.getId()), sendEventsThreadPool);
         return postMapper.toDto(post);
     }
@@ -279,17 +280,6 @@ public class PostService {
 
     @Retryable(maxAttemptsExpression = "${retry.maxAttempts}",
             backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
-    private ShortUserWithAvatarDto getShortUserWithAvatarDtoFromUserService(long userId) {
-        try {
-            return userServiceClient.getShortUserWithAvatarById(userId);
-        } catch (Exception e) {
-            log.error("Error when getting user from UserService", e);
-            throw e;
-        }
-    }
-
-    @Retryable(maxAttemptsExpression = "${retry.maxAttempts}",
-            backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
     private List<Long> getUserFollowers(long userId) {
         UserFilterDto userFilterDto = new UserFilterDto();
         try {
@@ -299,19 +289,6 @@ public class PostService {
             log.error("Error when getting followers from UserService", e);
             throw e;
         }
-    }
-
-    private void cacheUser(long userId) {
-        userContext.setUserId(1L);
-        ShortUserWithAvatarDto userDto = getShortUserWithAvatarDtoFromUserService(userId);
-        ShortUserWithAvatar user = ShortUserWithAvatar
-                .builder()
-                .id(userDto.getId())
-                .username(userDto.getUsername())
-                .smallAvatarId(userDto.getSmallAvatarId())
-                .build();
-        log.info("Saving user {} to cache", user);
-        userCacheRepository.save(user);
     }
 
     private void sendPublishPostEvent(long postAuthorId, long postId) {
