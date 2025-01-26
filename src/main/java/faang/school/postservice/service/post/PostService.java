@@ -108,13 +108,7 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
         CompletableFuture.runAsync(() -> cacheUser(post.getAuthorId()), writeToCacheThreadPool);
-        CompletableFuture.runAsync(() -> {
-            UserFilterDto userFilterDto = new UserFilterDto();
-            List<Long> followerIds = userServiceClient.getFollowers(post.getAuthorId(), userFilterDto).stream()
-                    .map(ShortUserDto::getId).toList();
-            PublishPostEvent publishPostEvent = PublishPostEvent.builder().postId(post.getId()).build();
-            log.info("sending post publish events to kafka");
-        }, sendEventsThreadPool);
+        CompletableFuture.runAsync(() -> sendPublishPostEvent(post.getAuthorId(), post.getId()), sendEventsThreadPool);
         return postMapper.toDto(post);
     }
 
@@ -286,7 +280,25 @@ public class PostService {
     @Retryable(maxAttemptsExpression = "${retry.maxAttempts}",
             backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
     private ShortUserWithAvatarDto getShortUserWithAvatarDtoFromUserService(long userId) {
-        return userServiceClient.getShortUserWithAvatarById(userId);
+        try {
+            return userServiceClient.getShortUserWithAvatarById(userId);
+        } catch (Exception e) {
+            log.error("Error when getting user from UserService", e);
+            throw e;
+        }
+    }
+
+    @Retryable(maxAttemptsExpression = "${retry.maxAttempts}",
+            backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
+    private List<Long> getUserFollowers(long userId) {
+        UserFilterDto userFilterDto = new UserFilterDto();
+        try {
+            return userServiceClient.getFollowers(userId, userFilterDto).stream()
+                    .map(ShortUserDto::getId).toList();
+        } catch (Exception e) {
+            log.error("Error when getting followers from UserService", e);
+            throw e;
+        }
     }
 
     private void cacheUser(long userId) {
@@ -300,5 +312,17 @@ public class PostService {
                 .build();
         log.info("Saving user {} to cache", user);
         userCacheRepository.save(user);
+    }
+
+    private void sendPublishPostEvent(long postAuthorId, long postId) {
+        userContext.setUserId(1L);
+        List<Long> followerIds = getUserFollowers(postAuthorId);
+        log.info("Sending PublishPostEvent to kafka");
+        publishPostEventPublisher.publish(PublishPostEvent
+                .builder()
+                .postId(postId)
+                .followers(followerIds)
+                .build()
+        );
     }
 }

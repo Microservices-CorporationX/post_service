@@ -21,6 +21,7 @@ public class PublishPostEventPublisher {
 
     public void publish(PublishPostEvent event) {
         try {
+            log.info("Publishing event to topic {}, event: {}", postPublishTopicName, event);
             kafkaTemplate.send(postPublishTopicName, objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
             log.error("Exception when converting PublishPostEvent to json", e);

@@ -26,6 +26,6 @@ public interface UserServiceClient {
     @GetMapping("/users/with-avatar/{userId}")
     ShortUserWithAvatarDto getShortUserWithAvatarById(@PathVariable long userId);
 
-    @PostMapping("followers/{followeeId}")
+    @PostMapping("/api/v1/subscription/followers/{followeeId}")
     List<ShortUserDto> getFollowers(@PathVariable long followeeId, @RequestBody UserFilterDto filter);
 }
