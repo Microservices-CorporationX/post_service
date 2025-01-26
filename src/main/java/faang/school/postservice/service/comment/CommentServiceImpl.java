@@ -43,7 +43,7 @@ public class CommentServiceImpl implements CommentService {
 
         cacheService.publishCommentAuthor(comment.getAuthorId());
 
-        commentEventPublisher.sendMessage(commentDto);
+        commentEventPublisher.sendMessage(commentMapper.toEvent(comment));
 
         return commentMapper.toDto(commentRepository.save(comment));
     }
@@ -54,7 +54,7 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Comment with id %s not found".formatted(commentDto.getId())));
         commentMapper.update(commentDto, comment);
 
-        commentEventPublisher.sendMessage(commentMapper.toDto(comment));
+        commentEventPublisher.sendMessage(commentMapper.toEvent(comment));
 
         return commentMapper.toDto(commentRepository.save(comment));
     }

@@ -124,4 +124,5 @@ public class LikeService {
             like.setComment(commentService.getComment(likeDto.getCommentId()));
         }
     }
+
 }

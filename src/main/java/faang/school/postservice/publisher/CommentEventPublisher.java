@@ -1,6 +1,7 @@
 package faang.school.postservice.publisher;
 
 import faang.school.postservice.dto.CommentDto;
+import faang.school.postservice.events.CommentEvent;
 import faang.school.postservice.events.LikeEvent;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ public class CommentEventPublisher {
     @Value("${spring.kafka.topic-name.comments}")
     private String commentsTopic;
 
-    public void sendMessage(CommentDto comment) {
+    public void sendMessage(CommentEvent comment) {
         kafkaTemplate.send(commentsTopic, comment);
     }
 }
