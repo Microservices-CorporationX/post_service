@@ -113,6 +113,10 @@ kafka:
       name: post-publish
       partitions: 1
       replication-factor: 1
+    post-comment:
+      name: post-comment
+      partitions: 1
+      replication-factor: 1
 
 retry:
   maxAttempts: 3

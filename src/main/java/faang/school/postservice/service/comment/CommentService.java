@@ -7,6 +7,7 @@ import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.comment.CommentEventPublisher;
+import faang.school.postservice.publisher.comment.KafkaCommentPostEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
@@ -25,6 +26,7 @@ public class CommentService {
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
     private final CommentEventPublisher commentEventPublisher;
+    private final KafkaCommentPostEventPublisher kafkaCommentPostEventPublisher;
 
     public Comment findEntityById(long id) {
         return commentRepository.findById(id)
@@ -32,7 +34,6 @@ public class CommentService {
     }
 
     public CommentDto createComment(CommentDto commentDto) {
-        commentValidator.validateCreation(commentDto);
         Post post = postService.findEntityById(commentDto.getPostId());
 
         commentDto.setCreatedAt(LocalDateTime.now());
@@ -44,6 +45,7 @@ public class CommentService {
         comment = commentRepository.save(comment);
 
         publishCommentCreationEvent(comment);
+        sendCommentPostEvent(comment);
 
         return commentMapper.toDto(comment);
     }
@@ -80,5 +82,16 @@ public class CommentService {
                 comment.getId(),
                 comment.getContent()
         ));
+    }
+
+    private void sendCommentPostEvent(Comment comment) {
+        CommentEvent event = CommentEvent
+                .builder()
+                .commentId(comment.getId())
+                .postId(comment.getPost().getId())
+                .authorId(comment.getAuthorId())
+                .content(comment.getContent())
+                .build();
+        kafkaCommentPostEventPublisher.publish(event);
     }
 }

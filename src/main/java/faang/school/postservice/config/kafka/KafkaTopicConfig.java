@@ -36,6 +36,13 @@ public class KafkaTopicConfig {
     @Value("${kafka.topics.post-publish.replication-factor}")
     private int postPublishTopicReplicationFactor;
 
+    @Value("${kafka.topics.post-comment.name}")
+    private String postCommentTopicName;
+    @Value("${kafka.topics.post-comment.partitions}")
+    private int postCommentTopicPartitions;
+    @Value("${kafka.topics.post-comment.replication-factor}")
+    private int postCommentTopicReplicationFactor;
+
     @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
@@ -56,5 +63,10 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic postPublishTopic() {
         return new NewTopic(postPublishTopicName, postPublishTopicPartitions, (short) postPublishTopicReplicationFactor);
+    }
+
+    @Bean
+    public NewTopic postCommentTopic() {
+        return new NewTopic(postCommentTopicName, postCommentTopicPartitions, (short) postCommentTopicReplicationFactor);
     }
 }
