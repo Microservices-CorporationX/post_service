@@ -13,33 +13,34 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/posts")
+@RequestMapping("/v1/comments")
 @RequiredArgsConstructor
 public class CommentController {
     private final CommentService commentService;
 
-    @PostMapping("/comments")
+    @PostMapping
     public CommentReadDto create(@Valid @RequestBody CommentCreateDto createDto) {
         return commentService.create(createDto);
     }
 
-    @PutMapping("/comments")
+    @PutMapping
     public CommentReadDto update(@Valid @RequestBody CommentUpdateDto updateDto) {
         return commentService.update(updateDto);
     }
 
-    @GetMapping("/{postId}/comments")
-    public List<CommentReadDto> getCommentsByPostId(@PathVariable long postId) {
+    @GetMapping
+    public List<CommentReadDto> getCommentsByPostId(@RequestParam(required = false) long postId) {
         return commentService.getCommentsByPostId(postId);
     }
 
-    @DeleteMapping("/comments/{commentId}")
-    public void remove(@PathVariable long commentId) {
+    @DeleteMapping
+    public void remove(@RequestParam long commentId) {
         commentService.remove(commentId);
     }
 }
