@@ -3,6 +3,7 @@ package faang.school.postservice.util.service;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.exception.PostNotFoundException;
 import faang.school.postservice.exception.PostValidationException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -249,6 +251,14 @@ public class PostServiceTest {
         assertEquals(expectedPosts, actualPosts);
         verify(postRepository).findByProjectId(TEST_PROJECT_ID);
         verify(postMapper, times(2)).toDto(any(Post.class));
+    }
+
+    @Test
+    void getNotDeletedPublishedPostsByProjectId_WithNonExistingProjectId_shouldThrowException() {
+        when(postRepository.findByProjectId(TEST_PROJECT_ID)).thenReturn(Collections.emptyList());
+
+        assertThrows(PostNotFoundException.class, () ->
+                postService.getNotDeletedPublishedPostsByProjectId(TEST_PROJECT_ID));
     }
 
 }
