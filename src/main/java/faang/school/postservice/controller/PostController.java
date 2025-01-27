@@ -53,4 +53,9 @@ public class PostController {
     public List<PostReadDto> getPublishedPosts(@PathVariable long id, @RequestParam String type) {
         return postService.getAllPublished(id, PostOwnerType.fromString(type));
     }
+
+    @GetMapping
+    public List<PostReadDto> getPostsByHashtagId(@RequestParam long hashtagId) {
+        return postService.getPostsByHashtagId(hashtagId);
+    }
 }

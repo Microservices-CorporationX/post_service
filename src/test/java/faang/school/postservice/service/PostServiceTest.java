@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -137,9 +138,10 @@ public class PostServiceTest {
     void testUpdatePostSuccessCase() {
         long postId = 1;
         var newContent = "new content";
+        List<Long> hashtagIds = List.of(1L);
         mockGetPostById(postId);
 
-        postService.updatePost(postId, new PostUpdateDto(newContent));
+        postService.updatePost(postId, new PostUpdateDto(newContent, hashtagIds));
         verify(postRepository, atLeastOnce()).save(postArgumentCaptor.capture());
         Post capturedPost = postArgumentCaptor.getValue();
         assertEquals(newContent, capturedPost.getContent());
