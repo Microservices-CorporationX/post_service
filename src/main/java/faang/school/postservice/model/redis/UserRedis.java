@@ -20,6 +20,7 @@ public class UserRedis {
     private Long id;
     @TimeToLive
     private Long expirationInSeconds;
-    private String name;
+    private String username;
+    private Integer experience;
 
 }

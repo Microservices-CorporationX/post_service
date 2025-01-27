@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentRedisDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.config.api.SpellingConfig;
@@ -7,13 +8,17 @@ import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.resource.ResourceResponseDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.post.PostMapper;
+import faang.school.postservice.mapper.redis.UserRedisMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.model.redis.PostRedis;
+import faang.school.postservice.model.redis.UserRedis;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.redis.PostRedisRepository;
+import faang.school.postservice.repository.redis.UserRedisRepository;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.service.resource.ResourceService;
@@ -60,12 +65,15 @@ public class PostService {
     private final PostMapper postMapper;
     private final SpellingConfig api;
     private final RestTemplate restTemplate;
+    private final UserServiceClient userServiceClient;
     private final ResourceMapper resourceMapper;
     private final PostRedisRepository postRedisRepository;
     private final ResourceValidator resourceValidator;
     private final PostValidator postValidator;
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
+    private final UserRedisMapper userRedisMapper;
+    private final UserRedisRepository userRedisRepository;
 
     @Transactional
     public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
@@ -135,6 +143,8 @@ public class PostService {
         log.info("Post with id {} published", id);
         postRedisRepository.save(createPostForRedis(post));
         log.info("Post with id {} saved in Redis", id);
+        userRedisRepository.save(createUserRedisFromDto(userServiceClient.getUser(post.getAuthorId())));
+        log.info("User with id {} saved in Redis", post.getAuthorId());
 
         return postMapper.toDto(post);
     }
@@ -166,6 +176,11 @@ public class PostService {
             List<Post> sublist = posts.subList(i, Math.min(i + sizeOfRequests, posts.size()));
             checkingPostsForSpelling(sublist);
         }
+    }
+    private UserRedis createUserRedisFromDto(UserDto userDto) {
+        UserRedis userRedis = userRedisMapper.toUserRedis(userDto);
+        userRedis.setExpirationInSeconds(20L);
+        return userRedis;
     }
 
     private void checkingPostsForSpelling(List<Post> posts) {

@@ -1,16 +1,21 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateRequestDto;
 import faang.school.postservice.dto.events_dto.CommentEventDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserForBanEventDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.redis.UserRedisMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.redis.UserRedis;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.UserRedisRepository;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.comment.CommentValidator;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +43,9 @@ public class CommentService {
     private final UserBanEventPublisher banPublisher;
     private final PostRepository postRepository;
     private final ModerationDictionary moderationDictionary;
+    private final UserRedisRepository userRedisRepository;
+    private final UserServiceClient userServiceClient;
+    private final UserRedisMapper userRedisMapper;
 
     public CommentResponseDto createComment(CommentRequestDto commentRequestDto) {
         commentValidator.validateAuthorExists(commentRequestDto.getAuthorId());
@@ -57,6 +65,9 @@ public class CommentService {
         CommentEventDto commentEventDto = createCommentEventDto(commentResponseDto);
         commentEventPublisher.publish(commentEventDto);
         log.info("Notification about new comment sent to notification service {}", commentEventDto);
+        userRedisRepository.save(createUserRedisFromDto(userServiceClient.getUser(commentResponseDto.getAuthorId())));
+        log.info("Author {} from comment was saved successfully in Redis", commentResponseDto.getAuthorId());
+
         return commentResponseDto;
     }
 
@@ -108,6 +119,12 @@ public class CommentService {
             commentsFromUser.forEach(comment -> comment.setVision(false));
             log.info("Author with authorId {} is banned", authorId);
         });
+    }
+
+    private UserRedis createUserRedisFromDto(UserDto userDto) {
+        UserRedis userRedis = userRedisMapper.toUserRedis(userDto);
+        userRedis.setExpirationInSeconds(20L);
+        return userRedis;
     }
 
 }
