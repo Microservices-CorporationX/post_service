@@ -100,6 +100,7 @@ banner:
 kafka:
   bootstrap-server: localhost:9092
   acknowledgement: all
+  group-id: post-service-group
   topics:
     post-like:
       name: post-like
@@ -113,10 +114,17 @@ kafka:
       name: post-publish
       partitions: 1
       replication-factor: 1
+    post-publish-batched:
+      name: post-publish-batched
+      partitions: 1
+      replication-factor: 1
     post-comment:
       name: post-comment
       partitions: 1
       replication-factor: 1
+  listeners:
+    post-listener:
+      batch-size: 2
 
 retry:
   maxAttempts: 3
@@ -132,6 +140,9 @@ caching:
   user:
     ttl-seconds: 84000
     value: Users
+  feed:
+    collection-name: Feed
+    size: 500
 
 events:
   partitioning-batch: 100

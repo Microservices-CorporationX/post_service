@@ -36,6 +36,13 @@ public class KafkaTopicConfig {
     @Value("${kafka.topics.post-publish.replication-factor}")
     private int postPublishTopicReplicationFactor;
 
+    @Value("${kafka.topics.post-publish-batched.name}")
+    private String postPublishBatchedTopicName;
+    @Value("${kafka.topics.post-publish-batched.partitions}")
+    private int postPublishBatchedTopicPartitions;
+    @Value("${kafka.topics.post-publish-batched.replication-factor}")
+    private int postPublishBatchedTopicReplicationFactor;
+
     @Value("${kafka.topics.post-comment.name}")
     private String postCommentTopicName;
     @Value("${kafka.topics.post-comment.partitions}")
@@ -63,6 +70,11 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic postPublishTopic() {
         return new NewTopic(postPublishTopicName, postPublishTopicPartitions, (short) postPublishTopicReplicationFactor);
+    }
+
+    @Bean
+    public NewTopic postPublishBatchedTopic() {
+        return new NewTopic(postPublishBatchedTopicName, postPublishBatchedTopicPartitions, (short) postPublishBatchedTopicReplicationFactor);
     }
 
     @Bean

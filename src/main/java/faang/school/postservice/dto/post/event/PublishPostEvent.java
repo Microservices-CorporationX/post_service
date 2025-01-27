@@ -1,10 +1,8 @@
 package faang.school.postservice.dto.post.event;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -14,4 +12,5 @@ import java.util.List;
 public class PublishPostEvent {
     private long postId;
     private List<Long> followers;
+    private LocalDateTime publishedAt;
 }

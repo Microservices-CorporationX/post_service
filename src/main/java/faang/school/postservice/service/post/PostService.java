@@ -109,7 +109,7 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
         CompletableFuture.runAsync(() -> userCacheWriter.cacheUser(post.getAuthorId()), writeToCacheThreadPool);
-        CompletableFuture.runAsync(() -> sendPublishPostEvent(post.getAuthorId(), post.getId()), sendEventsThreadPool);
+        CompletableFuture.runAsync(() -> sendPublishPostEvent(post), sendEventsThreadPool);
         return postMapper.toDto(post);
     }
 
@@ -291,14 +291,15 @@ public class PostService {
         }
     }
 
-    private void sendPublishPostEvent(long postAuthorId, long postId) {
+    private void sendPublishPostEvent(Post post) {
         userContext.setUserId(1L);
-        List<Long> followerIds = getUserFollowers(postAuthorId);
+        List<Long> followerIds = getUserFollowers(post.getAuthorId());
         log.info("Sending PublishPostEvent to kafka");
         publishPostEventPublisher.publish(PublishPostEvent
                 .builder()
-                .postId(postId)
+                .postId(post.getId())
                 .followers(followerIds)
+                .publishedAt(post.getPublishedAt())
                 .build()
         );
     }

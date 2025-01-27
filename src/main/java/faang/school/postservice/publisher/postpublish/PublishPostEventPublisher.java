@@ -19,10 +19,18 @@ public class PublishPostEventPublisher {
     @Value("${kafka.topics.post-publish.name}")
     private String postPublishTopicName;
 
+    @Value("${kafka.topics.post-publish-batched.name}")
+    private String postPublishBatchTopicName;
+
     public void publish(PublishPostEvent event) {
+        publish(event, false);
+    }
+
+    public void publish(PublishPostEvent event, boolean isBatched) {
+        String topicName = isBatched ? postPublishBatchTopicName : postPublishTopicName;
         try {
-            log.info("Publishing event to topic {}, event: {}", postPublishTopicName, event);
-            kafkaTemplate.send(postPublishTopicName, objectMapper.writeValueAsString(event));
+            log.info("Publishing event to topic {}, event: {}", topicName, event);
+            kafkaTemplate.send(topicName, objectMapper.writeValueAsString(event));
         } catch (JsonProcessingException e) {
             log.error("Exception when converting PublishPostEvent to json", e);
             throw new IllegalStateException("Exception when converting PublishPostEvent to json");
