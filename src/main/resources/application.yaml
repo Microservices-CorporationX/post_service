@@ -32,7 +32,7 @@ spring:
           name: comment_channel
 
   kafka:
-    bootstrapServers: localhost:9092
+    bootstrap-servers: localhost:9092
     consumer:
       acks: all
       retries: 3

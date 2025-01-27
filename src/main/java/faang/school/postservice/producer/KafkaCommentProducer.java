@@ -2,6 +2,7 @@ package faang.school.postservice.producer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.CommentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,18 +16,11 @@ import org.springframework.stereotype.Component;
 public class KafkaCommentProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
 
-    @Value("${spring.kafka.topic.comment}")
+    @Value("${spring.kafka.topic.comment.name}")
     private String commentsTopic;
 
-    public void sendMessage(CommentEvent event) {
-        try {
-            String json = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send(commentsTopic, json);
-        } catch (JsonProcessingException e) {
-            log.error("Error converting object {} to JSON: {}", event, e.getMessage());
-            throw new RuntimeException(e);
-        }
+    public void sendMessage(CommentDto commentDto) {
+        kafkaTemplate.send(commentsTopic, commentsTopic);
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostMapper {
-    @Mapping(target = "likesCount", source = "likes")
+    @Mapping(target = "likesCount", source = "likes", qualifiedByName = "mapLike")
     PostDto toDto(Post post);
 
     Post toEntity(PostDto postDto);

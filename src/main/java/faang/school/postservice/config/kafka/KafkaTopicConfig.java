@@ -1,44 +1,34 @@
 package faang.school.postservice.config.kafka;
 
-import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.ApplicationArguments;
-import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.KafkaAdmin;
 
-import java.util.Collections;
-import java.util.concurrent.ExecutionException;
+import java.util.HashMap;
+import java.util.Map;
 
-@Slf4j
 @Configuration
-public class KafkaTopicConfig implements ApplicationRunner {
+public class KafkaTopicConfig {
 
     @Value(value = "${spring.kafka.bootstrap-servers}")
     private String bootstrapAddress;
+    @Value(value = "${spring.kafka.topic.comment.name}")
+    private String commentsTopic;
+    @Value(value = "${spring.kafka.topic.comment.partitions}")
+    private int commentsTopicNumPartitions;
 
     @Bean
-    public AdminClient adminClient() {
-        return AdminClient.create(Collections.singletonMap(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress));
+    public KafkaAdmin kafkaAdmin() {
+        Map<String, Object> configs = new HashMap<>();
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        return new KafkaAdmin(configs);
     }
 
-    @Override
-    public void run(ApplicationArguments args) throws Exception {
-        createTopic("comments", 3, (short) 1);
-    }
-
-    public void createTopic(String name, int partitions, short replicationFactor) {
-        AdminClient adminClient = adminClient();
-        NewTopic newTopic = new NewTopic(name, partitions, replicationFactor);
-
-        try {
-            adminClient.createTopics(Collections.singleton(newTopic)).all().get();
-            log.info("Topic created: {}", newTopic.name());
-        } catch (InterruptedException | ExecutionException e) {
-            log.error("Error creating topic: {}", e.getMessage());
-        }
+    @Bean
+    public NewTopic commentsTopic() {
+        return new NewTopic(commentsTopic, commentsTopicNumPartitions, (short) 1);
     }
 }

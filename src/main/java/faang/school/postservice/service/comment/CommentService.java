@@ -85,12 +85,7 @@ public class CommentService {
         ));
     }
 
-    private void sendCommentCreationMessage(Comment comment) {
-        kafkaCommentProducer.sendMessage(new CommentEvent(
-                comment.getAuthorId(),
-                comment.getPost().getId(),
-                comment.getId(),
-                comment.getContent()
-        ));
+    private void sendCommentCreationMessage(CommentDto comment) {
+        kafkaCommentProducer.sendMessage(comment);
     }
 }

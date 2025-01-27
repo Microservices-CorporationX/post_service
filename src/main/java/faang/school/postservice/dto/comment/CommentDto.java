@@ -8,13 +8,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CommentDto {
+public class CommentDto implements Serializable {
     private Long id;
 
     @NotBlank(message = "Comment content is required")
@@ -26,6 +27,8 @@ public class CommentDto {
 
     @NotNull(message = "Comment post id is required")
     private Long postId;
+
+    private Long likesCount;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
