@@ -2,6 +2,7 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.dto.filter.FilterDto;
 import faang.school.postservice.dto.PostDto;
 import faang.school.postservice.events.BanUserEvent;
@@ -10,6 +11,7 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.RedisBanMessagePublisher;
+import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.sort.PostField;
 import faang.school.postservice.sort.SortBy;
@@ -38,6 +40,7 @@ public class PostService {
     private final List<SortBy> sort;
     private final CommentService commentService;
     private final RedisBanMessagePublisher redisBanMessagePublisher;
+    private final UserCacheRepository userCacheRepository;
 
     public PostDto createPost(PostDto postDto) {
         log.info("validate post dto argument");
@@ -69,8 +72,15 @@ public class PostService {
         log.info("update at db post " + post.getId());
         savePost(post);
 
+        saveUserToCache(post.getAuthorId());
         log.info("mapping entity to dto");
         return postMapper.toDto(post);
+    }
+
+    private void saveUserToCache(long userId) {
+        UserDto userDto = userServiceClient.getUserById(userId);
+        log.info("Saving user %s to cache when post published = {}", userDto);
+        userCacheRepository.cacheUser(userDto);
     }
 
     public PostDto updatePost(long id, PostDto postDto) {

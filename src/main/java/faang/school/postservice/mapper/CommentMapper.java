@@ -26,7 +26,6 @@ public interface CommentMapper {
     @Mapping(target = "likes", ignore = true)
     void update(CommentDto commentDto, @MappingTarget Comment comment);
 
-    @Mapping(target = "id", ignore = true)
     @Mapping(target = "post", ignore = true)
     Comment toEntity(CommentDto commentDto);
 
