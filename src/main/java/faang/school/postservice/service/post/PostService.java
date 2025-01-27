@@ -17,11 +17,13 @@ import faang.school.postservice.helper.UserCacheWriter;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.PostCache;
 import faang.school.postservice.model.user.ShortUserWithAvatar;
 import faang.school.postservice.publisher.postpublish.PublishPostEventPublisher;
 import faang.school.postservice.publisher.postview.KafkaViewPostEventPublisher;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.publisher.user.UserBanPublisher;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.user.UserCacheRepository;
 import faang.school.postservice.service.image.ImageResizeService;
@@ -72,6 +74,7 @@ public class PostService {
     private final KafkaViewPostEventPublisher kafkaViewPostEventPublisher;
     private final PublishPostEventPublisher publishPostEventPublisher;
     private final UserCacheWriter userCacheWriter;
+    private final PostCacheRepository postCacheRepository;
 
     @Autowired
     @Qualifier("writeToCacheThreadPool")
@@ -110,6 +113,7 @@ public class PostService {
         post.setUpdatedAt(LocalDateTime.now());
         CompletableFuture.runAsync(() -> userCacheWriter.cacheUser(post.getAuthorId()), writeToCacheThreadPool);
         CompletableFuture.runAsync(() -> sendPublishPostEvent(post), sendEventsThreadPool);
+        CompletableFuture.runAsync(() -> cachePost(post), writeToCacheThreadPool);
         return postMapper.toDto(post);
     }
 
@@ -302,5 +306,21 @@ public class PostService {
                 .publishedAt(post.getPublishedAt())
                 .build()
         );
+    }
+
+    private void cachePost(Post post) {
+        long likes = 0;
+        long views = 0;
+        PostCache postCache
+                = new PostCache(
+                post.getId(),
+                post.getContent(),
+                post.getAuthorId(),
+                post.getProjectId(),
+                likes,
+                views,
+                post.getPublishedAt()
+        );
+        postCacheRepository.save(postCache);
     }
 }
