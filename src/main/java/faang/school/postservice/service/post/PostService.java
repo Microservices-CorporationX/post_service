@@ -142,6 +142,7 @@ public class PostService {
         postRepository.save(post);
         log.info("Post with id {} published", id);
         postRedisRepository.save(createPostForRedis(post));
+
         log.info("Post with id {} saved in Redis", id);
         userRedisRepository.save(createUserRedisFromDto(userServiceClient.getUser(post.getAuthorId())));
         log.info("User with id {} saved in Redis", post.getAuthorId());
