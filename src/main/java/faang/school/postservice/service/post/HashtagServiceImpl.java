@@ -1,18 +1,21 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.dto.post.HashtagRequestDto;
 import faang.school.postservice.dto.post.HashtagResponseDto;
 import faang.school.postservice.mapper.post.HashtagMapper;
 import faang.school.postservice.model.post.Hashtag;
 import faang.school.postservice.model.post.Post;
 import faang.school.postservice.repository.post.HashtagRepository;
 import faang.school.postservice.repository.post.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -39,34 +42,23 @@ public class HashtagServiceImpl implements HashtagService {
                 .toList();
     }
 
-    @CachePut(key = "#hashtag", value = "postsByHashtag")
+    @Transactional
     @Override
-    public void addHashtag(long postId, String hashtag) {
-        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Post not found with id: " + postId));
-        Hashtag result = hashtagRepository.findByName(hashtag).orElseGet(() -> {
-            Hashtag newHashtag = Hashtag.builder()
-                    .name(hashtag)
-                    .build();
-            return hashtagRepository.save(newHashtag);
-        });
-        List<Hashtag> hashtags = post.getHashtags();
-        if (!hashtags.contains(result)) {
-            hashtags.add(result);
-            post.setHashtags(hashtags);
-            postRepository.save(post);
+    public void addHashtag(HashtagRequestDto dto) {
+        Post post = postRepository.findById(dto.getPostId()).orElseThrow(
+                () -> new EntityNotFoundException(String.format("Post not found with id: %d", dto.getPostId())));
+        Hashtag hashtag = hashtagRepository.findByName(dto.getHashtag())
+                .orElseGet(() -> buildHashtag(dto.getHashtag(), post));
+        if (!post.getHashtags().contains(hashtag)) {
+            hashtagRepository.addHashtag(post.getId(), hashtag.getId());
         }
-//        return postRepository.findByHashtag(hashtag);
+    }
 
-//        if (postRepository.findById(dto.getPostId()).isEmpty()) {
-//            throw new EntityNotFoundException(
-//                    String.format("Post with id = %s doesn't exists", dto.getPostId()));
-//        }
-//        if (hashtagRepository.findByName(dto.getHashtag()).isEmpty()) {
-//            hashtagRepository.save(Hashtag.builder().name(dto.getHashtag()).build());
-//        } else {
-//            Hashtag hashtag = hashtagRepository.findByName(dto.getHashtag()).orElseThrow();
-//            hashtagRepository.save(hashtag);
-//        }
-//        hashtagRepository.addHashtag(dto.getPostId(), dto.getHashtag());
+    private Hashtag buildHashtag(String hashtag, Post post) {
+        return Hashtag.builder()
+                .id(UUID.randomUUID())
+                .name(hashtag)
+                .posts(List.of(post))
+                .build();
     }
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -17,11 +18,11 @@ public class PostResponseDto implements Serializable {
 
     private String content;
 
-//    private Long authorId;
-//
-//    private Long projectId;
+    private Long authorId;
 
-//    private LocalDateTime createdAt;
-//
-//    private LocalDateTime updatedAt;
+    private Long projectId;
+
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }

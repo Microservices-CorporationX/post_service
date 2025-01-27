@@ -12,7 +12,7 @@ public interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
 
     @Query(nativeQuery = true, value = "INSERT INTO post_hashtag (post_id, hashtag_id) VALUES (:postId, :hashtagId)")
     @Modifying
-    void addHashtag(long postId, String hashtag);
+    void addHashtag(long postId, UUID hashtagId);
 
     Optional<Hashtag> findByName(String name);
 }

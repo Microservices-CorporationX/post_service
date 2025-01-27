@@ -9,6 +9,5 @@ import org.mapstruct.ReportingPolicy;
 public interface PostMapper {
 
     PostResponseDto toDto(Post post);
-//
-//    Post toEntity(PostDto postDto);
+
 }

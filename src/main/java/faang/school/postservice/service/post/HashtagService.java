@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.dto.post.HashtagRequestDto;
 import faang.school.postservice.dto.post.HashtagResponseDto;
 
 import java.util.List;
@@ -10,6 +11,6 @@ public interface HashtagService {
 
     List<HashtagResponseDto> getTopHashtags();
 
-    void addHashtag(long postId, String hashtag);
+    void addHashtag(HashtagRequestDto dto);
 
 }

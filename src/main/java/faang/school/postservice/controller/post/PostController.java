@@ -3,18 +3,21 @@ package faang.school.postservice.controller.post;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${post.domain.path}/posts")
+@RequestMapping("${domain.path}/posts")
 public class PostController {
     private final PostService postService;
 
     @GetMapping
-    public List<PostResponseDto> getPostsByHashtag(@RequestParam("hashtag") String hashtag) {
-        return postService.getPostsByHashtag(hashtag);
+    public ResponseEntity<List<PostResponseDto>> getPostsByHashtag(@RequestParam("hashtag") String hashtag) {
+        List<PostResponseDto> postsByHashtag = postService.getPostsByHashtag(hashtag);
+        return new ResponseEntity<>(postsByHashtag, HttpStatus.OK);
     }
 }
