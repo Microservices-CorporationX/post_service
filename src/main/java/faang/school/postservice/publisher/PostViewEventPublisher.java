@@ -12,7 +12,7 @@ public class PostViewEventPublisher {
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
-    @Value("${spring.kafka.topic-name.post}")
+    @Value("${spring.kafka.topic-name.post-view}")
     private String postTopic;
 
     public void sendMessage(PostViewEvent postEvent) {

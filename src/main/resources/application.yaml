@@ -31,6 +31,14 @@ spring:
           name: calculations_channel
         ban_user_topic:
           name: user_ban
+      post-cache:
+        key-prefix: Posts
+        field:
+          views: views
+      feed :
+        key-prefix: feed
+
+
 
   kafka:
     consumer:
@@ -46,7 +54,8 @@ spring:
     topic-name:
       likes: "likes"
       comments: "comments"
-      post: "postView"
+      post-view: "postView"
+      post: "post"
 
 server:
   port: 8081

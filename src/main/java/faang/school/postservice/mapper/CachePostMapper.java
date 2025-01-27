@@ -1,6 +1,7 @@
 package faang.school.postservice.mapper;
 
 import faang.school.postservice.dto.CommentDto;
+import faang.school.postservice.events.CommentEvent;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
@@ -13,11 +14,12 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CachePostMapper {
 
-    @Mapping(source = "comments", target = "commentsDto", qualifiedByName = "commentsDto")
+    @Mapping(source = "comments", target = "commentEvents", qualifiedByName = "commentEvents")
     @Mapping(source = "likes", target = "likes", qualifiedByName = "countTotalLikes")
     RedisPost toCache(Post post);
 
@@ -28,13 +30,15 @@ public interface CachePostMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(source = "likes", target = "likes", qualifiedByName = "countTotalLikes")
-    @Mapping(source = "comments", target = "commentsDto", qualifiedByName = "commentsDto")
+    @Mapping(source = "comments", target = "commentEvents", qualifiedByName = "commentEvents")
     void update(Post post, @MappingTarget RedisPost redisPost);
 
-    @Named("commentsDto")
-    default List<CommentDto> getCommentDto(List<Comment> comments) {
+    @Named("commentEvents")
+    default List<CommentEvent> getCommentDto(List<Comment> comments) {
         CommentMapperImpl commentMapper = new CommentMapperImpl();
-        return commentMapper.toDto(comments);
+        return comments.stream()
+                .map(commentMapper::toEvent)
+                .collect(Collectors.toList());
     }
 
     @Named("countTotalLikes")
