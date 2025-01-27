@@ -28,6 +28,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.verify;
@@ -196,6 +197,11 @@ public class PostServiceTest {
         long projectId = 1;
         postService.getAllPublished(projectId, PostOwnerType.PROJECT);
         verify(postRepository, atLeastOnce()).findAllPublishedByProjectId(projectId);
+    }
+
+    @Test
+    void failTest() {
+        fail();
     }
 
     private void mockGetPostById(long id) {
