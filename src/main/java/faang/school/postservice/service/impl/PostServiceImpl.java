@@ -29,7 +29,7 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostDto create(PostSaveDto postSaveDto) {
         Post post = postMapper.toEntity(postSaveDto);
-        post.setPublishedAt(LocalDateTime.now().plusDays(3));
+        post.setScheduledAt(LocalDateTime.now().plusDays(3));
         return postMapper.toDto(postRepository.save(post));
     }
 
@@ -63,7 +63,6 @@ public class PostServiceImpl implements PostService {
         Post post = postRepositoryAdapter.findById(id);
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        postRepository.save(post);
     }
 
     @Transactional
@@ -71,7 +70,6 @@ public class PostServiceImpl implements PostService {
     public void delete(long id) {
         Post post = postRepositoryAdapter.findById(id);
         post.setDeleted(true);
-        postRepository.save(post);
     }
 
     @Transactional(readOnly = true)

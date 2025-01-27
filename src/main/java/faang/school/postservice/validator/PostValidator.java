@@ -7,11 +7,8 @@ import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
-import faang.school.postservice.exception.IntegrationException;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,7 +17,6 @@ import org.springframework.stereotype.Component;
 public class PostValidator {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
-
 
     private static final String USER_NOT_FOUND_ERR_MSG = "Пользователь с id:%s не найден!";
     private static final String PROJECT_NOT_FOUND_ERR_MSG = "Проект с id:%s не найден!";
@@ -43,36 +39,18 @@ public class PostValidator {
     }
 
     public void userExist(long authorId) {
-        try {
-            UserDto userResponse = userServiceClient.getUser(authorId);
-            log.debug("userResponse response: {}", userResponse);
-            if (userResponse == null || userResponse.id() == null) {
-                throw new DataNotFoundException(String.format(USER_NOT_FOUND_ERR_MSG, authorId));
-            }
-        } catch (FeignException e) {
-            log.error("userResponse response: {}", e.toString());
-            if (e.status() == HttpStatus.NOT_FOUND.value()) {
-                throw new DataNotFoundException(String.format(USER_NOT_FOUND_ERR_MSG, authorId));
-            } else {
-                throw new IntegrationException(e.getMessage());
-            }
+        UserDto userResponse = userServiceClient.getUser(authorId);
+        log.debug("userResponse response: {}", userResponse);
+        if (userResponse == null || userResponse.id() == null) {
+            throw new DataNotFoundException(String.format(USER_NOT_FOUND_ERR_MSG, authorId));
         }
     }
 
     public void projectExist(long projectId) {
-        try {
-            ProjectDto projectResponse = projectServiceClient.getProject(projectId);
-            log.debug("projectResponse response: {}", projectResponse);
-            if (projectResponse == null) {
-                throw new DataNotFoundException(String.format(PROJECT_NOT_FOUND_ERR_MSG, projectId));
-            }
-        } catch (FeignException e) {
-            log.error("projectResponse response: {}", e.toString());
-            if (e.status() == HttpStatus.NOT_FOUND.value()) {
-                throw new DataNotFoundException(String.format(PROJECT_NOT_FOUND_ERR_MSG, projectId));
-            } else {
-                throw new IntegrationException(e.getMessage());
-            }
+        ProjectDto projectResponse = projectServiceClient.getProject(projectId);
+        log.debug("projectResponse response: {}", projectResponse);
+        if (projectResponse == null) {
+            throw new DataNotFoundException(String.format(PROJECT_NOT_FOUND_ERR_MSG, projectId));
         }
     }
 }

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class PostScheduler {
     private final PostService postService;
 
-    @Scheduled(cron = "0 0 1 * * *")
+    @Scheduled(cron = "${scheduling.publishing-cron}")
     public void publishingPostsOnSchedule() {
         int count = postService.publishingPostsOnSchedule();
         log.debug("Published posts on schedule: {}", count);

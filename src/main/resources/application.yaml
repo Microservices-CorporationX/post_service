@@ -30,17 +30,20 @@ spring:
       client:
         config:
           user-service:
-            url: http://localhost:8080/api/v1/
+            url: ${USER_SERVICE_URL}
             connect-timeout: 5000
             read-timeout: 5000
           project-service:
-            url: http://localhost:8082/api/v1/
+            url: ${PROJECT_SERVICE_URL}
             connect-timeout: 5000
             read-timeout: 5000
           payment-service:
-            url: http://localhost:9080/api/
+            url: ${PAYMENT_SERVICE_URL}
             connect-timeout: 5000
             read-timeout: 5000
+
+scheduling:
+  publishing-cron: "0 0 1 * * *"
 
 server:
   port: 8081
