@@ -41,3 +41,13 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+post:
+  domain:
+    path: /api/v1
+hashtag:
+  domain:
+    path: /api/v1
+
+redis:
+  ttl-minutes: 1
