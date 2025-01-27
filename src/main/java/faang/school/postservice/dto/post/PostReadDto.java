@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
-public class PostDto {
+public class PostReadDto {
     private Long id;
     private String content;
     private Long authorId;

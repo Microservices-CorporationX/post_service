@@ -2,8 +2,10 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostCreateDto;
-import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.PostReadDto;
+import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
@@ -23,23 +26,17 @@ public class PostService {
     private final ProjectServiceClient projectServiceClient;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
+    private final UserContext userContext;
 
-    public PostDto createPostDraft(PostCreateDto dto) {
-        var authorId = dto.getAuthorId();
-        var projectId = dto.getProjectId();
-
-        if (authorId != null && userServiceClient.getUser(authorId) == null) {
-            throw new EntityNotFoundException("Пользователь не найден");
-        } else if (projectId != null && projectServiceClient.getProject(projectId) == null) {
-            throw new EntityNotFoundException("Проект не найден");
-        }
+    public PostReadDto createPostDraft(PostCreateDto dto) {
+        validateCreateDraftDto(dto);
 
         Post post = postMapper.toEntity(dto);
         post = postRepository.save(post);
         return postMapper.toDto(post);
     }
 
-    public PostDto publishPost(long id) {
+    public PostReadDto publishPost(long id) {
         Post post = getPostById(id);
         if (post.isPublished()) {
             throw new BusinessException("Пост уже опубликован");
@@ -49,7 +46,7 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
-    public PostDto updatePost(long id, PostUpdateDto dto) {
+    public PostReadDto updatePost(long id, PostUpdateDto dto) {
         Post post = getPostById(id);
         if (post.isDeleted()) {
             throw new BusinessException("Пост удалён");
@@ -58,7 +55,7 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
-    public PostDto softDeletePost(long id) {
+    public PostReadDto softDeletePost(long id) {
         Post post = getPostById(id);
         if (post.isDeleted()) {
             throw new BusinessException("Пост уже удален");
@@ -67,32 +64,61 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
-    public List<PostDto> getAllDraftsByAuthor(long authorId) {
-        return postRepository.findAllDraftsByAuthorId(authorId).stream()
-                .map(postMapper::toDto)
-                .toList();
+    public List<PostReadDto> getAllDrafts(long id, PostOwnerType ownerType) {
+        return getAllPostByCondition(
+                ownerType,
+                () -> postRepository.findAllDraftsByAuthorId(id),
+                () -> postRepository.findAllDraftsByProjectId(id)
+        );
     }
 
-    public List<PostDto> getAllDraftsByProject(long projectId) {
-        return postRepository.findAllDraftsByProjectId(projectId).stream()
-                .map(postMapper::toDto)
-                .toList();
-    }
-
-    public List<PostDto> getAllPublishedPostsByAuthor(long authorId) {
-        return postRepository.findAllPublishedByAuthorId(authorId).stream()
-                .map(postMapper::toDto)
-                .toList();
-    }
-
-    public List<PostDto> getAllPublishedPostsByProject(long projectId) {
-        return postRepository.findAllPublishedByProjectId(projectId).stream()
-                .map(postMapper::toDto)
-                .toList();
+    public List<PostReadDto> getAllPublished(long id, PostOwnerType ownerType) {
+        return getAllPostByCondition(
+                ownerType,
+                () -> postRepository.findAllPublishedByAuthorId(id),
+                () -> postRepository.findAllPublishedByProjectId(id)
+        );
     }
 
     public Post getPostById(long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Пост не найден"));
+    }
+
+    private List<PostReadDto> getAllPostByCondition(
+            PostOwnerType ownerType,
+            Supplier<List<Post>> authorSupplier,
+            Supplier<List<Post>> projetcSupplier
+            ) {
+        List<Post> postStream = switch (ownerType) {
+            case AUTHOR:
+                yield authorSupplier.get();
+            case PROJECT:
+                yield projetcSupplier.get();
+        };
+        return postStream.stream()
+                .map(postMapper::toDto)
+                .toList();
+    }
+
+    private void validateCreateDraftDto(PostCreateDto dto) {
+        var authorId = dto.getAuthorId();
+        var projectId = dto.getProjectId();
+
+        if (authorId != null && projectId != null) {
+            throw new BusinessException("Пост может создать либо автор, либо проект.");
+        }
+
+        if (authorId != null) {
+            userContext.setUserId(authorId);
+            if (userServiceClient.getUser(authorId) == null) {
+                throw new EntityNotFoundException("Пользователь не найден");
+            }
+        } else if (projectId != null) {
+            userContext.setUserId(projectId);
+            if (projectServiceClient.getProject(projectId) == null) {
+                throw new EntityNotFoundException("Проект не найден");
+            }
+        }
     }
 }

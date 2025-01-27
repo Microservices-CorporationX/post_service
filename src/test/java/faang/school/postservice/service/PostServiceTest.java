@@ -2,7 +2,9 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostCreateDto;
+import faang.school.postservice.dto.post.PostOwnerType;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.BusinessException;
@@ -39,12 +41,15 @@ public class PostServiceTest {
     private ProjectServiceClient projectServiceClient;
     @Mock
     private PostRepository postRepository;
+    @Mock
+    private UserContext userContext;
     @Spy
     private PostMapper postMapper = new PostMapperImpl();
     @InjectMocks
     private PostService postService;
 
     private Post post;
+
     @Captor
     ArgumentCaptor<Post> postArgumentCaptor;
 
@@ -60,8 +65,8 @@ public class PostServiceTest {
     void testCreatePostDraftWithAuthorNotExist() {
         long userId = 1;
         when(userServiceClient.getUser(userId)).thenReturn(null);
-        var dto = PostCreateDto.builder().
-                content("content")
+        var dto = PostCreateDto.builder()
+                .content("content")
                 .authorId(userId)
                 .build();
 
@@ -72,8 +77,8 @@ public class PostServiceTest {
     void testCreatePostDraftWithProjectNotExist() {
         long projectId = 1;
         when(projectServiceClient.getProject(projectId)).thenReturn(null);
-        var dto = PostCreateDto.builder().
-                content("content")
+        var dto = PostCreateDto.builder()
+                .content("content")
                 .projectId(projectId)
                 .build();
 
@@ -85,8 +90,8 @@ public class PostServiceTest {
         long userId = 1;
         when(userServiceClient.getUser(userId))
                 .thenReturn(new UserDto(1L, "user", "user@gmail.com"));
-        var createDto = PostCreateDto.builder().
-                content("content")
+        var createDto = PostCreateDto.builder()
+                .content("content")
                 .authorId(userId)
                 .build();
 
@@ -168,28 +173,28 @@ public class PostServiceTest {
     @Test
     void testGetAllDraftsByAuthor() {
         long authorId = 1;
-        postService.getAllDraftsByAuthor(authorId);
+        postService.getAllDrafts(authorId, PostOwnerType.AUTHOR);
         verify(postRepository, atLeastOnce()).findAllDraftsByAuthorId(authorId);
     }
 
     @Test
     void testGetAllDraftsByProject() {
         long projectId = 1;
-        postService.getAllDraftsByProject(projectId);
+        postService.getAllDrafts(projectId, PostOwnerType.PROJECT);
         verify(postRepository, atLeastOnce()).findAllDraftsByProjectId(projectId);
     }
 
     @Test
     void testGetAllPublishedPostsByAuthor() {
         long authorId = 1;
-        postService.getAllPublishedPostsByAuthor(authorId);
+        postService.getAllPublished(authorId, PostOwnerType.AUTHOR);
         verify(postRepository, atLeastOnce()).findAllPublishedByAuthorId(authorId);
     }
 
     @Test
     void testGetAllPublishedPostsByProject() {
         long projectId = 1;
-        postService.getAllPublishedPostsByProject(projectId);
+        postService.getAllPublished(projectId, PostOwnerType.PROJECT);
         verify(postRepository, atLeastOnce()).findAllPublishedByProjectId(projectId);
     }
 
