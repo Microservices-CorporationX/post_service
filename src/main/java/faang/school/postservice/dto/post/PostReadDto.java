@@ -1,5 +1,25 @@
 package faang.school.postservice.dto.post;
 
-//Заглушка. Ожидаю мерж в мастер ветку
-public record PostReadDto() {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
+public class PostReadDto {
+    private Long id;
+    private String content;
+    private Long authorId;
+    private Long projectId;
+    private LocalDateTime createdAt;
+    private boolean published;
+    private boolean deleted;
+    private LocalDateTime publishedAt;
 }
