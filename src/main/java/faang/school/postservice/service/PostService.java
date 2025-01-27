@@ -82,7 +82,7 @@ public class PostService {
 
     public Post getPostById(long id) {
         return postRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Пост не найден"));
+                .orElseThrow(() -> new EntityNotFoundException("Пост с ID " + id + " не найден"));
     }
 
     private List<PostReadDto> getAllPostByCondition(
