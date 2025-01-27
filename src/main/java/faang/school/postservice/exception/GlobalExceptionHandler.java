@@ -58,8 +58,8 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
         return new ErrorResponse(
+                ex.getMessage(),
                 "Непредвиденная ошибка сервера",
-                "Ошибка сервера",
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
