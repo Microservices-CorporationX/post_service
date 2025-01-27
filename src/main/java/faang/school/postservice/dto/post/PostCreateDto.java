@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -17,4 +19,5 @@ public class PostCreateDto {
     private String content;
     private Long projectId;
     private Long authorId;
+    private List<Long> hashtagIds;
 }

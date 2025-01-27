@@ -16,10 +16,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@Mapper
+@Mapper(componentModel = "spring")
 public interface HashtagMapper {
 
-    @Mapping(target = "posts", source = "postIds")
     Hashtag toEntity(HashtagCreateDto createDto);
 
     @Mapping(target = "postIds", source = "posts")

@@ -54,8 +54,8 @@ public class PostController {
         return postService.getAllPublished(id, PostOwnerType.fromString(type));
     }
 
-    public List<PostReadDto> getPostsByHashtagId(long hashtagId) {
-        //TODO дописать метод в Cервисе
-        return null;
+    @GetMapping
+    public List<PostReadDto> getPostsByHashtagId(@RequestParam long hashtagId) {
+        return postService.getPostsByHashtagId(hashtagId);
     }
 }

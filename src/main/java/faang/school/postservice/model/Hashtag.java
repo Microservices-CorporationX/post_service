@@ -36,8 +36,7 @@ public class Hashtag {
     @Column(name = "name", nullable = false, length = 64)
     private String name;
 
-    @ManyToMany
-    @JoinTable(name = "hashtag_post", joinColumns = @JoinColumn(name = "hashtag_id"), inverseJoinColumns = @JoinColumn(name = "post_id"))
+    @ManyToMany(mappedBy = "hashtags")
     private List<Post> posts;
 
     @CreationTimestamp

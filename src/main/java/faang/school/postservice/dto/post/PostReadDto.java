@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -18,6 +19,7 @@ public class PostReadDto {
     private String content;
     private Long authorId;
     private Long projectId;
+    private List<Long> hashtagIds;
     private LocalDateTime createdAt;
     private boolean published;
     private boolean deleted;
