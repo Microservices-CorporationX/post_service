@@ -47,6 +47,15 @@ public class KafkaConfigProducer {
     @Value("${spring.data.kafka.topics.comments.name}")
     private String commentsTopic;
 
+    @Value("${spring.data.kafka.topics.comments.partitions}")
+    private int partitionCount;
+
+    @Value("${spring.data.kafka.topics.comments.replicas}")
+    private int replicaCount;
+
+    @Value("${spring.data.kafka.topics.comments.configs.min.insync.replicas}")
+    private String configsValue;
+
 
     private Map<String, Object> producerConfigs() {
         Map<String, Object> config = new HashMap<>();
@@ -77,9 +86,9 @@ public class KafkaConfigProducer {
     @Bean
     NewTopic createTopic() {
         return TopicBuilder.name(commentsTopic)
-                .partitions(3)
-                .replicas(3)
-                .configs(Map.of("min.insync.replicas","2"))
+                .partitions(partitionCount)
+                .replicas(replicaCount)
+                .configs(Map.of("min.insync.replicas",configsValue))
                 .build();
     }
 }

@@ -31,6 +31,10 @@ spring:
       topics:
         comments:
           name: comment-created-events-topic
+          partitions: 3
+          replicas: 3
+          configs:
+            min.insync.replicas: 2
 
 server:
   port: 8081
