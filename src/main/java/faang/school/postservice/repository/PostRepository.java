@@ -31,4 +31,11 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.verified = FALSE")
     Optional<List<Post>> findNotVerifiedPots();
+
+    @Query(value = """
+            SELECT p.id FROM Post p 
+            WHERE p.authorId = :userId
+            ORDER BY p.publishedAt desc LIMIT :limit
+            """)
+    Optional<List<Long>> findLast(@Param("userId") Long userId, @Param("limit") int limit);
 }

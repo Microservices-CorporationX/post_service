@@ -40,6 +40,17 @@ spring:
       max-file-size: 5MB
       max-request-size: 50MB
 
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    bootstrap-servers: localhost:9092
+    topics:
+      feed:
+        name: feed
+        partitions: 2
+        executor: 2
+
 server:
   port: 8081
 
@@ -99,3 +110,6 @@ banner:
 cache:
   executor:
     pool-size: 1
+
+heater:
+  partitions: 1000

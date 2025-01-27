@@ -18,7 +18,9 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.validator.post.PostValidator;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -216,5 +218,11 @@ public class PostService {
                 )
                 .distinct()
                 .toList();
+    }
+
+    @SneakyThrows
+    public List<Long> getLastPostIds(Long userId, int limit) {
+        return postRepository.findLast(userId, limit)
+                .orElseThrow(() -> new EntityNotFoundException("Posts not found"));
     }
 }
