@@ -32,6 +32,14 @@ logging:
   level:
     root: info
 
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 15000
+        readTimeout: 15000
+        loggerLevel: BASIC
+
 user-service:
   host: localhost
   port: 8080
