@@ -200,7 +200,7 @@ public class PostServiceTest {
     }
 
     @Test
-    void failTest() {
+    void failTests() {
         fail();
     }
 
