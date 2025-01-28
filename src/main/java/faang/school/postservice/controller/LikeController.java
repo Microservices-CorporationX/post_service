@@ -26,7 +26,7 @@ public class LikeController {
 
     @PostMapping(POSTS_PATH)
     public ResponseEntity<LikeDto> likePost(@RequestParam Long userId, @RequestParam Long postId) {
-//        likeValidator.validateUser(userId);
+        likeValidator.validateUser(userId);
         if (postId == null) {
             throw new DataValidationException("PostId не может быть пустым");
         }
