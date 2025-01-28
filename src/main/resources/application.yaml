@@ -38,9 +38,11 @@ spring:
 
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
+    enabled: false
 
   data:
     redis:
+      ttl: 36000               #10 hours
       port: 6379
       host: localhost
       channels:
@@ -70,7 +72,7 @@ post:
 
 user-service:
   host: localhost
-  port: 8080
+  port: 8085
 project-service:
   host: localhost
   port: 8082

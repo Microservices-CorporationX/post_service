@@ -14,6 +14,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Service;
@@ -53,6 +55,7 @@ public class PostService {
         return post.getId();
     }
 
+    @CachePut(value = "postDto", key = "#postId")
     public PostDto publishPost(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with ID: " + postId));
@@ -63,6 +66,7 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    @CachePut(value = "postDto", key = "#postId")
     public PostDto updatePost(Long postId, PostDto postDto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with ID: " + postId));
@@ -80,6 +84,7 @@ public class PostService {
         return post.getId();
     }
 
+    @Cacheable(value = "postDto", key = "#postId")
     public PostDto getPost(Long postId) {
         Optional<Post> optionalPost = postRepository.findById(postId);
         if (optionalPost.isPresent()) {
@@ -110,6 +115,7 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    @CachePut(value = "postList", key = "#idUser")
     public List<PostDto> getPublishedPostsForUser(Long idUser) {
         checkUserExistById(idUser);
         List<Post> postList = postRepository.findByAuthorId(idUser)
@@ -124,6 +130,7 @@ public class PostService {
         return postDtoList;
     }
 
+    @CachePut(value = "postList", key = "#idProject")
     public List<PostDto> getPublishedPostForProject(Long idProject) {
         checkProjectExistById(idProject);
         List<Post> postList = postRepository.findByProjectId(idProject)

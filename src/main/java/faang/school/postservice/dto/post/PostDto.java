@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public record PostDto(
@@ -14,5 +15,5 @@ public record PostDto(
         Long userId,
         @Min(1)
         Long projectId,
-        LocalDateTime scheduledAt) {
+        LocalDateTime scheduledAt) implements Serializable {
 }
