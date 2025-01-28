@@ -16,6 +16,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -43,6 +44,7 @@ public class CommentService {
                 .orElseThrow(() -> new DataValidationException(String.format("Comment with id '%s' not found", id)));
     }
 
+    @Transactional
     public CommentDto createComment(CommentDto commentDto) {
         Post post = postService.findEntityById(commentDto.getPostId());
 
@@ -92,7 +94,8 @@ public class CommentService {
                 comment.getAuthorId(),
                 comment.getPost().getId(),
                 comment.getId(),
-                comment.getContent()
+                comment.getContent(),
+                comment.getCreatedAt()
         ));
     }
 
@@ -103,6 +106,7 @@ public class CommentService {
                 .postId(comment.getPost().getId())
                 .authorId(comment.getAuthorId())
                 .content(comment.getContent())
+                .createdAt(comment.getCreatedAt())
                 .build();
         kafkaCommentPostEventPublisher.publish(event);
     }

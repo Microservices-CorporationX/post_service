@@ -143,6 +143,9 @@ caching:
   feed:
     collection-name: Feed
     size: 500
+  comment:
+    collection-name: PostComments
+    size: 3
 
 events:
   partitioning-batch: 100

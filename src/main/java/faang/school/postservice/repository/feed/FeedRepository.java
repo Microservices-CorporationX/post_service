@@ -31,7 +31,7 @@ public class FeedRepository {
 
     public void addPostToUserFeed(long userId, long postId, LocalDateTime postPublishedAt) {
         RedisScript<String> script = RedisScript.of(ADD_AND_TRIM_SCRIPT, String.class);
-        String key = feedCollectionName + userId;
+        String key = feedCollectionName + ":" + userId;
         long timestamp = postPublishedAt.toInstant(ZoneOffset.UTC).toEpochMilli();
         redisTemplate.execute(
                 script,

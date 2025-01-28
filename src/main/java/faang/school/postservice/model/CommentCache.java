@@ -1,4 +1,4 @@
-package faang.school.postservice.dto.comment;
+package faang.school.postservice.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,13 +8,12 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
-public class CommentEvent {
+@AllArgsConstructor
+@Builder
+public class CommentCache {
+    private Long id;
     private long authorId;
-    private long postId;
-    private long commentId;
     private String content;
     private LocalDateTime createdAt;
 }
