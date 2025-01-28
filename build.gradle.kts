@@ -73,7 +73,7 @@ tasks.jacocoTestReport {
 
     classDirectories.setFrom(
         fileTree(project.buildDir.resolve("classes/java/main")) {
-            include("**/service/PostService.class")
+            include("**/service/**")
         }
     )
 
@@ -85,14 +85,16 @@ tasks.jacocoTestCoverageVerification {
 
     classDirectories.setFrom(
         fileTree(project.buildDir.resolve("classes/java/main")) {
-            include("**/service/PostService.class")
+            include("**/service/**")
         }
     )
 
     violationRules {
         rule {
+            element = "CLASS"
+            includes = listOf("faang.school.postservice.service.*")
             limit {
-                counter = "LINE"
+                counter = "INSTRUCTION"
                 value = "COVEREDRATIO"
                 minimum = 0.70.toBigDecimal()
             }
