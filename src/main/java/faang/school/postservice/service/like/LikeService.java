@@ -9,6 +9,7 @@ import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.kafka.LikeForKafka;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -16,6 +17,7 @@ import faang.school.postservice.validator.comment.CommentValidator;
 import faang.school.postservice.validator.like.LikeValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,6 +38,7 @@ public class LikeService {
     private final LikeValidator validator;
     private final UserServiceClient userServiceClient;
     private final CommentValidator commentValidator;
+    private final KafkaTemplate<String, LikeForKafka> kafkaLikeProducerTemplate;
 
     private static final int BATCH_SIZE = 100;
 
@@ -54,6 +57,7 @@ public class LikeService {
         post.getLikes().add(like);
         postRepository.save(post);
         log.info("The post {} was successfully saved in DB", post.getId());
+        kafkaLikeProducerTemplate.send("likeEvent", createLikeEventForKafka(like));
         return likeMapper.toResponseLikeDto(like);
     }
 
@@ -104,6 +108,13 @@ public class LikeService {
         deleteLike(comment.getLikes(), userId);
         commentRepository.save(comment);
         log.info("The comment {} was successfully saved in DB", comment.getId());
+    }
+
+    private LikeForKafka createLikeEventForKafka(Like like) {
+        return LikeForKafka.builder()
+                .authorId(like.getUserId())
+                .postId(like.getPost().getId())
+                .build();
     }
 
     private Post getPost(long postId) {

@@ -1,7 +1,6 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.comment.CommentRedisDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.dto.post.PostRequestDto;
@@ -14,6 +13,7 @@ import faang.school.postservice.mapper.redis.UserRedisMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.model.kafka.UserForKafka;
 import faang.school.postservice.model.redis.PostRedis;
 import faang.school.postservice.model.redis.UserRedis;
 import faang.school.postservice.repository.PostRepository;
@@ -34,6 +34,7 @@ import org.json.JSONObject;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +45,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.ArrayList;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,6 +74,7 @@ public class PostService {
     private final ModerationDictionary moderationDictionary;
     private final UserRedisMapper userRedisMapper;
     private final UserRedisRepository userRedisRepository;
+    private final KafkaTemplate<String, UserForKafka> kafkaPostProducerTemplate;
 
     @Transactional
     public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
@@ -142,10 +143,10 @@ public class PostService {
         postRepository.save(post);
         log.info("Post with id {} published", id);
         postRedisRepository.save(createPostForRedis(post));
-
-        log.info("Post with id {} saved in Redis", id);
-        userRedisRepository.save(createUserRedisFromDto(userServiceClient.getUser(post.getAuthorId())));
+        UserDto userDto = userServiceClient.getUser(post.getAuthorId());
+        userRedisRepository.save(createUserRedisFromDto(userDto));
         log.info("User with id {} saved in Redis", post.getAuthorId());
+        kafkaPostProducerTemplate.send("postEvent", createPostForKafka(userDto));
 
         return postMapper.toDto(post);
     }
@@ -178,6 +179,14 @@ public class PostService {
             checkingPostsForSpelling(sublist);
         }
     }
+
+    private UserForKafka createPostForKafka(UserDto userDto) {
+        return UserForKafka.builder()
+                .userId(userDto.getId())
+                .followers(userDto.getFollowers())
+                .build();
+    }
+
     private UserRedis createUserRedisFromDto(UserDto userDto) {
         UserRedis userRedis = userRedisMapper.toUserRedis(userDto);
         userRedis.setExpirationInSeconds(20L);

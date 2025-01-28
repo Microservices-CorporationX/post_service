@@ -16,5 +16,6 @@ public class UserDto {
     private String email;
     private String phone;
     private Integer experience;
+    private List<Long> followers;
 
 }

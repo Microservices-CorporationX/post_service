@@ -10,6 +10,7 @@ import faang.school.postservice.dto.user.UserForBanEventDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.mapper.redis.UserRedisMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.kafka.CommentForKafka;
 import faang.school.postservice.model.redis.UserRedis;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
@@ -20,6 +21,7 @@ import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.comment.CommentValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,6 +46,7 @@ public class CommentService {
     private final PostRepository postRepository;
     private final ModerationDictionary moderationDictionary;
     private final UserRedisRepository userRedisRepository;
+    private final KafkaTemplate<String, CommentForKafka> kafkaCommentProducerTemplate;
     private final UserServiceClient userServiceClient;
     private final UserRedisMapper userRedisMapper;
 
@@ -67,8 +70,16 @@ public class CommentService {
         log.info("Notification about new comment sent to notification service {}", commentEventDto);
         userRedisRepository.save(createUserRedisFromDto(userServiceClient.getUser(commentResponseDto.getAuthorId())));
         log.info("Author {} from comment was saved successfully in Redis", commentResponseDto.getAuthorId());
+        kafkaCommentProducerTemplate.send("commentEvent", createCommentForKafka(savedComment));
 
         return commentResponseDto;
+    }
+
+    private CommentForKafka createCommentForKafka(Comment comment) {
+        return CommentForKafka.builder()
+                .postId(comment.getPost().getId())
+                .authorId(comment.getAuthorId())
+                .build();
     }
 
     private CommentEventDto createCommentEventDto(CommentResponseDto commentResponseDto) {
