@@ -39,7 +39,8 @@ public class GlobalExceptionAdvice {
     @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleRuntimeException(RuntimeException ex) {
-        return ex.getMessage();
+        log.error("Error", ex);
+        return "Unknown error";
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
