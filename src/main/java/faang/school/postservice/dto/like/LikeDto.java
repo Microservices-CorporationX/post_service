@@ -9,8 +9,6 @@ public record LikeDto(
         @NotNull
         @Positive
         Long userId,
-        @Positive
         Long commentId,
-        @Positive
         Long postId) {
 }
