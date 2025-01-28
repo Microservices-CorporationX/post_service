@@ -28,6 +28,15 @@ spring:
         user-bans-channel: user_ban_channel
         comments-channel: comment_channel
 
+    kafka:
+      port: 9092
+      host: localhost
+      consumer:
+        group-id: my-group
+        auto-offset-reset: latest
+      channels:
+        post-channel: "post-topic"
+
   retry:
     maxAttempts: 3
     initialDelay: 1000

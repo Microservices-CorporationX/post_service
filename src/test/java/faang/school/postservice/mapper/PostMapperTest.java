@@ -1,6 +1,6 @@
 package faang.school.postservice.mapper;
 
-import faang.school.postservice.dto.post.RedisCommentDto;
+import faang.school.postservice.dto.post.CacheCommentDto;
 import faang.school.postservice.dto.post.RedisPostDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Hashtag;
@@ -48,7 +48,7 @@ void setUp(){
 
     @Test
     void toRecentCommentsShouldReturnEmptyListIfNoComments() {
-        List<RedisCommentDto> recentComments = postMapper.toRecentComments(null);
+        List<CacheCommentDto> recentComments = postMapper.toRecentComments(null);
 
         assertNotNull(recentComments);
         assertTrue(recentComments.isEmpty());
@@ -56,7 +56,7 @@ void setUp(){
 
     @Test
     void toRecentCommentsShouldMapAndSortRecentComments() {
-        List<RedisCommentDto> recentComments = postMapper.toRecentComments(comments);
+        List<CacheCommentDto> recentComments = postMapper.toRecentComments(comments);
 
         assertNotNull(recentComments);
         assertEquals(3, recentComments.size());

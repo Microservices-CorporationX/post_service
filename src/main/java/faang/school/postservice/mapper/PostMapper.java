@@ -1,7 +1,7 @@
 package faang.school.postservice.mapper;
 
 import faang.school.postservice.dto.post.CreatePostDto;
-import faang.school.postservice.dto.post.RedisCommentDto;
+import faang.school.postservice.dto.post.CacheCommentDto;
 import faang.school.postservice.dto.post.RedisPostDto;
 import faang.school.postservice.dto.post.ResponsePostDto;
 import faang.school.postservice.model.Comment;
@@ -35,14 +35,14 @@ public interface PostMapper {
     RedisPostDto toRedisPostDto (Post post);
 
     @Named("toRecentComments")
-    default List<RedisCommentDto> toRecentComments(List<Comment> comments) {
+    default List<CacheCommentDto> toRecentComments(List<Comment> comments) {
         if (comments == null) {
             return List.of();
         }
         return comments.stream()
                 .sorted((c1, c2) -> c2.getCreatedAt().compareTo(c1.getCreatedAt()))
                 .limit(3)
-                .map(comment -> new RedisCommentDto(
+                .map(comment -> new CacheCommentDto(
                         comment.getId(),
                         comment.getAuthorId(),
                         comment.getLikes() != null ? comment.getLikes().size() : 0,
