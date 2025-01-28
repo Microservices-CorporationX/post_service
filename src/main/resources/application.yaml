@@ -34,6 +34,13 @@ logging:
   level:
     root: info
 
+services:
+  s3:
+    endpoint: http://172.28.224.1:9000
+    accessKey: user
+    secretKey: password
+    bucketName: postbucket
+
 user-service:
   host: localhost
   port: 8080

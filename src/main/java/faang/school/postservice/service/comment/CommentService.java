@@ -1,13 +1,15 @@
-package faang.school.postservice.service;
+package faang.school.postservice.service.comment;
 
-import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentCreateDto;
+import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.repository.CommentRepository;
+import faang.school.postservice.service.PostService;
+import faang.school.postservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +22,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final UserService userService;
     private final PostService postService;
+
 
     public CommentReadDto create(CommentCreateDto createDto) {
         verifyCommentCreation(createDto);
@@ -52,7 +55,7 @@ public class CommentService {
         commentRepository.deleteById(commentId);
     }
 
-    private Comment getCommentById(long commentId) {
+    public Comment getCommentById(long commentId) {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Комментария с ID " + commentId + " не найден"));
     }
