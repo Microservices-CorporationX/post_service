@@ -9,11 +9,9 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -40,7 +38,7 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public CommentResponseDto updateComment(long commentId, CommentRequestDto commentRequestDto) {
         Comment foundComment = getById(commentId);
-        if (foundComment.getAuthorId().equals(commentRequestDto.authorId())) {
+        if (!foundComment.getAuthorId().equals(commentRequestDto.authorId())) {
             throw new IllegalArgumentException(String.format("User with id %s is not allowed to update this comment.",
                     commentRequestDto.authorId()));
         }
