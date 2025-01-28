@@ -2,14 +2,17 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.service.PostService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 import static faang.school.postservice.constant.PostErrorMessages.POST_CANNOT_BE_NULL;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("${post-service.api-version}/post")
@@ -17,7 +20,7 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping(value = "/create-draft")
-    public PostDto createDraft(@RequestBody PostDto postDto) {
+    public PostDto createDraft(@Valid @RequestBody PostDto postDto) {
         return postService.createDraft(postDto);
     }
 
