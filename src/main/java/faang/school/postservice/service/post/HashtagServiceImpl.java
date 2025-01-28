@@ -10,6 +10,7 @@ import faang.school.postservice.repository.post.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class HashtagServiceImpl implements HashtagService {
@@ -26,6 +28,7 @@ public class HashtagServiceImpl implements HashtagService {
 
     @Override
     public List<HashtagResponseDto> getAllHashtags() {
+        log.info("Get all hashtags");
         return hashtagRepository.findAll().stream()
                 .map(hashtagMapper::toDto)
                 .toList();
@@ -34,6 +37,7 @@ public class HashtagServiceImpl implements HashtagService {
     @Cacheable(value = "top_hashtags")
     @Override
     public List<HashtagResponseDto> getTopHashtags() {
+        log.info("Get top hashtags");
         List<Hashtag> allHashtags = hashtagRepository.findAll();
         return allHashtags.stream()
                 .sorted(Comparator.comparing(h -> h.getPosts().size(), Comparator.reverseOrder()))
@@ -45,12 +49,14 @@ public class HashtagServiceImpl implements HashtagService {
     @Transactional
     @Override
     public void addHashtag(HashtagRequestDto dto) {
+        log.info("Start add hashtag");
         Post post = postRepository.findById(dto.getPostId()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Post not found with id: %d", dto.getPostId())));
         Hashtag hashtag = hashtagRepository.findByName(dto.getHashtag())
                 .orElseGet(() -> buildHashtag(dto.getHashtag(), post));
         if (!post.getHashtags().contains(hashtag)) {
             hashtagRepository.addHashtag(post.getId(), hashtag.getId());
+            log.info("Hashtag added");
         }
     }
 
