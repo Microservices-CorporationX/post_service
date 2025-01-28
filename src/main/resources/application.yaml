@@ -41,3 +41,12 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+api:
+  title: "Post service API"
+  version: "0.1.0.1"
+  description: "Post service gives the ability to write text posts to share your thoughts, knowledge and information with other users."
+
+external:
+  userServiceUrl: "http://localhost/user/"
+  projectServiceUrl: "http://localhost/project/"
