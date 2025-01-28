@@ -11,14 +11,14 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class UserRedisRepository {
 
-    private final RedisTemplate<String, Object> userRedisTemplate;
+    private final RedisTemplate<String, Object> redisTemplate;
     private static final long TTL_SECONDS = 86400;
 
     public void save(String key, Object value) {
-        userRedisTemplate.opsForValue().set(key, value, Duration.ofSeconds(TTL_SECONDS));
+        redisTemplate.opsForValue().set(key, value, Duration.ofSeconds(TTL_SECONDS));
     }
 
     public UserDto findUserByKey(String key) {
-        return (UserDto) userRedisTemplate.opsForValue().get(key);
+        return (UserDto) redisTemplate.opsForValue().get(key);
     }
 }

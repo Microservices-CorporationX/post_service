@@ -1,6 +1,7 @@
 package faang.school.postservice.config.kafka;
 
 import faang.school.postservice.model.Post;
+import faang.school.postservice.utils.PublishedPostMessage;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +22,7 @@ public class KafkaProducerConfig {
     private String bootstrapServers;
 
     @Bean
-    public ProducerFactory<String, Post> postProducerFactory() {
+    public ProducerFactory<String, PublishedPostMessage> postProducerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -30,7 +31,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Post> kafkaTemplate() {
+    public KafkaTemplate<String, PublishedPostMessage> kafkaTemplate() {
         return new KafkaTemplate<>(postProducerFactory());
     }
 }
