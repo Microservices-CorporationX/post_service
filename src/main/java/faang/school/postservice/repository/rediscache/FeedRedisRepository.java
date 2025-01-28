@@ -12,13 +12,13 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FeedRedisRepository {
 
-    private final RedisTemplate<String, List<String>> feedRedisTemplate;
+    private final RedisTemplate<String, List<String>> redisTemplate;
 
     private static final int MAX_FEED_SIZE = 100;
     private static final long TTL_SECONDS = 86400;
 
     public void save(String key, String postId) {
-        List<String> postIds = feedRedisTemplate.opsForValue().get(key);
+        List<String> postIds = redisTemplate.opsForValue().get(key);
 
         if (postIds == null) {
             postIds = new ArrayList<>();
@@ -30,10 +30,10 @@ public class FeedRedisRepository {
             postIds.remove(postIds.size() - 1);
         }
 
-        feedRedisTemplate.opsForValue().set(key, postIds, Duration.ofSeconds(TTL_SECONDS));
+        redisTemplate.opsForValue().set(key, postIds, Duration.ofSeconds(TTL_SECONDS));
     }
 
     public List<String> getPostIdsFromCache(String userId) {
-        return feedRedisTemplate.opsForValue().get(userId);
+        return redisTemplate.opsForValue().get(userId);
     }
 }

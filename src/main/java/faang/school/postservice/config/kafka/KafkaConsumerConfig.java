@@ -1,6 +1,7 @@
 package faang.school.postservice.config.kafka;
 
 import faang.school.postservice.model.Post;
+import faang.school.postservice.utils.PublishedPostMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,23 +18,23 @@ import java.util.Map;
 
 @Configuration
 @EnableKafka
-public class KafkaConsumer {
+public class KafkaConsumerConfig {
 
     @Value("${spring.data.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
     @Bean
-    public ConsumerFactory<String, Post> postConsumerFactory() {
+    public ConsumerFactory<String, PublishedPostMessage> postConsumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        JsonDeserializer<Post> deserializer = new JsonDeserializer<>(Post.class);
+        JsonDeserializer<PublishedPostMessage> deserializer = new JsonDeserializer<>(PublishedPostMessage.class);
         deserializer.addTrustedPackages("*");
         return new DefaultKafkaConsumerFactory<>(configProps, new StringDeserializer(), deserializer);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Post> postsKafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Post> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, PublishedPostMessage> postsKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PublishedPostMessage> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(postConsumerFactory());
         return factory;
     }
