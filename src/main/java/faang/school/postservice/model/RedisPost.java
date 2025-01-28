@@ -24,8 +24,4 @@ public class RedisPost {
     private LocalDateTime updatedAt;
     private long views;
     private long likes;
-
-    public void addViews(){
-        views++;
-    }
 }
