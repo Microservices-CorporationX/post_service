@@ -3,6 +3,7 @@ package faang.school.postservice.service;
 import faang.school.postservice.dto.hashtag.HashtagCreateDto;
 import faang.school.postservice.dto.hashtag.HashtagReadDto;
 import faang.school.postservice.dto.hashtag.HashtagUpdateDto;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.mapper.HashtagMapper;
 import faang.school.postservice.model.Hashtag;
@@ -19,6 +20,7 @@ public class HashtagService {
     private final HashtagRepository hashtagRepository;
 
     public HashtagReadDto create(HashtagCreateDto createDto) {
+        validateHashtagNameExists(createDto.name());
         Hashtag newHashtag = hashtagMapper.toEntity(createDto);
         newHashtag = hashtagRepository.save(newHashtag);
         return hashtagMapper.toDto(newHashtag);
@@ -26,6 +28,7 @@ public class HashtagService {
 
     public HashtagReadDto update(HashtagUpdateDto updateDto) {
         Hashtag hashtag = getHashtagById(updateDto.id());
+        validateHashtagNameExists(updateDto.name());
         hashtagMapper.updateEntityFromDto(updateDto, hashtag);
 
         hashtag = hashtagRepository.save(hashtag);
@@ -55,6 +58,12 @@ public class HashtagService {
 
     public boolean isHashtagExist(long hashtagId) {
         return hashtagRepository.existsById(hashtagId);
+    }
+
+    public void validateHashtagNameExists(String name) {
+        if(hashtagRepository.findByName(name).isPresent()) {
+            throw new DataValidationException("Хэштег с названием " + name + " уже существует");
+        }
     }
 
 }
