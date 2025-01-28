@@ -32,7 +32,7 @@ public class PostController {
         return postService.publishPost(id);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/")
     public PostResponseDto updatePost(@RequestBody UpdatePostDto postDto) {
         return postService.updatePost(postDto);
     }
