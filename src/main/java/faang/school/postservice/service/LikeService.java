@@ -76,9 +76,9 @@ public class LikeService {
     }
 
     private void checkForDuplicateLike(Optional<Like> existingLike) {
-        if (existingLike.isPresent()) {
+        existingLike.ifPresent(like -> {
             throw new IllegalArgumentException(ERROR_USER_LIKED);
-        }
+        });
     }
 
     private void validatePostExists(long postId) {

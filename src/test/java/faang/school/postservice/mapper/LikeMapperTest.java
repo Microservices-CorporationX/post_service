@@ -31,7 +31,6 @@ public class LikeMapperTest {
     }
 
     @Test
-    // todo: how to check validation constraints?
     public void testToEntity_whenLikeDtoWithoutUserId_thenReturnLikeWithNullFields() {
         // Arrange
         LikeDto likeDto = new LikeDto(); // userId is not set

@@ -19,5 +19,6 @@ public interface LikeMapper {
     @Mapping(source = "userId", target = "userId")
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "comment",ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
     Like toEntity(LikeDto likeDto);
 }
