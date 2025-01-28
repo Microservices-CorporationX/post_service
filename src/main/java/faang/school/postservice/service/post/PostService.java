@@ -153,7 +153,6 @@ public class PostService {
     }
 
     public List<PostDto> getAllNonPublishedByAuthorId(long id) {
-        postValidator.validateUser(id);
         return filterNonPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
     }
 
@@ -163,18 +162,11 @@ public class PostService {
     }
 
     public List<PostDto> getAllPublishedByAuthorId(long id) {
-        postValidator.validateUser(id);
-        List<PostDto> postDtos = filterPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
-        publishPostViewEvent(postDtos);
-        publishViewPostEventToKafka(postDtos);
-        return postDtos;
+        return filterPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
     }
 
     public List<PostDto> getAllPublishedByProjectId(long id) {
-        List<PostDto> postDtos = filterPublishedPostsByTimeToDto(postRepository.findByProjectIdWithLikes(id));
-        publishPostViewEvent(postDtos);
-        publishViewPostEventToKafka(postDtos);
-        return postDtos;
+        return filterPublishedPostsByTimeToDto(postRepository.findByProjectIdWithLikes(id));
     }
 
     private List<PostDto> filterPublishedPostsByTimeToDto(List<Post> posts) {
@@ -183,18 +175,17 @@ public class PostService {
                 .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
                 .map(postMapper::toDto)
                 .toList();
+        publishPostViewEvent(postDtos);
         publishViewPostEventToKafka(postDtos);
         return postDtos;
     }
 
     private List<PostDto> filterNonPublishedPostsByTimeToDto(List<Post> posts) {
-        List<PostDto> postDtos = posts.stream()
+        return posts.stream()
                 .filter(post -> !post.isDeleted() && !post.isPublished())
                 .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
                 .map(postMapper::toDto)
                 .toList();
-        publishViewPostEventToKafka(postDtos);
-        return postDtos;
     }
 
     @Transactional

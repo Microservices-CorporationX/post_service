@@ -7,13 +7,10 @@ import faang.school.postservice.model.user.ShortUserWithAvatar;
 import faang.school.postservice.repository.user.UserCacheRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.ExecutorService;
 
 @Component
 @RequiredArgsConstructor

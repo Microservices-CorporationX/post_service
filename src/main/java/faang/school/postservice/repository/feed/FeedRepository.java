@@ -15,7 +15,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 @Slf4j
 public class FeedRepository {
-    public static final String ADD_AND_TRIM_SCRIPT = """ 
+    private static final String ADD_AND_TRIM_SCRIPT = """ 
             redis.call('ZADD', KEYS[1], ARGV[1], ARGV[2]);
             redis.call('ZREMRANGEBYRANK', KEYS[1], 0, -(tonumber(ARGV[3]) + 1));
             return 'OK';
