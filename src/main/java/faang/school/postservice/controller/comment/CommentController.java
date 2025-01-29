@@ -5,7 +5,7 @@ import faang.school.postservice.dto.comment.UpdateCommentDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.mapper.comment.UpdateCommentMapper;
 import faang.school.postservice.model.Comment;
-import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.comment.CommentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
