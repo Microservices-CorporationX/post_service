@@ -4,8 +4,10 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.LikeDto;
 import faang.school.postservice.dto.UserDto;
+import faang.school.postservice.mapper.LikeEventMapper;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.producer.KafkaLikeProducer;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.validator.LikeValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,7 +30,8 @@ public class LikeService {
     private final PostService postService;
     private final CommentService commentService;
     private final LikeMapper likeMapper;
-
+    private final KafkaLikeProducer kafkaLikeProducer;
+    private final LikeEventMapper likeEventMapper;
     public LikeDto getLikeById(long id) {
         return likeMapper.toDto(likeRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Like with id %d not found", id)))
@@ -56,7 +59,10 @@ public class LikeService {
         setLikeObject(likeDto, addedLike);
         addedLike.setCreatedAt(LocalDateTime.now());
 
-        return likeMapper.toDto(likeRepository.save(addedLike));
+        Like savedLike = likeRepository.save(addedLike);
+        kafkaLikeProducer.sendLikeEvent(likeEventMapper.toDto(savedLike));
+
+        return likeMapper.toDto(savedLike);
     }
 
     public void deleteLike(LikeDto likeDto) {

@@ -1,9 +1,13 @@
 package faang.school.postservice.service.comment;
 
 import faang.school.postservice.dto.CommentDto;
+import faang.school.postservice.events.CommentEvent;
+import faang.school.postservice.mapper.CommentEventMapper;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaCommentProducer;
+import faang.school.postservice.redis.service.AuthorCacheService;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validator.comment.CommentServiceValidator;
@@ -17,14 +21,13 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
-
     private final CommentRepository commentRepository;
-
     private final CommentMapper commentMapper;
-
     private final CommentServiceValidator validator;
-
     private final PostService postService;
+    private final AuthorCacheService authorCacheService;
+    private final KafkaCommentProducer kafkaCommentProducer;
+    private final CommentEventMapper commentEventMapper;
 
     @Override
     public CommentDto createComment(CommentDto commentDto) {
@@ -35,8 +38,11 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = commentMapper.toEntity(commentDto);
         comment.setPost(post);
+        CommentEvent commentEvent = commentEventMapper.toDto(commentRepository.save(comment));
+        authorCacheService.saveAuthorCache(commentEvent.getAuthorId());
+        kafkaCommentProducer.sendCommentEvent(commentEvent);
 
-        return commentMapper.toDto(commentRepository.save(comment));
+        return commentDto;
     }
 
     @Override

@@ -1,4 +1,28 @@
 spring:
+  kafka:
+    bootstrap-servers: localhost:29092
+    partitions-count: 1
+    replicas-count: 1
+    topic-name:
+      like-topic: like_topic
+      comment-topic: comment_topic
+      posts-topic: posts_topic
+      views-topic: views_topic
+    consumer:
+      group-id: default-consumer-group
+
+    listener:
+      topics:
+        views-topic:
+          group-id: view-group
+        like-topic:
+          group-id: like-group
+        comment-topic:
+          group-id: comment_group
+        posts-topic:
+          group-id: posts_group
+
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -31,6 +55,13 @@ spring:
           name: calculations_channel
         ban_user_topic:
           name: user_ban
+      post-cache:
+        key-prefix: postCache
+        views: views
+        likes: likes
+        comments: comments
+        comment-end-index: 3
+        feed-end-index: 500
 
 server:
   port: 8081
@@ -52,6 +83,7 @@ payment-service:
 schedule:
   banUser:
     cron: 0 0 * * * *
+
 services:
   s3:
     endpoint: http://127.0.0.1:9000
@@ -60,3 +92,4 @@ services:
     bucketName: corpbucket
     isMocked: true
     region: Monte
+
