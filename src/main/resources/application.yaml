@@ -39,6 +39,11 @@ spring:
         ad-bought-channel:
           name: ad_bought_channel
 
+    kafka:
+      bootstrap-servers: "localhost:9092"
+      topic:
+        posts: "posts"
+
   task:
     execution:
       pool:
@@ -46,6 +51,7 @@ spring:
         max-size: 10
         queue-capacity: 500
       thread-name-prefix: async-worker-thread- # префикс для имен потоков
+
   scheduler:
     comment:
       moderator:
