@@ -6,6 +6,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaCommentProducer;
 import faang.school.postservice.publisher.comment.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
@@ -38,6 +39,8 @@ class CommentServiceTest {
     CommentMapper commentMapper;
     @Mock
     CommentEventPublisher commentEventPublisher;
+    @Mock
+    KafkaCommentProducer kafkaCommentProducer;
     @InjectMocks
     CommentService commentService;
 
@@ -56,6 +59,7 @@ class CommentServiceTest {
         commentService.createComment(commentDto);
         Mockito.verify(commentRepository, times(1)).save(any());
         Mockito.verify(commentEventPublisher, times(1)).publish(any());
+        Mockito.verify(kafkaCommentProducer, times(1)).sendMessage(any());
     }
 
     @Test

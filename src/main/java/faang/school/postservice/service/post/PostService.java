@@ -13,6 +13,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.RedisPostRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.validator.post.PostValidator;
@@ -49,6 +50,7 @@ public class PostService {
     private final ResourceService resourceService;
     private final ImageResizeService imageResizeService;
     private final UserBanPublisher userBanPublisher;
+    private final RedisPostRepository redisPostRepository;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -67,7 +69,11 @@ public class PostService {
         postDto.setUpdatedAt(LocalDateTime.now());
 
         Post post = postMapper.toEntity(postDto);
-        return postMapper.toDto(postRepository.save(post));
+        post = postRepository.save(post);
+
+        redisPostRepository.savePost(postDto);
+
+        return postMapper.toDto(post);
     }
 
     public PostDto publish(long postId) {
