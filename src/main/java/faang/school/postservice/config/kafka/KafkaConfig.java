@@ -1,13 +1,11 @@
 package faang.school.postservice.config.kafka;
 
-import faang.school.postservice.event.PostPublishedEvent;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -31,21 +29,7 @@ import java.util.Map;
 @EnableKafka
 @RequiredArgsConstructor
 public class KafkaConfig {
-
-    @Value("${spring.kafka.topics.post-channel.partitions}")
-    private int partitions;
-
-    @Value("${spring.kafka.topics.post-channel.replicasCount}")
-    private int replicasCount;
-
-    @Value("${spring.kafka.topics.post-channel.min-insync-replicas}")
-    private String minInsyncReplicas;
-
-    @Value("${spring.kafka.topics.post-channel.name}")
-    private String postChannel;
-
     private final Environment environment;
-
 
     @Bean
     ProducerFactory<String, Object> producerFactory() {
@@ -69,6 +53,11 @@ public class KafkaConfig {
     }
 
     @Bean
+    KafkaTemplate<String, Object> kafkaTemplate() {
+        return new KafkaTemplate<>(producerFactory());
+    }
+
+    @Bean
     ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,
@@ -83,32 +72,38 @@ public class KafkaConfig {
     }
 
     @Bean
-    KafkaTemplate<String, Object> kafkaTemplate() {
-        return new KafkaTemplate<>(producerFactory());
-    }
-
-    @Bean
-    ConcurrentKafkaListenerContainerFactory<String, PostPublishedEvent> kafkaListenerContainerFactory(
+    ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
             ConsumerFactory<String, Object> consumerFactory
     ) {
-        ConcurrentKafkaListenerContainerFactory<String, PostPublishedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
-        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL);
         return factory;
-    }
-
-    @Bean
-    NewTopic postKafkaTopic() {
-        return TopicBuilder
-                .name(postChannel)
-                .partitions(partitions)
-                .replicas(replicasCount)
-                .configs(Map.of("min.insync.replicas", minInsyncReplicas))
-                .build();
     }
 
     @Bean
     public DeadLetterPublishingRecoverer deadLetterRecoverer(KafkaTemplate<?, ?> template) {
         return new DeadLetterPublishingRecoverer(template);
+    }
+
+    @Bean
+    NewTopic postKafkaTopic() {
+        return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.post-published"));
+    }
+
+    @Bean
+    NewTopic postViewKafkaTopic() {
+        return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.post-view"));
+    }
+
+    private NewTopic topicBuilder(String topicName) {
+        return TopicBuilder
+                .name(topicName)
+                .partitions(Integer.parseInt(environment.getRequiredProperty("spring.kafka.topics.partitions")))
+                .replicas(Integer.parseInt(environment.getRequiredProperty("spring.kafka.topics.replicasCount")))
+                .configs(Map.of(
+                        "min.insync.replicas",
+                        environment.getRequiredProperty("spring.kafka.topics.min-insync-replicas")))
+                .build();
     }
 }

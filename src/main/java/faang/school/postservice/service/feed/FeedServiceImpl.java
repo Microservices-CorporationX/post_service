@@ -1,7 +1,6 @@
 package faang.school.postservice.service.feed;
 
 import faang.school.postservice.exception.RedisTransactionFailedException;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +18,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FeedServiceImpl implements FeedService {
     private final RedisTemplate<String, Object> redisLettuceTemplate;
-    private RedisScript<Long> feedUpdateScript;
 
     @Value("${spring.data.redis.prefix-feeds}")
     private String prefixFeed;
@@ -30,27 +28,24 @@ public class FeedServiceImpl implements FeedService {
     @Value("${spring.data.redis.ttl-feeds}")
     private int ttl;
 
-    @PostConstruct
-    public void init() {
-        feedUpdateScript = RedisScript.of(
-                """
-                        local key = KEYS[1]
-                        local postId = ARGV[1]
-                        local ttlSeconds = ARGV[2]
-                        local maxFeeds = tonumber(ARGV[3])
-                        local score = tonumber(ARGV[4])
-                        redis.call('ZADD', key, score, postId)
-                        redis.call('EXPIRE', key, ttlSeconds)
-                        local count = redis.call('ZCARD', key)
-                        if count > maxFeeds then
-                           local removeCount = count - maxFeeds
-                           redis.call('ZREMRANGEBYRANK', key, 0, removeCount - 1)
-                        end
-                        return 1
-                        """,
-                Long.class
-        );
-    }
+    private static final RedisScript<Long> FEED_UPDATE_SCRIPT = RedisScript.of(
+            """
+                    local key = KEYS[1]
+                    local postId = ARGV[1]
+                    local ttlSeconds = ARGV[2]
+                    local maxFeeds = tonumber(ARGV[3])
+                    local score = tonumber(ARGV[4])
+                    redis.call('ZADD', key, score, postId)
+                    redis.call('EXPIRE', key, ttlSeconds)
+                    local count = redis.call('ZCARD', key)
+                    if count > maxFeeds then
+                        local removeCount = count - maxFeeds
+                        redis.call('ZREMRANGEBYRANK', key, 0, removeCount - 1)
+                    end
+                    return 1
+                    """,
+            Long.class
+    );
 
     @Retryable(
             maxAttempts = 3,
@@ -61,18 +56,14 @@ public class FeedServiceImpl implements FeedService {
         String key = prefixFeed + followerId;
         long currentTime = System.currentTimeMillis();
         List<String> keys = Collections.singletonList(key);
-        Object[] args = {
-                postId.toString(),
-                ttl * 86400,
-                maxFeeds,
-                currentTime,
-        };
-
         try {
             Long result = redisLettuceTemplate.execute(
-                    feedUpdateScript,
+                    FEED_UPDATE_SCRIPT,
                     keys,
-                    args
+                    postId,
+                    ttl * 86400,
+                    maxFeeds,
+                    currentTime
             );
             if (result == null || result != 1) {
                 throw new RedisTransactionFailedException(

@@ -42,8 +42,8 @@ spring:
           name: ad_bought_channel
         post-channel:
           name: post_channel
-      key-hash-users: users
-      key-hash-posts: posts
+      prefix-users: users
+      prefix-posts: posts
       prefix-feeds: feeds
       max-feeds: 500
       ttl-users: 1
@@ -54,6 +54,7 @@ spring:
   kafka:
     producer:
       bootstrap-servers: localhost:9092, localhost:9094
+      group-id: feed
       retries: 10
       acks: all
       properties:
@@ -64,16 +65,16 @@ spring:
         max-in-flight-requests-per-connection: 5
     consumer:
       bootstrap-servers: localhost:9092, localhost:9094
-      group-id: post-published-events
+      group-id: feed
       properties:
         spring.json.value.default.type: "faang.school.postservice.event"
-        spring.json.trusted.packages: "faang.school.postservice"
+        spring.json.trusted.packages: "faang.school.postservice, faang.school.postservice.event"
     topics:
-      post-channel:
-        name: post-published-events-topic
-        partitions: 3
-        replicasCount: 3
-        min-insync-replicas: 2
+      post-published: post-published-events-topic
+      post-view: post-view-events-topic
+      partitions: 3
+      replicasCount: 3
+      min-insync-replicas: 2
 
   task:
     execution:

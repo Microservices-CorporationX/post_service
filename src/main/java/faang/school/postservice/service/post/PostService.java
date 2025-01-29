@@ -165,7 +165,9 @@ public class PostService {
     }
 
     public PostResponseDto getPost(@Positive long postId) {
-        return postMapper.toDtoFromPost(getPostById(postId));
+        PostResponseDto postDto = postMapper.toDtoFromPost(getPostById(postId));
+        kafkaService.sendPostViewEvent(postId);
+        return postDto;
     }
 
     public boolean existsPost(Long postId) {
