@@ -93,8 +93,8 @@ public class PostController {
 
     @GetMapping("/not-published-posts-by-user/{user-id}")
     public ResponseEntity<List<ResponsePostDto>> getNotPublishedPostsByUser(
-            @PathVariable("user-id") final Long userId
-    ) {
+            @PathVariable("user-id") final Long userId) {
+
         final List<Post> notPublishedPosts = postService.getNotPublishedPostsByUser(userId);
         List<ResponsePostDto> responsePostDtos = postMapper.toDto(notPublishedPosts);
 
@@ -103,8 +103,8 @@ public class PostController {
 
     @GetMapping("/not-published-posts/{project-id}")
     public ResponseEntity<List<ResponsePostDto>> getNotPublishedPostsByProject(
-            @PathVariable("project-id") final Long projectId
-    ) {
+            @PathVariable("project-id") final Long projectId) {
+
         final List<Post> notPublishedPosts = postService.getNotPublishedPostsByProject(projectId);
         List<ResponsePostDto> responsePostDtos = postMapper.toDto(notPublishedPosts);
 
@@ -113,8 +113,8 @@ public class PostController {
 
     @GetMapping("/published-posts-by-user/{user-id}")
     public ResponseEntity<List<ResponsePostDto>> getPublishedPostsByUser(
-            @PathVariable("user-id") final Long userId
-    ) {
+            @PathVariable("user-id") final Long userId) {
+
         final List<Post> notPublishedPosts = postService.getPublishedPostsByUser(userId);
         List<ResponsePostDto> responsePostDtos = postMapper.toDto(notPublishedPosts);
 
@@ -123,8 +123,8 @@ public class PostController {
 
     @GetMapping("/published-posts/{project-id}")
     public ResponseEntity<List<ResponsePostDto>> getPublishedPostsByProject(
-            @PathVariable("project-id") final Long projectId
-    ) {
+            @PathVariable("project-id") final Long projectId) {
+
         final List<Post> notPublishedPosts = postService.getPublishedPostsByProject(projectId);
         List<ResponsePostDto> responsePostDtos = postMapper.toDto(notPublishedPosts);
 
