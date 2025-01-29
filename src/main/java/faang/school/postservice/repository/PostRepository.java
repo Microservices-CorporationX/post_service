@@ -31,4 +31,22 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.verified = FALSE")
     Optional<List<Post>> findNotVerifiedPots();
+
+    @Query(nativeQuery = true, value = """
+            SELECT p.* FROM post p
+            JOIN subscription s ON s.followee_id = p.author_id
+            WHERE follower_id = :userId AND published_at < (SELECT published_at FROM post WHERE id = :lastPostId)
+            ORDER BY published_at DESC
+            LIMIT :limit
+            """)
+    List<Post> findPostsForFeed(long lastPostId, long userId, int limit);
+
+    @Query(nativeQuery = true, value = """
+            SELECT p.* FROM post p
+            JOIN subscription s ON s.followee_id = p.author_id
+            WHERE follower_id = :userId
+            ORDER BY published_at DESC
+            LIMIT :limit
+            """)
+    List<Post> findLatestPostsForFeed(long userId, int limit);
 }

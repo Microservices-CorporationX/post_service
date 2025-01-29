@@ -10,9 +10,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 @Repository
 @RequiredArgsConstructor
@@ -48,5 +50,23 @@ public class CommentCacheRepository {
             log.error("Could not serialize CommentCache to json", e);
             throw new IllegalStateException("Could not serialize CommentCache to json");
         }
+    }
+
+    public List<CommentCache> getCommentsForPost(long postId) {
+        String key = feedCollectionName + ":" + postId;
+        Set<String> cachedComments = redisTemplate.opsForZSet().range(key, 0, -1);
+        if (cachedComments == null || cachedComments.isEmpty()) {
+            return List.of();
+        }
+        List<CommentCache> comments = new ArrayList<>();
+        for (String commentJson : cachedComments) {
+            try {
+                CommentCache comment = objectMapper.readValue(commentJson, CommentCache.class);
+                comments.add(comment);
+            } catch (JsonProcessingException e) {
+                log.error("Could not deserialize CommentCache from json", e);
+            }
+        }
+        return comments;
     }
 }
