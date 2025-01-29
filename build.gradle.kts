@@ -32,6 +32,17 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     /**
+     * S3
+     */
+    implementation("software.amazon.awssdk:s3:2.17.89")
+    implementation("software.amazon.awssdk:netty-nio-client:2.17.89")
+    implementation("software.amazon.awssdk:url-connection-client:2.17.89")
+    implementation("software.amazon.awssdk:regions:2.17.89")
+    implementation("software.amazon.awssdk:credentials:2.17.89")
+    implementation ("net.coobird:thumbnailator:0.4.14")
+
+
+    /**
      * Utils & Logging
      */
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
