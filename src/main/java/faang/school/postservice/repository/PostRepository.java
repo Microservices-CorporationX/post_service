@@ -26,6 +26,4 @@ public interface PostRepository extends CrudRepository<Post, Long> {
             + "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
 
-    boolean existsById(long id);
-
 }

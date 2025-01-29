@@ -1,5 +1,6 @@
 package faang.school.postservice;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -19,8 +20,9 @@ public class ApplicationContextTest {
         System.setProperty("spring.datasource.password", postgres.getPassword());
     }
 
-  /*  @Test
+    @Test
+    @Disabled
     void contextLoads() {
 
-    }*/
+    }
 }
