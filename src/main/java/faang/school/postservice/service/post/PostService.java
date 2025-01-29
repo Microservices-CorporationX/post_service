@@ -121,6 +121,10 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
+    public void savePost(Post post) {
+        postRepository.save(post);
+    }
+
     private void doesUserExist(Long userId) {
         try {
             userServiceClient.getUser(userId);
