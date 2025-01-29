@@ -24,7 +24,6 @@ public interface PostMapper {
     @Mapping(target = "resources", ignore = true)
     @Mapping(target = "published", ignore = true)
     @Mapping(target = "publishedAt", ignore = true)
-    @Mapping(target = "scheduledAt", ignore = true)
     @Mapping(target = "deleted", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import java.time.LocalDateTime;
+
 public record PostDto(
         @Min(1)
         Long id,
@@ -14,5 +16,6 @@ public record PostDto(
         Long userId,
         @Min(1)
         Long projectId,
+        LocalDateTime scheduledAt,
         int likesCount) {
 }

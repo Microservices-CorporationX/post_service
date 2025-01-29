@@ -29,7 +29,7 @@ public class PostMapperTest {
 
     @Test
     void toEntity_ShouldMapPostDtoToPost() {
-        PostDto postDto = new PostDto( 1L,"Test Content", 10L, 20L, 1);
+        PostDto postDto = new PostDto(1L, "Test Content", 10L, 20L, null, 1);
         Post post = postMapper.toEntity(postDto);
 
         assertNotNull(post);

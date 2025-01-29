@@ -1,13 +1,14 @@
-package faang.school.postservice.mapper;
+package faang.school.postservice.mapper.like;
 
 import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.model.Like;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring")
+
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface LikeMapper {
-
     @Mapping(source = "id", target = "id")
     @Mapping(source = "userId", target = "userId")
     @Mapping(source = "post.id", target = "postId")
@@ -19,6 +20,5 @@ public interface LikeMapper {
     @Mapping(source = "userId", target = "userId")
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "comment",ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
     Like toEntity(LikeDto likeDto);
 }

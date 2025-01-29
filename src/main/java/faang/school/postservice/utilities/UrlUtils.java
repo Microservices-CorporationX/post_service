@@ -16,6 +16,6 @@ public class UrlUtils {
     public static final String IMAGE = "/image";
     public static final String ALL = "/all";
     public static final String LIKE = "/like";
-    public static final String COMMENT = "/comments";
+    public static final String COMMENT = "/comment";
     public static final String COMMENT_ID = "/{commentId}";
 }
