@@ -1,14 +1,18 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.CommentDto;
+import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validator.comment.CommentServiceValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -16,6 +20,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
@@ -26,6 +31,9 @@ public class CommentServiceImpl implements CommentService {
 
     private final PostService postService;
 
+    private final UserCacheRepository userCacheRepository;
+    private final UserServiceClient userServiceClient;
+
     @Override
     public CommentDto createComment(CommentDto commentDto) {
         validator.validateCreateComment(commentDto);
@@ -35,8 +43,17 @@ public class CommentServiceImpl implements CommentService {
 
         Comment comment = commentMapper.toEntity(commentDto);
         comment.setPost(post);
+        Comment storedComment = commentRepository.save(comment);
 
-        return commentMapper.toDto(commentRepository.save(comment));
+        saveUserToCache(comment.getAuthorId());
+
+        return commentMapper.toDto(storedComment);
+    }
+
+    private void saveUserToCache(long userId) {
+        UserDto userDto = userServiceClient.getUserById(userId);
+        log.info("Saving user %s to cache when comment made = {}", userDto);
+        userCacheRepository.cacheUser(userDto);
     }
 
     @Override

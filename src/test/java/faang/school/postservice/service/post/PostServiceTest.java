@@ -2,6 +2,7 @@ package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.UserDto;
 import faang.school.postservice.dto.filter.FilterDto;
 import faang.school.postservice.dto.PostDto;
 import faang.school.postservice.events.BanUserEvent;
@@ -12,6 +13,7 @@ import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.RedisBanMessagePublisher;
+import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
@@ -39,6 +41,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,6 +61,8 @@ class PostServiceTest {
     private CommentService commentService;
     @Spy
     private ProjectServiceClient projectServiceClient;
+    @Mock
+    private UserCacheRepository userCacheRepository;
 
     @Spy
     private PostMapperImpl postMapper;
@@ -91,7 +96,8 @@ class PostServiceTest {
                 projectServiceClient,
                 sort,
                 commentService,
-                redisBanMessagePublisher
+                redisBanMessagePublisher,
+                userCacheRepository
         );
     }
 
@@ -170,8 +176,11 @@ class PostServiceTest {
 
     @Test
     void testSuccessfulPublishPost() {
+        long userId = 1L;
         post.setPublished(false);
+        post.setAuthorId(userId);
         when(postRepository.findById(4L)).thenReturn(Optional.of(post));
+        when(userServiceClient.getUserById(userId)).thenReturn(any(UserDto.class));
 
         postService.publishPost(4L);
         verify(postRepository).save(postCaptor.capture());

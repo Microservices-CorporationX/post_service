@@ -1,14 +1,15 @@
 package faang.school.postservice.service.comment;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.CommentDto;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.validator.comment.CommentServiceValidator;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mapstruct.factory.Mappers;
@@ -25,8 +26,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CommentServiceImplTest {
@@ -43,21 +50,34 @@ class CommentServiceImplTest {
     @Mock
     private PostService postService;
 
+    @Mock
+    private UserCacheRepository userCacheRepository;
+
+    @Mock
+    private UserServiceClient userServiceClient;
+
     @InjectMocks
     private CommentServiceImpl commentService;
 
     @Test
-    void createCommentSuccess() {
+    public void createCommentSuccess() {
+        long userId = 1L;
         CommentDto commentDto = getCommentDto();
         Comment comment = commentMapper.toEntity(commentDto);
-        comment.setPost(new Post());
+        comment.setAuthorId(userId);
+        Post post = new Post();
+        post.setId(1L);
+        post.setAuthorId(userId);
+        comment.setPost(post);
+        when(commentRepository.save(any(Comment.class))).thenReturn(comment);
+        when(postService.findPostById(anyLong())).thenReturn(Optional.of(post));
 
-        Mockito.lenient().when(postService.findPostById(Mockito.anyLong())).thenReturn(Optional.of(new Post()));
+        CommentDto savedComment = commentService.createComment(commentDto);
 
-        commentService.createComment(commentDto);
-
-        Mockito.verify(validator).validateCreateComment(getCommentDto());
-        Mockito.verify(commentRepository).save(comment);
+        assertNotNull(savedComment);
+        assertEquals(commentDto.getId(), savedComment.getId());
+        verify(commentRepository, times(1)).save(comment);
+        verify(userServiceClient, times(1)).getUserById(1L);
     }
 
     @Test
