@@ -16,11 +16,9 @@ import java.util.List;
 public interface PostMapper {
 
     @Mapping(source = "likes", target = "likeIds")
-    @Mapping(source = "comments", target = "commentIds")
     PostDto toDto(Post post);
 
     @Mapping(source = "likeIds", target = "likes")
-    @Mapping(source = "commentIds", target = "comments")
     Post toEntity(PostDto postDto);
 
     @Mapping(target = "id" , ignore = true)

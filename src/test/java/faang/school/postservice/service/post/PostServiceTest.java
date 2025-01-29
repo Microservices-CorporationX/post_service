@@ -13,6 +13,7 @@ import faang.school.postservice.mapper.PostMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.RedisBanMessagePublisher;
+import faang.school.postservice.redis.repository.PostCacheRepository;
 import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.CommentService;
@@ -63,6 +64,8 @@ class PostServiceTest {
     private ProjectServiceClient projectServiceClient;
     @Mock
     private UserCacheRepository userCacheRepository;
+    @Mock
+    private PostCacheRepository postCacheRepository;
 
     @Spy
     private PostMapperImpl postMapper;
@@ -97,7 +100,8 @@ class PostServiceTest {
                 sort,
                 commentService,
                 redisBanMessagePublisher,
-                userCacheRepository
+                userCacheRepository,
+                postCacheRepository
         );
     }
 
