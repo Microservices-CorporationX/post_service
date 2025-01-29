@@ -2,6 +2,7 @@ package faang.school.postservice.service.kafka;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.event.PostLikeEvent;
 import faang.school.postservice.event.PostPublishedEvent;
 import faang.school.postservice.event.PostViewEvent;
 import faang.school.postservice.model.Post;
@@ -22,6 +23,7 @@ public class KafkaServiceImpl implements KafkaService {
     private final UserServiceClient userServiceClient;
     private final KafkaPublisher<PostPublishedEvent> kafkaPostProducer;
     private final KafkaPublisher<PostViewEvent> kafkaPostViewProducer;
+    private final KafkaPublisher<PostLikeEvent> kafkaLikeProducer;
     private final UserContext userContext;
 
     @Async("executorKafkaSend")
@@ -46,8 +48,8 @@ public class KafkaServiceImpl implements KafkaService {
     }
 
     @Override
-    public void sendLikeEvent() {
-        //TODO
+    public void sendLikeEvent(Long postId, Long userId) {
+        kafkaLikeProducer.publish(new PostLikeEvent(postId, userId));
     }
 
     @Override

@@ -9,4 +9,6 @@ public interface RedisCacheService {
     void saveUser(UserNFDto user);
 
     void incrementPostViews(Long postId);
+
+    void incrementLike(Long postId);
 }

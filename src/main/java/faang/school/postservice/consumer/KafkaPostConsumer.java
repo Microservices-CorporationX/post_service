@@ -15,7 +15,7 @@ public class KafkaPostConsumer {
     private final FeedService feedService;
 
     @KafkaListener(topics = "${spring.kafka.topics.post-published}")
-    public void consume(PostPublishedEvent event, Acknowledgment ack) {
+    public void listen(PostPublishedEvent event, Acknowledgment ack) {
         log.info("Received post published event from Kafka: {}", event);
         try {
             event.getFollowersId().forEach(followerId -> {

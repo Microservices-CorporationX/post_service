@@ -18,6 +18,6 @@ public class KafkaPostProducer implements KafkaPublisher<PostPublishedEvent> {
     @Override
     public void publish(PostPublishedEvent event) {
         kafkaTemplate.send(postKafkaTopic.name(), event);
-        log.info("Post published event was sent to Kafka topic: {}", event.getPostId());
+        log.info("Post published event was sent to Kafka topic {}: {}", postKafkaTopic.name(), event.getPostId());
     }
 }

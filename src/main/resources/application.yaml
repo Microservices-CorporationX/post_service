@@ -72,6 +72,7 @@ spring:
     topics:
       post-published: post-published-events-topic
       post-view: post-view-events-topic
+      like: like-events-topic
       partitions: 3
       replicasCount: 3
       min-insync-replicas: 2

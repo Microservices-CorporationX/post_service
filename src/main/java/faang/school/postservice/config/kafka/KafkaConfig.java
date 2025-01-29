@@ -96,6 +96,11 @@ public class KafkaConfig {
         return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.post-view"));
     }
 
+    @Bean
+    NewTopic likeKafkaTopic(){
+        return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.like"));
+    }
+
     private NewTopic topicBuilder(String topicName) {
         return TopicBuilder
                 .name(topicName)

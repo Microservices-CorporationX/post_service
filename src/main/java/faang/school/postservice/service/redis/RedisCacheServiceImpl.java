@@ -24,23 +24,43 @@ public class RedisCacheServiceImpl implements RedisCacheService {
     private final Environment environment;
     private final RedisTemplate<String, Object> redisTemplate;
 
-    private static final RedisScript<Long> INCREMENT_VIEWS_SCRIPT = RedisScript.of(
+    private static final RedisScript<Long> INCREMENT_VIEWS_POST_SCRIPT = RedisScript.of(
             """
-            local key = KEYS[1]
-            local ttl = tonumber(ARGV[1])
-            
-            local post = redis.call('GET', key)
-            if not post then
-                return 0
-            end
-            
-            local postObj = cjson.decode(post)
-            postObj.views = postObj.views + 1
-            redis.call('SET', key, cjson.encode(postObj))
-            redis.call('EXPIRE', key, ttl)
-            
-            return postObj.views
-            """,
+                    local key = KEYS[1]
+                    local ttl = tonumber(ARGV[1])
+                                
+                    local post = redis.call('GET', key)
+                    if not post then
+                        return 0
+                    end
+                                
+                    local postObj = cjson.decode(post)
+                    postObj.views = postObj.views + 1
+                    redis.call('SET', key, cjson.encode(postObj))
+                    redis.call('EXPIRE', key, ttl)
+                                
+                    return postObj.views
+                    """,
+            Long.class
+    );
+
+    private static final RedisScript<Long> INCREMENT_LIKES_POST_SCRIPT = RedisScript.of(
+            """
+                    local key = KEYS[1]
+                    local ttl = tonumber(ARGV[1])
+                                
+                    local post = redis.call('GET', key)
+                    if not post then
+                        return 0
+                    end
+                                
+                    local postObj = cjson.decode(post)
+                    postObj.likes = postObj.likes + 1
+                    redis.call('SET', key, cjson.encode(postObj))
+                    redis.call('EXPIRE', key, ttl)
+                                
+                    return postObj.views
+                    """,
             Long.class
     );
 
@@ -74,7 +94,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
         int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
         try {
             Long updatedViews = redisTemplate.execute(
-                    INCREMENT_VIEWS_SCRIPT,
+                    INCREMENT_VIEWS_POST_SCRIPT,
                     Collections.singletonList(key),
                     ttl
             );
@@ -83,6 +103,33 @@ public class RedisCacheServiceImpl implements RedisCacheService {
                 log.warn("Post {} not found in Redis", postId);
             } else {
                 log.info("Updated views for post {}: {}", postId, updatedViews);
+            }
+        } catch (RedisTransactionFailedException e) {
+            log.error("Redis transaction failed", e);
+            throw e;
+        }
+    }
+
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2),
+            retryFor = RedisTransactionFailedException.class
+    )
+    @Override
+    public void incrementLike(Long postId) {
+        String key = environment.getRequiredProperty("spring.data.redis.prefix-posts") + postId;
+        int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
+        try {
+            Long updatedLikes = redisTemplate.execute(
+                    INCREMENT_LIKES_POST_SCRIPT,
+                    Collections.singletonList(key),
+                    ttl
+            );
+
+            if (updatedLikes == null || updatedLikes == 0) {
+                log.warn("Post {} not found in Redis", postId);
+            } else {
+                log.info("Updated likes for post {}: {}", postId, updatedLikes);
             }
         } catch (RedisTransactionFailedException e) {
             log.error("Redis transaction failed", e);

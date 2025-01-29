@@ -1,6 +1,6 @@
 package faang.school.postservice.consumer;
 
-import faang.school.postservice.event.PostViewEvent;
+import faang.school.postservice.event.PostLikeEvent;
 import faang.school.postservice.service.redis.RedisCacheService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,17 +11,17 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class KafkaPostViewConsumer {
+public class KafkaLikeConsumer {
     private final RedisCacheService redisCacheService;
 
-    @KafkaListener(topics="${spring.kafka.topics.post-view}")
-    public void listen(PostViewEvent event, Acknowledgment ack) {
-        log.info("Received post view event: {}", event);
+    @KafkaListener(topics = "${spring.kafka.topics.like}")
+    public void listen(PostLikeEvent event, Acknowledgment ack) {
+        log.info("Received like event: {}", event);
         try {
-            redisCacheService.incrementPostViews(event.getPostId());
+            redisCacheService.incrementLike(event.getPostId());
             ack.acknowledge();
         } catch (Exception e) {
-            log.error("Error while updating post view", e);
+            log.error("Error while processing like event: {}", event, e);
             throw e;
         }
     }
