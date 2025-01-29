@@ -38,6 +38,7 @@ public class FeedRedisRepository {
     }
 
     public List<String> getPostIdsFromCache(String userId, String postId) {
+        log.info("Fetching posts from Redis for user with ID: {}", userId);
         List<String> postIds = redisTemplate.opsForValue().get(userId);
 
         if (postIds == null || postIds.isEmpty()) {
