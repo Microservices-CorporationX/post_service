@@ -33,7 +33,6 @@ public class KafkaServiceImpl implements KafkaService {
         }
         PostPublishedEvent event = PostPublishedEvent.builder()
                 .postId(post.getId())
-                .authorId(post.getAuthorId())
                 .followersId(followerIds)
                 .build();
         kafkaPostProducer.publish(event);

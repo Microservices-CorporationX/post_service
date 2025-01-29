@@ -44,17 +44,16 @@ spring:
           name: post_channel
       key-hash-users: users
       key-hash-posts: posts
-      key-hash-feeds: feeds
+      prefix-feeds: feeds
       max-feeds: 500
       ttl-users: 1
       ttl-posts: 1
+      ttl-feeds: 1
 
 
   kafka:
     producer:
       bootstrap-servers: localhost:9092, localhost:9094
-#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       retries: 10
       acks: all
       properties:
@@ -65,15 +64,10 @@ spring:
         max-in-flight-requests-per-connection: 5
     consumer:
       bootstrap-servers: localhost:9092, localhost:9094
-#      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       group-id: post-published-events
       properties:
-        spring:
-          json:
-            trusted:
-              packages: "*"
-#              packages: faang.school.postservice
+        spring.json.value.default.type: "faang.school.postservice.event"
+        spring.json.trusted.packages: "faang.school.postservice"
     topics:
       post-channel:
         name: post-published-events-topic
