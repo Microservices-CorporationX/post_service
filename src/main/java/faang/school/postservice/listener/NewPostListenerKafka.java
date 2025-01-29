@@ -22,7 +22,8 @@ public class NewPostListenerKafka {
     private final UserRedisRepository userRedisRepository;
 
     @KafkaListener(groupId = "posts-group", topics = "posts",
-                   containerFactory = "postsKafkaListenerContainerFactory")
+                   containerFactory = "postsKafkaListenerContainerFactory",
+                   concurrency = "3")
     public void listener(PublishedPostMessage post) {
         log.info("Received message [{}] in posts-group", post);
         cacheToPostRedis(post.getPost());
@@ -45,8 +46,7 @@ public class NewPostListenerKafka {
 
     private void cacheToFeedRedis(PublishedPostMessage post) {
         List<Long> userFollowers = post.getUserDto().getUserFollowerIds();
-        for(Long followerId : userFollowers) {
-            feedRedisRepository.save(followerId.toString(), post.getPost().getId().toString());
-        }
+        userFollowers.parallelStream().forEach(followerId ->
+                feedRedisRepository.save(followerId.toString(), post.getPost().toString()));
     }
 }
