@@ -7,6 +7,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.kafka.KafkaServiceImpl;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
@@ -27,6 +28,7 @@ public class CommentService {
     private final PostValidator postValidator;
     private final UserValidator userValidator;
     private final CommentMapper commentMapper;
+    private final KafkaServiceImpl kafkaServiceImpl;
     private final UserContext userContext;
 
     @Transactional
@@ -40,6 +42,9 @@ public class CommentService {
                         new EntityNotFoundException(String.format(CommentValidator.POST_NOT_FOUND, commentDto.getPostId())));
         comment.setPost(post);
         Comment commentSaved = commentRepository.save(comment);
+
+        kafkaServiceImpl.sendCommentEvent(commentSaved);
+
         return commentMapper.toDto(commentSaved);
     }
 
