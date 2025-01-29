@@ -1,7 +1,7 @@
 package faang.school.postservice.consumer;
 
 import faang.school.postservice.event.PostPublishedEvent;
-import faang.school.postservice.service.feed.FeedServiceImpl;
+import faang.school.postservice.service.feed.FeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -12,15 +12,15 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class KafkaPostConsumer {
-    private final FeedServiceImpl feedServiceImpl;
+    private final FeedService feedService;
 
-    @KafkaListener(topics = "${spring.kafka.topics.post-channel.name}")
+    @KafkaListener(topics = "${spring.kafka.topics.post-published}")
     public void consume(PostPublishedEvent event, Acknowledgment ack) {
         log.info("Received post published event from Kafka: {}", event);
         try {
             event.getFollowersId().forEach(followerId -> {
                         try {
-                            feedServiceImpl.bindPostToFollower(followerId, event.getPostId());
+                            feedService.bindPostToFollower(followerId, event.getPostId());
                         } catch (Exception e) {
                             log.error("Failed to process follower {} for post {}", followerId, event.getPostId(), e);
                         }

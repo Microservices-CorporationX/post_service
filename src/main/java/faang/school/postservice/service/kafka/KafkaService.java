@@ -4,7 +4,7 @@ import faang.school.postservice.model.Post;
 
 public interface KafkaService {
     void sendPostEvent(Post post, long contextUserId);
-    void sendPostViewEvent();
+    void sendPostViewEvent(Long postId);
     void sendLikeEvent();
     void sendCommentEvent();
 }
