@@ -1,5 +1,4 @@
 spring:
-
   datasource:
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -52,6 +51,8 @@ spring:
           name: user_ban_channel
         postViewChannel:
           name: post_view_channel
+  kafka:
+    bootstrapAddress: localhost:29092
 
 server:
   port: 8081
