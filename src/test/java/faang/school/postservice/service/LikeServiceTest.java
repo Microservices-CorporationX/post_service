@@ -1,6 +1,7 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.dto.like.LikeDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapperImpl;
 import faang.school.postservice.model.Like;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
@@ -40,13 +42,18 @@ public class LikeServiceTest {
     @InjectMocks
     private LikeService likeService;
 
+    private LikeDto likeDtoPost;
+    private LikeDto likeDtoComment;
     private UserDto userDto;
     private Like like;
     private List<Like> likes;
     private List<UserDto> usersDto;
 
     @BeforeEach
-    public void setUp() {
+    public void init() {
+        likeDtoPost = LikeDto.builder().postId(1L).userId(1L).build();
+        likeDtoComment = LikeDto.builder().commentId(1L).userId(1L).build();
+
         userDto = UserDto.builder()
                 .id(1L)
                 .username("name")
@@ -58,6 +65,38 @@ public class LikeServiceTest {
                 .build();
         likes = List.of(like);
         usersDto = List.of(userDto);
+    }
+
+    @Test
+    public void testCreateLikePostSuccess() {
+        Like like = likeMapperImpl.toEntity(likeDtoPost);
+        likeService.createPostLike(likeDtoPost);
+        verify(likeValidator, times(1)).validateLikeCreationParams(likeDtoPost);
+        verify(likeRepository, times(1)).save(like);
+    }
+
+    @Test
+    public void testCreateLikeCommentSuccess() {
+        Like like = likeMapperImpl.toEntity(likeDtoComment);
+        likeService.createCommentLike(likeDtoComment);
+        verify(likeValidator, times(1)).validateLikeCreationParams(likeDtoComment);
+        verify(likeRepository, times(1)).save(like);
+    }
+
+    @Test
+    public void testRemovePostLikeSuccess() {
+        Mockito.when(userService.getUserDtoById(likeDtoPost.userId())).thenReturn(UserDto.builder().build());
+        likeService.removePostLike(likeDtoPost);
+        verify(likeValidator, times(1)).checkLikeBeforeDelete(likeDtoPost);
+        verify(likeRepository, times(1)).deleteLikeByPostIdAndUserId(likeDtoPost.postId(), likeDtoPost.userId());
+    }
+
+    @Test
+    public void testRemoveCommentLikeSuccess() {
+        Mockito.when(userService.getUserDtoById(likeDtoComment.userId())).thenReturn(UserDto.builder().build());
+        likeService.removeCommentLike(likeDtoComment);
+        verify(likeValidator, times(1)).checkLikeBeforeDelete(likeDtoComment);
+        verify(likeRepository, times(1)).deleteLikeByCommentIdAndUserId(likeDtoComment.commentId(), likeDtoComment.userId());
     }
 
     @Test
