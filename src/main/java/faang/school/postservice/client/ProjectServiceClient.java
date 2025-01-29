@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
-@FeignClient(name = "project-service", url = "${project-service.host}:${project-service.port}${project-service.api-version}",
+@FeignClient(name = "project-service", url = "${project-service.host}:${project-service.port}${domain.base-path}",
         configuration = {FeignConfig.class, CustomErrorDecoder.class})
 public interface ProjectServiceClient {
     @GetMapping("/project/{projectId}")

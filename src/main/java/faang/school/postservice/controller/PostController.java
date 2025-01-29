@@ -15,7 +15,7 @@ import static faang.school.postservice.constant.PostErrorMessages.POST_CANNOT_BE
 @Validated
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${post-service.api-version}/post")
+@RequestMapping("${domain.base-path}/post")
 public class PostController {
     private final PostService postService;
 
