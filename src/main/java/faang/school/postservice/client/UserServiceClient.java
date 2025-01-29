@@ -4,13 +4,8 @@ import faang.school.postservice.dto.user.ShortUserDto;
 import faang.school.postservice.dto.user.ShortUserWithAvatarDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserFilterDto;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -28,4 +23,7 @@ public interface UserServiceClient {
 
     @PostMapping("/api/v1/subscription/followers/{followeeId}")
     List<ShortUserDto> getFollowers(@PathVariable long followeeId, @RequestBody UserFilterDto filter);
+
+    @GetMapping("/users/id")
+    List<Long> getUserIds(@RequestParam("page") long page, @RequestParam("pageSize") long pageSize);
 }

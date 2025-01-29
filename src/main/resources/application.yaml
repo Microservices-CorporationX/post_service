@@ -122,9 +122,13 @@ kafka:
       name: post-comment
       partitions: 1
       replication-factor: 1
+    heat-feed-cache:
+      name: heat-feed-cache
+      partitions: 1
+      replication-factor: 1
   listeners:
     post-listener:
-      batch-size: 2
+      batch-size: 100
 
 retry:
   maxAttempts: 3
@@ -135,6 +139,8 @@ multithreading:
     pool-size: 4
   send-events:
     pool-size: 4
+  heat-cache:
+    pool-size: 8
 
 caching:
   user:
@@ -146,6 +152,9 @@ caching:
   comment:
     collection-name: PostComments
     size: 3
+  heat:
+    page-size: 10000
+    batch-size: 100
 
 events:
   partitioning-batch: 100

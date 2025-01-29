@@ -15,6 +15,9 @@ public class MultithreadingConfig {
     @Value("${multithreading.send-events.pool-size}")
     private int sendEventsPoolSize;
 
+    @Value("${multithreading.heat-cache.pool-size}")
+    private int heatCachePoolSize;
+
     @Bean
     public ExecutorService writeToCacheThreadPool() {
         return Executors.newFixedThreadPool(writeToCachePoolSize);
@@ -23,5 +26,10 @@ public class MultithreadingConfig {
     @Bean
     public ExecutorService sendEventsThreadPool() {
         return Executors.newFixedThreadPool(sendEventsPoolSize);
+    }
+
+    @Bean
+    public ExecutorService heatCacheThreadPool() {
+        return Executors.newFixedThreadPool(heatCachePoolSize);
     }
 }

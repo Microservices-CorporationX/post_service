@@ -1,6 +1,7 @@
 package faang.school.postservice.mapper.post;
 
 import faang.school.postservice.dto.post.FeedPostDto;
+import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
@@ -24,11 +25,12 @@ public interface PostMapper {
     @Mapping(target = "comments", ignore = true)
     FeedPostDto toFeedPostDto(Post post);
 
+    PostCache toPostCache(Post post);
+
     default Long mapLike(List<Like> likes) {
         if (likes == null) {
             return 0L;
         }
         return (long) likes.size();
     }
-
 }

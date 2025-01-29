@@ -1,18 +1,18 @@
 package faang.school.postservice;
 
-import faang.school.postservice.service.post.PostService;
+import faang.school.postservice.service.feed.cache.HeaterService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-public class TestSmth {
+class TestSmth {
     @Autowired
-    private PostService postService;
+    private HeaterService heaterService;
 
     @Test
     void test1() throws Exception {
-        postService.publish(14);
+        heaterService.heatUser(1);
         Thread.sleep(3000);
     }
 }
