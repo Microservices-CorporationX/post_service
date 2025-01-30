@@ -16,6 +16,7 @@ import faang.school.postservice.publisher.RedisBanMessagePublisher;
 import faang.school.postservice.redis.repository.PostCacheRepository;
 import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.sender.async.AsyncPostEventSender;
 import faang.school.postservice.service.CommentService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.sort.PostField;
@@ -66,6 +67,8 @@ class PostServiceTest {
     private UserCacheRepository userCacheRepository;
     @Mock
     private PostCacheRepository postCacheRepository;
+    @Mock
+    private AsyncPostEventSender asyncPostEventSender;
 
     @Spy
     private PostMapperImpl postMapper;
@@ -101,7 +104,8 @@ class PostServiceTest {
                 commentService,
                 redisBanMessagePublisher,
                 userCacheRepository,
-                postCacheRepository
+                postCacheRepository,
+                asyncPostEventSender
         );
     }
 
