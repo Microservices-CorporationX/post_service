@@ -19,6 +19,10 @@ spring:
 
   data:
     redis:
+      cache:
+        time-to-live: 2
+        comment:
+          limit: 4
       port: 6379
       host: localhost
       channels:
@@ -91,3 +95,7 @@ banner:
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool: 1
+
+cache:
+  executor:
+    pool-size: 1

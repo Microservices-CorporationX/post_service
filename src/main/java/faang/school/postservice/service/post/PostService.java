@@ -1,7 +1,9 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.cache.CacheFacade;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostAuthorFilterDto;
+import faang.school.postservice.dto.post.PostCache;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
@@ -49,6 +51,7 @@ public class PostService {
     private final ResourceService resourceService;
     private final ImageResizeService imageResizeService;
     private final UserBanPublisher userBanPublisher;
+    private final CacheFacade<PostCache> postCacheFacade;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -76,7 +79,9 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+        Post createdPost = postRepository.save(post);
+        postCacheFacade.cacheWithDetails(postMapper.toCache(createdPost));
+        return postMapper.toDto(createdPost);
     }
 
     public PostDto update(PostDto postDto) {
