@@ -19,6 +19,7 @@ import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.validator.post.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -221,8 +219,17 @@ public class PostService {
     }
 
     @SneakyThrows
-    public List<Long> getLastPostIds(Long userId, int limit) {
-        return postRepository.findLast(userId, limit)
+    public List<Long> getLastFolloweePostIds(List<Long> follweeIds, int limit) {
+        return postRepository.findLastFolloweePostIds(follweeIds, limit)
                 .orElseThrow(() -> new EntityNotFoundException("Posts not found"));
+    }
+
+    @Transactional
+    public List<PostCache> getPostsByIds(@NotNull Set<Long> postIds) {
+        return postRepository.findAllByIds(postIds)
+                .orElseThrow(() -> new EntityNotFoundException("Posts by ids not found!"))
+                .stream()
+                .map(postMapper::toCache)
+                .toList();
     }
 }

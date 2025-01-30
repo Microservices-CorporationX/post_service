@@ -7,4 +7,6 @@ import java.util.List;
 public interface FeedService {
 
     List<FeedDto> heat();
+
+    FeedDto findById(String userId);
 }

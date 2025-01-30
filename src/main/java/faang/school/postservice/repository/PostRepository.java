@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface PostRepository extends CrudRepository<Post, Long> {
@@ -33,9 +34,12 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     Optional<List<Post>> findNotVerifiedPots();
 
     @Query(value = """
-            SELECT p.id FROM Post p 
-            WHERE p.authorId = :userId
+            SELECT p.id FROM Post p
+            WHERE p.authorId IN(:follweeIds)
             ORDER BY p.publishedAt desc LIMIT :limit
             """)
-    Optional<List<Long>> findLast(@Param("userId") Long userId, @Param("limit") int limit);
+    Optional<List<Long>> findLastFolloweePostIds(@Param("follweeIds") List<Long> follweeIds, @Param("limit") int limit);
+
+    @Query("SELECT p FROM Post p WHERE p.id IN (:postIds)")
+    Optional<List<Post>> findAllByIds(@Param("postIds") Set<Long> postIds);
 }
