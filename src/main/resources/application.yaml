@@ -57,6 +57,10 @@ spring:
         name: comments
         partitions: 1
         replicationFactor: 1
+      posts:
+        name: posts
+        partitions: 10
+        replicas: 3
 
 server:
   port: 8081
@@ -74,6 +78,9 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+post-event:
+  thread-pool-size: 2
 
 schedule:
   banUser:

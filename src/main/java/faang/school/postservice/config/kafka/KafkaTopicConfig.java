@@ -22,6 +22,13 @@ public class KafkaTopicConfig {
     @Value(value = "${spring.kafka.topic.comment.replicationFactor}")
     private short commentsReplicationFactor;
 
+    @Value(value = "${spring.kafka.topic.post.name}")
+    private String postTopic;
+    @Value(value = "${spring.kafka.topic.post.partitions}")
+    private int postTopicNumPartitions;
+    @Value(value = "${spring.kafka.topic.post.replicationFactor}")
+    private short postReplicationFactor;
+
     @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> configs = new HashMap<>();
@@ -32,6 +39,11 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic commentsTopic() {
         return new NewTopic(commentsTopic, commentsTopicNumPartitions, (short) commentsReplicationFactor);
+    }
+
+    @Bean
+    public NewTopic postTopic() {
+        return new NewTopic(postTopic, postTopicNumPartitions, (short) postReplicationFactor);
     }
 }
 
