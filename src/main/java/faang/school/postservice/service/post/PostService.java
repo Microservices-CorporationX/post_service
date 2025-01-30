@@ -1,7 +1,7 @@
 package faang.school.postservice.service.post;
 
-import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.config.api.SpellingConfig;
+import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
@@ -11,10 +11,12 @@ import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.cache.AuthorCacheService;
+import faang.school.postservice.service.cache.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;
-import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.s3.S3Service;
+import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.post.PostValidator;
 import faang.school.postservice.validator.resource.ResourceValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,12 +30,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -49,6 +52,8 @@ public class PostService {
     ExecutorService execute = Executors.newFixedThreadPool(10);
 
     private final ResourceService resourceService;
+    private final AuthorCacheService authorCacheService;
+    private final PostCacheService postCacheService;
     private final S3Service s3Service;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
@@ -60,6 +65,7 @@ public class PostService {
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
 
+    @Transactional
     public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
         postValidator.validateCreate(requestDto);
         Post post = postMapper.toEntity(requestDto);
@@ -84,6 +90,7 @@ public class PostService {
         return responseDto;
     }
 
+    @Transactional
     public PostResponseDto updatePost(Long postId, PostUpdateDto updateDto, List<MultipartFile> images, List<MultipartFile> audio) {
         Post post = postRepository.getPostById(postId);
 
@@ -108,6 +115,7 @@ public class PostService {
         return responseDto;
     }
 
+    @Transactional(readOnly = true)
     public PostResponseDto getPost(Long postId) {
         Post post = postRepository.getPostById(postId);
         PostResponseDto responseDto = postMapper.toDto(post);
@@ -158,8 +166,12 @@ public class PostService {
         postValidator.validatePublish(post);
         post.setPublished(true);
         post.setDeleted(false);
-
-        return postMapper.toDto(postRepository.save(post));
+        post = postRepository.save(post);
+        PostResponseDto postResponseDto = postMapper.toDto(post);
+        authorCacheService.saveAuthorCache(post.getAuthorId());
+        postCacheService.savePostCache(postResponseDto);
+        log.info("Post with id {} published ", post.getId());
+        return postResponseDto;
     }
 
     public void deletePost(Long id) {
@@ -179,6 +191,7 @@ public class PostService {
                 .orElseThrow(EntityNotFoundException::new);
     }
 
+    @Transactional
     public void checkSpelling() {
         List<Post> posts = postRepository.findByPublishedFalse();
         int sizeOfRequests = getSizeOfRequest(posts.size());

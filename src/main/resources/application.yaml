@@ -61,6 +61,12 @@ services:
     secretKey: password
     bucketName: post-bucket
 
+cache:
+  author:
+    ttl: 24
+  post:
+    ttl: 24
+
 user-service:
   host: localhost
   port: 8080

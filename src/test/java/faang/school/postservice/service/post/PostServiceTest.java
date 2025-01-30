@@ -9,6 +9,8 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.cache.AuthorCacheService;
+import faang.school.postservice.service.cache.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.util.ModerationDictionary;
@@ -61,6 +63,10 @@ public class PostServiceTest {
     private ResourceValidator resourceValidator;
     @Mock
     private ResourceService resourceService;
+    @Mock
+    private AuthorCacheService authorCacheService;
+    @Mock
+    private PostCacheService postCacheService;
     @Mock
     private List<PostFilters> postFilters;
     @Mock
@@ -186,27 +192,35 @@ public class PostServiceTest {
     @Test
     public void shouldPublishPost() {
         Long postId = 1L;
+        Long authorId = 10L;
+
         Post post = new Post();
         post.setId(postId);
         post.setPublished(false);
+        post.setAuthorId(authorId);
 
         Post updatedPost = new Post();
         updatedPost.setId(postId);
         updatedPost.setPublished(true);
+        updatedPost.setDeleted(false);
+        updatedPost.setAuthorId(authorId);
 
         PostResponseDto postDto = new PostResponseDto();
         postDto.setId(postId);
+        postDto.setAuthorId(authorId);
 
         when(postValidator.validateAndGetPostById(postId)).thenReturn(post);
         when(postRepository.save(post)).thenReturn(updatedPost);
         when(postMapper.toDto(updatedPost)).thenReturn(postDto);
-
 
         PostResponseDto result = postService.publishPost(postId);
 
         verify(postValidator).validatePublish(post);
         verify(postRepository).save(post);
         verify(postMapper).toDto(updatedPost);
+
+        verify(authorCacheService).saveAuthorCache(authorId);
+        verify(postCacheService).savePostCache(postDto);
 
         assertEquals(result.getId(), postId);
     }
