@@ -28,8 +28,8 @@ public class CommentService {
     private final ValidateService validateService;
     private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
-    private final static int SMALL_IMAGE_SIZE = 170;
-    private final static int LARGE_IMAGE_SIZE = 1080;
+    private static final int SMALL_IMAGE_SIZE = 170;
+    private static final int LARGE_IMAGE_SIZE = 1080;
     private final ImageService imageService;
 
     @Transactional
