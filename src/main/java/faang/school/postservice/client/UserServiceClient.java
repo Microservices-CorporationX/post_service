@@ -17,4 +17,7 @@ public interface UserServiceClient {
 
     @PostMapping("/api/v1/users")
     List<UserDto> getUsersByIds(@RequestBody List<Long> ids);
+
+    @GetMapping("/api/v1/subscriptions/{followeeId}/followers")
+    List<UserDto> getFollowers(@PathVariable Long followeeId);
 }

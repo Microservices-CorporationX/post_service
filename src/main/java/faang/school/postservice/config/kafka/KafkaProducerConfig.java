@@ -1,6 +1,6 @@
 package faang.school.postservice.config.kafka;
 
-import faang.school.postservice.cache_entities.PostCache;
+import faang.school.postservice.dto.kafka_events.AbstractKafkaEventDto;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,14 +15,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-public class KafkaPostProducer {
+public class KafkaProducerConfig {
     @Value(value = "${spring.kafka.port}")
     private String port;
     @Value(value = "${spring.kafka.host}")
     private String host;
 
     @Bean
-    public ProducerFactory<String, PostCache> producerFactory() {
+    public ProducerFactory<String, AbstractKafkaEventDto> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, host + ":" + port);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -31,7 +31,7 @@ public class KafkaPostProducer {
     }
 
     @Bean
-    public KafkaTemplate<String, PostCache> kafkaTemplate() {
+    public KafkaTemplate<String, AbstractKafkaEventDto> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }
