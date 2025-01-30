@@ -5,6 +5,10 @@ spring:
     username: user
     password: password
 
+  servlet:
+    multipart:
+      max-file-size: 5MB
+
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
@@ -41,3 +45,7 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+minio:
+  url: "${MINIO_URL: http://localhost:9000}"
+  user: ${MINIO_USER:user}
+  password: ${MINIO_PASSWORD:password}

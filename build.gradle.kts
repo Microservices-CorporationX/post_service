@@ -34,6 +34,12 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     /**
+     * Amazon S3
+     */
+    implementation("com.amazonaws:aws-java-sdk-s3:1.12.464")
+    implementation("io.minio:minio:8.5.17")
+
+    /**
      * Utils & Logging
      */
     implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
@@ -43,6 +49,7 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.26")
     implementation("org.mapstruct:mapstruct:1.5.3.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.3.Final")
+    implementation("net.coobird:thumbnailator:0.4.20")
 
     /**
      * Test containers
