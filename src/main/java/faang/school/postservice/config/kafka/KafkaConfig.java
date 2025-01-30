@@ -97,8 +97,13 @@ public class KafkaConfig {
     }
 
     @Bean
-    NewTopic likeKafkaTopic(){
-        return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.like"));
+    NewTopic postCommentKafkaTopic() {
+        return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.post-comment"));
+    }
+
+    @Bean
+    NewTopic postLikeKafkaTopic(){
+        return topicBuilder(environment.getRequiredProperty("spring.kafka.topics.post-like"));
     }
 
     private NewTopic topicBuilder(String topicName) {

@@ -10,13 +10,13 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class KafkaLikeProducer implements KafkaPublisher<PostLikeEvent> {
+public class KafkaPostLikeProducer implements KafkaPublisher<PostLikeEvent> {
     private final KafkaTemplate<String, Object> kafkaTemplate;
-    private final NewTopic likeKafkaTopic;
+    private final NewTopic postLikeKafkaTopic;
 
     @Override
     public void publish(PostLikeEvent event) {
-        kafkaTemplate.send(likeKafkaTopic.name(), event);
-        log.info("Like event was sent to Kafka topic {}: {} ", likeKafkaTopic.name(), event);
+        kafkaTemplate.send(postLikeKafkaTopic.name(), event);
+        log.info("Like event was sent to Kafka topic {}: {} ", postLikeKafkaTopic.name(), event);
     }
 }
