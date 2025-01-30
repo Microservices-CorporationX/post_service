@@ -3,15 +3,22 @@ package faang.school.postservice.service;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.thread.pool.ThreadPoolConfig;
+import faang.school.postservice.dto.comment.CommentForNewsFeedDto;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.PostForNewsFeedDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.dto.sightengine.textAnalysis.ModerationClasses;
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
+import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.user.UserForNewsFeedResponseDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostMapper;
+import faang.school.postservice.mapper.UserMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.cache.UserCache;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.cache.RedisUserRepository;
 import faang.school.postservice.service.moderation.ModerationDictionary;
 import faang.school.postservice.service.moderation.sightengine.ModerationVerifierFactory;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
@@ -20,6 +27,8 @@ import feign.FeignException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +50,7 @@ public class PostService {
     private final SightEngineReactiveClient sightEngineReactiveClient;
     private final ModerationDictionary moderationDictionary;
     private final ModerationVerifierFactory moderationVerifierFactory;
+    private final RedisUserRepository redisUserRepository;
 
     @Transactional
     public PostDto createPost(PostDto postDto) {
@@ -94,6 +104,11 @@ public class PostService {
         return postMapper.toDto(post);
     }
 
+    public List<PostDto> getAllPosts() {
+        log.info("Trying to get all posts");
+        return postMapper.toDto(postRepository.findAll());
+    }
+
     public List<PostDto> getAllDraftNotDeletedPostsByUserId(long userId) {
         List<Post> posts = postRepository.findByAuthorId(userId);
         log.info("Get all draft not deleted posts by user {}", userId);
@@ -116,6 +131,22 @@ public class PostService {
         List<Post> posts = postRepository.findByProjectId(projectId);
         log.info("Get all published not deleted posts by project {}", projectId);
         return getPublishedNotDeletedPostsSortedByPublishedAt(posts);
+    }
+
+    public PostForNewsFeedDto getPostForNewsFeed(long postId, long userId) {
+        log.info("Trying to get post under id {} for news feed for user under id {}", postId, userId);
+        Post post = postRepository.findByPostIdWithLikes(postId);
+        validator.validatePostIsNotNull(post, postId);
+        return postMapper.toPostForNewsFeedDto(post);
+    }
+
+    public List<PostForNewsFeedDto> getLastNPostsByUserIdStartingFromPost(long userId, int numPosts, long lastPostId) {
+        log.info("Trying to get last {} posts for user under id {}. Last viewed post id: {}", userId, numPosts, lastPostId);
+        Pageable pageable = PageRequest.of(0, numPosts);
+        Optional<UserCache> userOptional = redisUserRepository.findById(userId);
+        List<Long> followeeIds = userOptional.isEmpty() ? userServiceClient.getUserForNewsFeed(userId).followeeIds() : userOptional.get().getFolloweeIds();
+        List<Post> posts = postRepository.findLastNPostsByUserIdStartingFromPostWithLikes(followeeIds, lastPostId, pageable);
+        return postMapper.toPostForNewsFeedDto(posts);
     }
 
     private List<PostDto> getDraftNotDeletedPostsSortedByCreatedAt(List<Post> posts) {

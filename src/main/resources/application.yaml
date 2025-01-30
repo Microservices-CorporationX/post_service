@@ -30,6 +30,39 @@ spring:
         like-event-topic: likeEventTopic
         users-ban-channel:
           name: users_ban_event
+      entity:
+        post:
+          name: post
+          time-to-live: 86400
+        feed:
+          name: feed
+          max-feed-size: 500
+      lock-registry:
+        key: key
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    topic:
+      posts:
+        name: posts
+        partitions: 1
+        users-per-event: 100
+      comments:
+        name: comments
+        partitions: 1
+      likes:
+        name: likes
+        partitions: 1
+      views:
+        name: views
+        partitions: 1
+      heat:
+        name: heat
+        partitions: 1
+        posts-per-thread: 100
+    consumer:
+      group-id: news-feed-events
+      trusted-packages: "*"
 
   task:
     scheduling:
@@ -88,6 +121,8 @@ thread-pool:
   verification-content-pool:
     num-of-thread: 5
     num-of-chunk: 10
+  core-size: 5
+  max-size: 10
 
 schedule:
   verify-posts:
@@ -108,3 +143,7 @@ daily:
   cron:
    comment-moderation: 0 0 10 * * *
    user-ban: 0 0 0 * * ?
+
+feed:
+  posts-per-page: 20
+  comments-per-post: 3

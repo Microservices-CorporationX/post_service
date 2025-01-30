@@ -2,6 +2,7 @@ package faang.school.postservice.mapper;
 
 import faang.school.postservice.dto.like.LikeCommentDto;
 import faang.school.postservice.dto.like.LikePostDto;
+import faang.school.postservice.message.event.LikeEvent;
 import faang.school.postservice.model.Like;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -20,4 +21,6 @@ public interface LikeMapper {
 
     @Mapping(target = "comment", ignore = true)
     Like toLike(LikeCommentDto likeDto);
+
+    LikeEvent toLikeEvent(LikePostDto likePostDto);
 }

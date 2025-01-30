@@ -4,12 +4,12 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
 import faang.school.postservice.message.event.UsersBanEvent;
-import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.service.sightengine.TextAnalysisService;
+import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +51,7 @@ public class CommentServiceTest {
     private UserServiceClient userServiceClient;
 
     @Mock
-    private TextAnalysisService textAnalysisService;
+    private SightEngineReactiveClient textAnalysisService;
 
     @Mock
     private UsersBanPublisher usersBanPublisher;

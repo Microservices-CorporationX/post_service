@@ -10,6 +10,7 @@ import lombok.Builder;
 public record CommentDto(
         Long id,
         @NotBlank @Size(max = 4096) String content,
-        @NotNull @Positive Long authorId
+        @NotNull @Positive Long authorId,
+        @NotNull @Positive Long postId
 ) {
 }

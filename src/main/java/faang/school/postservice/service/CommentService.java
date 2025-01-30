@@ -2,9 +2,9 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentDto;
-import faang.school.postservice.message.event.UsersBanEvent;
 import faang.school.postservice.dto.sightengine.textAnalysis.TextAnalysisResponse;
-import faang.school.postservice.mapper.comment.CommentMapper;
+import faang.school.postservice.mapper.CommentMapper;
+import faang.school.postservice.message.event.UsersBanEvent;
 import faang.school.postservice.message.producer.UsersBanPublisher;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -90,7 +90,6 @@ public class CommentService {
 
         usersBanPublisher.publish(new UsersBanEvent(userIdsToBan));
     }
-
 
     public void verifyComments() {
         List<Comment> notVerifiedComments = commentRepository.findByVerifiedIsNull();

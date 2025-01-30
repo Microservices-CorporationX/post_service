@@ -1,7 +1,10 @@
 package faang.school.postservice.controller;
 
+import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.UpdatePostDto;
+import faang.school.postservice.model.Post;
+import faang.school.postservice.service.NewsFeedService;
 import faang.school.postservice.service.PostService;
 import faang.school.postservice.service.moderation.sightengine.SightEngineReactiveClient;
 import jakarta.validation.constraints.Positive;
@@ -27,11 +30,14 @@ import java.util.List;
 public class PostControllerV1 {
     private final PostService postService;
     private final SightEngineReactiveClient sightEngineReactiveClient;
+    private final NewsFeedService newsFeedService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public PostDto create(@Validated @RequestBody PostDto postDto) {
-        return postService.createPost(postDto);
+        PostDto responsePostDto = postService.createPost(postDto);
+        newsFeedService.addPostToCacheAsync(responsePostDto);
+        return responsePostDto;
     }
 
     @PutMapping("/publish/{id}")
@@ -47,7 +53,9 @@ public class PostControllerV1 {
 
     @GetMapping("/{id}")
     public PostDto getById(@PathVariable @Positive long id) {
-        return postService.getPostDtoById(id);
+        PostDto postDto = postService.getPostDtoById(id);
+        newsFeedService.sendPostViewEventAsync(postDto.id());
+        return postDto;
     }
 
     @DeleteMapping("/{id}")

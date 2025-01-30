@@ -4,6 +4,7 @@ import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.like.LikeCommentDto;
 import faang.school.postservice.dto.like.LikePostDto;
 import faang.school.postservice.service.LikeService;
+import faang.school.postservice.service.NewsFeedService;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,12 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class LikeController {
     private final LikeService likeService;
     private final UserContext userContext;
+    private final NewsFeedService newsFeedService;
 
     @PostMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.CREATED)
     public LikePostDto likePost(@PathVariable @Positive long postId) {
         @Positive long userId = userContext.getUserId();
-        return likeService.createLikePost(postId, userId);
+        LikePostDto likePostDto = likeService.createLikePost(postId, userId);
+        newsFeedService.sendLikeEventAsync(likePostDto);
+        return likePostDto;
     }
 
     @PostMapping("/comment/{commentId}")

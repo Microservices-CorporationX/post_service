@@ -2,6 +2,7 @@ package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.service.CommentService;
+import faang.school.postservice.service.NewsFeedService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -28,12 +29,15 @@ import java.util.List;
 @RequestMapping("/api/v1/post")
 public class CommentController {
     private final CommentService commentService;
+    private final NewsFeedService newsFeedService;
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/{postId}/comments")
     public CommentDto addComment(@PathVariable @NotNull @Positive Long postId,
                                  @RequestBody @Valid CommentDto comment) {
-        return commentService.addComment(postId, comment);
+        CommentDto commentDto = commentService.addComment(postId, comment);
+        newsFeedService.sendCommentEventAsync(commentDto);
+        return commentDto;
     }
 
     @PatchMapping("/comments/{commentId}")

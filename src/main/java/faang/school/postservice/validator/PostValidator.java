@@ -2,6 +2,8 @@ package faang.school.postservice.validator;
 
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.model.Post;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -19,6 +21,14 @@ public class PostValidator {
         if (postDto.authorId() == null && postDto.projectId() == null) {
             log.warn("Specify the author of the post");
             throw new DataValidationException("Specify the author of the post");
+        }
+    }
+
+    public void validatePostIsNotNull(Post post, long postId) {
+        if (post == null) {
+            throw new EntityNotFoundException(
+                    String.format("Post under id %d does not exist", postId)
+            );
         }
     }
 }

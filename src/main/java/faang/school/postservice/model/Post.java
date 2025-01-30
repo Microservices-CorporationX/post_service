@@ -4,6 +4,7 @@ import faang.school.postservice.model.ad.Ad;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -17,6 +18,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -48,12 +50,13 @@ public class Post {
     private List<Like> likes;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)
+    @BatchSize(size = 3)
     private List<Comment> comments;
 
     @ManyToMany(mappedBy = "posts")
     private List<Album> albums;
 
-    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "post", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private Ad ad;
 
     @OneToMany(mappedBy = "post", orphanRemoval = true)

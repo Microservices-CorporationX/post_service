@@ -27,6 +27,8 @@ dependencies {
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.retry:spring-retry:2.0.10")
+    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.integration:spring-integration-redis")
     implementation("io.github.resilience4j:resilience4j-all:2.0.2")
     implementation("io.github.resilience4j:resilience4j-spring-boot2:2.0.2")
 
