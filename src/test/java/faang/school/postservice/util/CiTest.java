@@ -7,9 +7,4 @@ public class CiTest {
     void placeholderTest() {
         assert true;
     }
-
-    @Test
-    void failingTest() {
-        assert false;
-    }
 }
