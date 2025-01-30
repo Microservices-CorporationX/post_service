@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 
 public record PostDto(
+        @Min(1)
+        Long id,
         @NotBlank(message = "Content should not be blank")
         @Size(max = 255, message = "Content must not exceed 255 characters")
         String content,
@@ -14,5 +16,6 @@ public record PostDto(
         Long userId,
         @Min(1)
         Long projectId,
-        LocalDateTime scheduledAt) {
+        LocalDateTime scheduledAt,
+        int likesCount) {
 }

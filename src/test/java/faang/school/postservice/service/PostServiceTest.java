@@ -47,18 +47,19 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
 
+    private final PostDto postDtoForUser = new PostDto(1L, "Test", 1L, null, null, 1);
+    @Captor
+    ArgumentCaptor<PostViewEvent> postViewEventArgumentCaptor;
+    @Captor
+    ArgumentCaptor<List<Post>> postsCaptor;
     @Mock
     private PostRepository postRepository;
-
     @Mock
     private PostMapper postMapper;
-
     @Mock
     private UserServiceClient userServiceClient;
-
     @Mock
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
-
     @InjectMocks
     private PostService postService;
     @Mock
@@ -67,14 +68,6 @@ public class PostServiceTest {
     private PostViewEventPublisher postViewEventPublisher;
     @Mock
     private UserContext userContext;
-
-    private final PostDto postDtoForUser = new PostDto("Test", 1L, null, null);
-
-    @Captor
-    ArgumentCaptor<PostViewEvent> postViewEventArgumentCaptor;
-
-    @Captor
-    ArgumentCaptor<List<Post>> postsCaptor;
 
     @Test
     void createDraftPostByUserSuccessTest() {
@@ -189,7 +182,7 @@ public class PostServiceTest {
     void updatePostSuccessTest() {
         Long postId = 1L;
         String updatedContent = "Updated content";
-        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null, null);
+        PostDto postDtoForUpdate = new PostDto(1L, updatedContent, 1L, null, null, 1);
 
         Post existingPost = new Post();
         existingPost.setId(postId);
@@ -216,7 +209,7 @@ public class PostServiceTest {
     void updatePostNotFoundFailTest() {
         Long postId = 100L;
         String updatedContent = "Updated content";
-        PostDto postDtoForUpdate = new PostDto(updatedContent, 1L, null, null);
+        PostDto postDtoForUpdate = new PostDto(1L, updatedContent, 1L, null, null, 1);
 
         when(postRepository.findById(postId)).thenReturn(Optional.empty());
 
@@ -297,7 +290,7 @@ public class PostServiceTest {
         existingPost.setContent("Sample content");
         existingPost.setAuthorId(2L);
 
-        PostDto postDto = new PostDto("Sample content", 1L, null, null);
+        PostDto postDto = new PostDto(1L, "Sample content", 1L, null, null, 1);
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(existingPost));
         when(postMapper.toDto(existingPost)).thenReturn(postDto);
@@ -351,8 +344,8 @@ public class PostServiceTest {
         draftPost2.setDeleted(false);
         draftPost2.setCreatedAt(LocalDateTime.now());
 
-        PostDto draftPostDto1 = new PostDto("Dto 1", 1L, null, null);
-        PostDto draftPostDto2 = new PostDto("Dto 2", 2L, null, null);
+        PostDto draftPostDto1 = new PostDto(1L, "Dto 1", 1L, null, null, 1);
+        PostDto draftPostDto2 = new PostDto(2L, "Dto 2", 2L, null, null, 1);
 
         when(postRepository.findByAuthorId(userId)).thenReturn(List.of(draftPost1, draftPost2));
         when(postMapper.toDto(draftPost1)).thenReturn(draftPostDto1);

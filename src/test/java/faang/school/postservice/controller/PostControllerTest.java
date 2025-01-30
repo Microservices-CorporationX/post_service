@@ -26,30 +26,38 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PostController.class)
 @Import({PostController.class, ExceptionApiHandler.class})
 class PostControllerTest {
 
+    private final static String mainUrl = UrlUtils.MAIN_URL + UrlUtils.V1 + UrlUtils.POSTS;
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     @MockBean
     private PostService postService;
     @MockBean
     private PostResourceService postResourceService;
-
     @Autowired
     private MockMvc mockMvc;
-
     @MockBean
     private UserContext userContext;
-
     private MockMultipartFile validImage;
     private ResourceDto resourceDto;
-
-    private final static String mainUrl = UrlUtils.MAIN_URL + UrlUtils.V1 + UrlUtils.POSTS;
 
     @BeforeEach
     void setUp() {
@@ -67,11 +75,9 @@ class PostControllerTest {
                 1L);
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-
     @Test
     void createDraftPostByUserSuccessTest() throws Exception {
-        PostDto postDto = new PostDto("Test content", 1L, null, null);
+        PostDto postDto = new PostDto(1L, "Test content", 1L, null, null, 1);
         Long expectedPostId = 1L;
         when(postService.createDraftPost(postDto)).thenReturn(1L);
 
@@ -86,7 +92,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByProjectSuccessTest() throws Exception {
-        PostDto postDto = new PostDto("Test content", null, 3L, null);
+        PostDto postDto = new PostDto(1L, "Test content", null, 3L, null, 1);
         Long expectedPostId = 2L;
         when(postService.createDraftPost(postDto)).thenReturn(2L);
 
@@ -101,7 +107,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserContentIsBlankFailTest() throws Exception {
-        PostDto postDto = new PostDto("  ", 1L, null, null);
+        PostDto postDto = new PostDto(1L, "  ", 1L, null, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -113,7 +119,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserContentNullFailTest() throws Exception {
-        PostDto postDto = new PostDto(null, 1L, null, null);
+        PostDto postDto = new PostDto(1L, null, 1L, null, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -125,7 +131,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserIdNullAndProjectIdNullFailTest() throws Exception {
-        PostDto postDto = new PostDto("Test for test", null, null, null);
+        PostDto postDto = new PostDto(1L, "Test for test", null, null, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +142,7 @@ class PostControllerTest {
 
     @Test
     void createDraftPostByUserIdAndProjectIdFailTest() throws Exception {
-        PostDto postDto = new PostDto("Test for test", 1L, 2L, null);
+        PostDto postDto = new PostDto(1L, "Test for test", 1L, 2L, null, 1);
 
         mockMvc.perform(post(mainUrl)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,7 +153,7 @@ class PostControllerTest {
 
     @Test
     void publishPostSuccessTest() throws Exception {
-        PostDto postDto = new PostDto("Test content", 1L, null, null);
+        PostDto postDto = new PostDto(1L, "Test content", 1L, null, null, 1);
         Long postId = 1L;
 
         when(postService.publishPost(postId)).thenReturn(postDto);
@@ -216,7 +222,7 @@ class PostControllerTest {
     void getPostSuccessTest() throws Exception {
         Long postId = 1L;
 
-        PostDto postDto = new PostDto("Sample Post", 1L, 2L, null);
+        PostDto postDto = new PostDto(1L, "Sample Post", 1L, 2L, null, 1);
         when(postService.getPost(anyLong())).thenReturn(postDto);
 
         mockMvc.perform(get(mainUrl + "/" + postId))
@@ -244,8 +250,8 @@ class PostControllerTest {
     void getDraftPostsByUserIdSuccessTest() throws Exception {
         Long userId = 1L;
         List<PostDto> drafts = List.of(
-                new PostDto("Draft 1", 1L, null, null),
-                new PostDto("Draft 2", 2L, null, null)
+                new PostDto(1L, "Draft 1", 1L, null, null, 1),
+                new PostDto(2L, "Draft 2", 2L, null, null, 1)
         );
         when(postService.getDraftPostsForUser(userId)).thenReturn(drafts);
 
@@ -284,8 +290,8 @@ class PostControllerTest {
     void getDraftPostsByProjectIdSuccessTest() throws Exception {
         Long projectId = 1L;
         List<PostDto> drafts = List.of(
-                new PostDto("Draft 1", null, 1L, null),
-                new PostDto("Draft 2", null, 2L, null)
+                new PostDto(1L, "Draft 1", null, 1L, null, 1),
+                new PostDto(2L, "Draft 2", null, 2L, null, 1)
         );
         when(postService.getDraftPostsForProject(projectId)).thenReturn(drafts);
 
@@ -324,8 +330,8 @@ class PostControllerTest {
     void getPublishedPostsByUserIdSuccessTest() throws Exception {
         Long userId = 1L;
         List<PostDto> drafts = List.of(
-                new PostDto("Publish 1", 1L, null, null),
-                new PostDto("Publish 2", 2L, null, null)
+                new PostDto(1L, "Publish 1", 1L, null, null, 1),
+                new PostDto(2L, "Publish 2", 2L, null, null, 1)
         );
         when(postService.getPublishedPostsForUser(userId)).thenReturn(drafts);
 
@@ -364,8 +370,8 @@ class PostControllerTest {
     void getPublishedPostsByProjectIdSuccessTest() throws Exception {
         Long projectId = 1L;
         List<PostDto> publishedPosts = List.of(
-                new PostDto("Post 1", null, 1L, null),
-                new PostDto("Post 2", null, 2L, null)
+                new PostDto(1L, "Post 1", null, 1L, null, 1),
+                new PostDto(2L, "Post 2", null, 2L, null, 1)
         );
         when(postService.getPublishedPostForProject(projectId)).thenReturn(publishedPosts);
 
@@ -463,7 +469,7 @@ class PostControllerTest {
                 .andExpect(jsonPath("$.message").value(errorMessage));
     }
 
-   @Test
+    @Test
     void getImageByKey_ShouldReturnImage_WhenKeyExists() throws Exception {
         Long postId = 1L;
         String key = "valid-key";

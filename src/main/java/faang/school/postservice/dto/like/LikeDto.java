@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.LocalDateTime;
+import jakarta.validation.constraints.NotNull;
 
 @Getter
 @Setter
@@ -13,15 +15,11 @@ import lombok.Setter;
 public class LikeDto {
     @Min(1)
     private Long id;
-
-    @Min(1)
+    @Min(1) @NotNull(message = "User id is required")
     private Long userId;
-
-    @Min(1)
-    private Long commentId;
-
     @Min(1)
     private Long postId;
-
-    private String createdAt;
+    @Min(1)
+    private Long commentId;
+    private LocalDateTime createdAt;
 }

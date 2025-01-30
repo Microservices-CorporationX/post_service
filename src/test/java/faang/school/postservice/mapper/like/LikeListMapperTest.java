@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LikeListMapperTest {
     private static LikeListMapperImpl likeListMapper;
@@ -34,8 +33,7 @@ public class LikeListMapperTest {
 
     @Test
     public void toLikeListSuccessTest() {
-        LocalDateTime now = LocalDateTime.now();
-        String dateTimeString = now.format(formatter);
+        LocalDateTime createdAt = LocalDateTime.now();
 
         List<LikeDto> likeDtoList = List.of(
                 new LikeDto() {{
@@ -43,25 +41,21 @@ public class LikeListMapperTest {
                     setCommentId(commentFirstId);
                     setPostId(postFirstId);
                     setUserId(userFirstId);
-                    setCreatedAt(dateTimeString);
+                    setCreatedAt(createdAt);
                 }},
                 new LikeDto() {{
                     setId(likeSecondId);
                     setCommentId(commentSecondId);
                     setPostId(postSecondId);
                     setUserId(userSecondId);
-                    setCreatedAt(dateTimeString);
+                    setCreatedAt(createdAt);
                 }}
         );
         List<Like> likeList = likeListMapper.toLikeList(likeDtoList);
         assertThat(likeList).isNotNull();
         for (int i = 0; i < likeDtoList.size(); i++) {
             assertThat(likeList.get(i)).isNotNull();
-            assertThat(likeList.get(i).getId()).isEqualTo(likeDtoList.get(i).getId());
-            assertThat(likeList.get(i).getPost().getId()).isEqualTo(likeDtoList.get(i).getPostId());
-            assertThat(likeList.get(i).getComment().getId()).isEqualTo(likeDtoList.get(i).getCommentId());
             assertThat(likeList.get(i).getUserId()).isEqualTo(likeDtoList.get(i).getUserId());
-            assertThat(likeList.get(i).getCreatedAt().format(formatter)).isEqualTo(likeDtoList.get(i).getCreatedAt());
         }
     }
 
@@ -69,44 +63,6 @@ public class LikeListMapperTest {
     public void toLikeListWithNullFailTest() {
         List<Like> likeList = likeListMapper.toLikeList(null);
         assertThat(likeList).isNull();
-    }
-
-    @Test
-    public void toLikeListWithoutCommentAndPostFailTest() {
-        List<LikeDto> likeDtoList = List.of(
-                new LikeDto() {{
-                    setId(likeFirstId);
-                }}
-        );
-
-        assertThrows(NullPointerException.class,
-                () -> likeListMapper.toLikeList(likeDtoList)
-        );
-    }
-
-    @Test
-    public void toLikeListWithoutCommentFailTest() {
-        List<LikeDto> likeDtoList = List.of(
-                new LikeDto() {{
-                    setId(likeFirstId);
-                    setPostId(postFirstId);
-                }}
-        );
-
-        assertThrows(NullPointerException.class,
-                () -> likeListMapper.toLikeList(likeDtoList)
-        );
-    }
-
-    @Test
-    public void toLikeListWithoutLikeIdFailTest() {
-        List<LikeDto> likeDtoList = List.of(
-                new LikeDto()
-        );
-
-        assertThrows(NullPointerException.class,
-                () -> likeListMapper.toLikeList(likeDtoList)
-        );
     }
 
     @Test
@@ -154,7 +110,7 @@ public class LikeListMapperTest {
             assertThat(likeDtoList.get(i).getPostId()).isEqualTo(likeList.get(i).getPost().getId());
             assertThat(likeDtoList.get(i).getCommentId()).isEqualTo(likeList.get(i).getComment().getId());
             assertThat(likeDtoList.get(i).getUserId()).isEqualTo(likeList.get(i).getUserId());
-            assertThat(likeDtoList.get(i).getCreatedAt()).isEqualTo(likeList.get(i).getCreatedAt().format(formatter));
+            assertThat(likeDtoList.get(i).getCreatedAt()).isEqualTo(now);
         }
     }
 

@@ -102,7 +102,7 @@ public class PostService {
     }
 
     public List<PostDto> getDraftPostsForProject(Long idProject) {
-        return postRepository.findByProjectId(idProject)
+        return postRepository.findByProjectIdWithLikes(idProject)
                 .stream()
                 .filter(post -> !post.isPublished() && !post.isDeleted())
                 .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
@@ -112,7 +112,7 @@ public class PostService {
 
     public List<PostDto> getPublishedPostsForUser(Long idUser) {
         checkUserExistById(idUser);
-        List<Post> postList = postRepository.findByAuthorId(idUser)
+        List<Post> postList = postRepository.findByAuthorIdWithLikes(idUser)
                 .stream()
                 .filter(post -> post.isPublished() && !post.isDeleted())
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
@@ -126,7 +126,7 @@ public class PostService {
 
     public List<PostDto> getPublishedPostForProject(Long idProject) {
         checkProjectExistById(idProject);
-        List<Post> postList = postRepository.findByProjectId(idProject)
+        List<Post> postList = postRepository.findByProjectIdWithLikes(idProject)
                 .stream()
                 .filter(post -> post.isPublished() && !post.isDeleted())
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed()).toList();

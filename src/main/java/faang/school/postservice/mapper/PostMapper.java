@@ -8,8 +8,10 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface PostMapper {
 
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "authorId", target = "userId")
     @Mapping(source = "projectId", target = "projectId")
+    @Mapping(target = "likesCount", expression = "java(post.getLikes() != null ? post.getLikes().size() : 0)")
     PostDto toDto(Post post);
 
     @Mapping(target = "id", ignore = true)

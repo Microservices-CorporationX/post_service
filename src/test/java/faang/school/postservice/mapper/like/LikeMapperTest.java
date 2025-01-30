@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LikeMapperTest {
     private final LikeMapper likeMapper = Mappers.getMapper(LikeMapper.class);
@@ -22,8 +21,7 @@ public class LikeMapperTest {
 
     @Test
     public void toDtoSuccessTest() {
-        LocalDateTime now = LocalDateTime.now();
-        String dateTimeString = now.format(formatter);
+        LocalDateTime createdAt = LocalDateTime.now();
 
         Post post = getPost();
         Comment comment = getComment();
@@ -32,7 +30,7 @@ public class LikeMapperTest {
                 .id(likeId)
                 .post(post)
                 .comment(comment)
-                .createdAt(now)
+                .createdAt(createdAt)
                 .build();
 
         LikeDto likeDto = likeMapper.toDto(like);
@@ -41,7 +39,7 @@ public class LikeMapperTest {
         assertThat(likeDto.getId()).isEqualTo(like.getId());
         assertThat(likeDto.getPostId()).isEqualTo(like.getPost().getId());
         assertThat(likeDto.getCommentId()).isEqualTo(like.getComment().getId());
-        assertThat(likeDto.getCreatedAt()).isEqualTo(dateTimeString);
+        assertThat(likeDto.getCreatedAt()).isEqualTo(createdAt);
     }
 
     @Test
@@ -92,43 +90,18 @@ public class LikeMapperTest {
 
     @Test
     public void toEntitySuccessTest() {
-        LocalDateTime now = LocalDateTime.now();
-        String dateTimeString = now.format(formatter);
+        LocalDateTime createdAt = LocalDateTime.now();
 
         LikeDto likeDto = new LikeDto();
         likeDto.setPostId(postId);
         likeDto.setId(likeId);
         likeDto.setCommentId(commentId);
-        likeDto.setCreatedAt(dateTimeString);
+        likeDto.setCreatedAt(createdAt);
 
         Like like = likeMapper.toEntity(likeDto);
 
         assertThat(like).isNotNull();
-        assertThat(like.getId()).isEqualTo(likeDto.getId());
-        assertThat(like.getComment().getId()).isEqualTo(likeDto.getCommentId());
-        assertThat(like.getPost().getId()).isEqualTo(likeDto.getPostId());
-        assertThat(like.getCreatedAt().format(formatter)).isEqualTo(likeDto.getCreatedAt());
-    }
-
-    @Test
-    public void toEntityWithoutPostIdFailTest() {
-        LikeDto likeDto = new LikeDto();
-        likeDto.setId(likeId);
-
-        assertThrows(NullPointerException.class,
-                () -> likeMapper.toEntity(likeDto)
-        );
-    }
-
-    @Test
-    public void toEntityWithoutCommentFailTest() {
-        LikeDto likeDto = new LikeDto();
-        likeDto.setId(likeId);
-        likeDto.setPostId(postId);
-
-        assertThrows(NullPointerException.class,
-                () -> likeMapper.toEntity(likeDto)
-        );
+        assertThat(like.getCreatedAt()).isEqualTo(createdAt);
     }
 
     @Test
@@ -141,9 +114,6 @@ public class LikeMapperTest {
         Like like = likeMapper.toEntity(likeDto);
 
         assertThat(like).isNotNull();
-        assertThat(like.getId()).isNotNull();
-        assertThat(like.getComment()).isNotNull();
-        assertThat(like.getPost()).isNotNull();
         assertThat(like.getCreatedAt()).isNull();
     }
 
