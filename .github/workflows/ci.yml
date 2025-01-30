@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
       - hippogriff-master-stream8
-      - dev
 
 jobs:
   build:
