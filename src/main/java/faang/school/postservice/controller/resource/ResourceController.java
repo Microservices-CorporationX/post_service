@@ -4,6 +4,7 @@ import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.service.resource.ResourceService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,13 +19,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @RequestMapping("/resource")
 @RestController
 public class ResourceController {
     private final ResourceService resourceService;
 
-    @PostMapping("/post/{postId}/images")
+    @PostMapping("/post/{postId}")
     @ResponseStatus(HttpStatus.CREATED)
     public List<ResourceDto> attachImages(@PathVariable Long postId,
                                           @RequestParam("imageFiles") @NonNull List<MultipartFile> imageFiles) {
