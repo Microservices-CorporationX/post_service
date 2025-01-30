@@ -2,8 +2,8 @@ spring:
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
-    username: postgres
-    password: root
+    username: user
+    password: password
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -24,6 +24,20 @@ spring:
       channels:
         calculations_channel:
           name: calculations_channel
+
+  services:
+    s3:
+     endpoint: http://127.0.0.1:9000
+     region: US_EAST_1
+     accessKey: user
+     secretKey: password
+     bucketName: post-bucket
+
+  servlet:
+    multipart:
+#      enabled: true
+      max-request-size: 100MB
+      max-file-size: 10MB
 
 server:
   port: 8081
@@ -48,28 +62,24 @@ springdoc:
   swagger-ui:
     path: /post-service-ui.html
 
-  services:
-    s3:
-      endpoint: http://127.0.0.1:9000
-      accessKey: user
-      secretKey: password
-      bucketName: post-service-bucket
-      region: US_EAST_1
+post:
+  publisher:
+    scheduler:
+      cron: "0 0/1 * 1/1 * ?" # every minute
+  ad-remover:
+    scheduler:
+      cron: "0 0/1 * 1/1 * ?" # every minute
+  max-images-per-post: 10
 
-  servlet:
-    multipart:
-      max-request-size: 100MB
-      max-file-size: 10MB
-
-  resources:
-    file:
-      max-file-size: 5242880
-    image:
-      max-width-horizontal: 1080
-      max-height-horizontal: 566
-      max-size-square: 1080
-      supported-image-types: "image/png,image/jpeg,image/jpg"
-    cleanup:
-      scheduler:
-        cron: "0 0 2 * * ?" # каждый день в 2 часа ночи
-      retention-period: 1M # настройка периода: M - месяц, D - день
+resources:
+  file:
+    max-file-size: 5242880
+  image:
+    max-width-horizontal: 1080
+    max-height-horizontal: 566
+    max-size-square: 1080
+    supported-image-types: "image/png,image/jpeg,image/jpg"
+  cleanup:
+    scheduler:
+      cron: "0 0 2 * * ?" # каждый день в 2 часа ночи
+    retention-period: 1M # настройка периода: M - месяц, D - день

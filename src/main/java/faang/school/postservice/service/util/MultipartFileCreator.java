@@ -13,14 +13,13 @@ import java.nio.file.Files;
 @Slf4j
 @RequiredArgsConstructor
 public class MultipartFileCreator implements MultipartFile {
-
     private final String name;
     private final String originalFilename;
     private final String contentType;
     private final byte[] content;
 
-    @Override
     @NonNull
+    @Override
     public String getName() {
         return name;
     }
@@ -45,14 +44,14 @@ public class MultipartFileCreator implements MultipartFile {
         return content.length;
     }
 
-    @Override
     @NonNull
+    @Override
     public byte[] getBytes() {
         return content;
     }
 
-    @Override
     @NonNull
+    @Override
     public InputStream getInputStream() {
         return new ByteArrayInputStream(content);
     }

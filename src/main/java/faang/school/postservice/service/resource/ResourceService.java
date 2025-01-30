@@ -101,10 +101,10 @@ public class ResourceService {
         }
     }
 
-    private List<MultipartFile> resizeFiles(List<MultipartFile> files) {
+    private List<MultipartFile> resizeFiles(List<MultipartFile> imageFiles) {
         List<MultipartFile> resizedFiles = new ArrayList<>();
 
-        files.forEach(file -> {
+        imageFiles.forEach(file -> {
             try {
                 resizedFiles.add(imageResizer.resizeImage(file));
             } catch (IOException ex) {

@@ -12,18 +12,18 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 import java.net.URI;
 
 @Configuration
-public class AmazonS3Config {
-    @Value("${spring.services.s3.accessKey}")
-    private String accessKey;
-
-    @Value("${spring.services.s3.secretKey}")
-    private String secretKey;
-
+public class S3Config {
     @Value("${spring.services.s3.endpoint}")
     private String endpoint;
 
     @Value("${spring.services.s3.region}")
     private Region region;
+
+    @Value("${spring.services.s3.accessKey}")
+    private String accessKey;
+
+    @Value("${spring.services.s3.secretKey}")
+    private String secretKey;
 
     @Bean
     public S3Client MinioS3Client() {
@@ -32,7 +32,9 @@ public class AmazonS3Config {
                 .region(region)
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(accessKey, secretKey)))
-                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
+                .serviceConfiguration(S3Configuration.builder()
+                        .pathStyleAccessEnabled(true)
+                        .build())
                 .build();
     }
 }

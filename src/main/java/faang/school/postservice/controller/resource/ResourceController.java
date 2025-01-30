@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,8 +27,8 @@ public class ResourceController {
     @PostMapping("/post/{postId}/images")
     @ResponseStatus(HttpStatus.CREATED)
     public List<ResourceDto> attachImages(@PathVariable Long postId,
-                                          @RequestBody @NonNull List<MultipartFile> files) {
-        return resourceService.attachImages(postId, files);
+                                          @RequestParam("imageFiles") @NonNull List<MultipartFile> imageFiles) {
+        return resourceService.attachImages(postId, imageFiles);
     }
 
     @DeleteMapping("/post/{resourceId}")

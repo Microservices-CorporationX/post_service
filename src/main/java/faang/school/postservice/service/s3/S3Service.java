@@ -70,8 +70,7 @@ public class S3Service {
                     putObjectRequest,
                     RequestBody.fromInputStream(file.getInputStream(), file.getSize())
             );
-        } catch (Exception ex) {
-            log.error("Error uploading file to S3: {}", file.getOriginalFilename(), ex);
+        } catch (Exception e) {
             throw new MediaFileException(String.format("Failed to upload file %s to S3", file.getOriginalFilename()));
         }
     }
