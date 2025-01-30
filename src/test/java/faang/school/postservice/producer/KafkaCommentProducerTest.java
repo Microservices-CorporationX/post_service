@@ -1,5 +1,6 @@
 package faang.school.postservice.producer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.dto.CommentDto;
 import org.junit.jupiter.api.Test;
@@ -31,13 +32,13 @@ public class KafkaCommentProducerTest {
     private String commentsTopic;
 
     @Test
-    public void testSuccessfulPublish() {
+    public void testSuccessfulPublish() throws JsonProcessingException {
         CommentDto commentDto = prepareComment();
 
         producer.sendMessage(commentDto);
 
-        verify(kafkaTemplate, times(1)).send(commentsTopic, commentDto);
-        verify(kafkaTemplate).send(commentsTopic, commentDto);
+        verify(kafkaTemplate, times(1)).send(commentsTopic, objectMapper.writeValueAsString(commentDto));
+        verify(kafkaTemplate).send(commentsTopic, objectMapper.writeValueAsString(commentDto));
     }
 
     private CommentDto prepareComment() {
