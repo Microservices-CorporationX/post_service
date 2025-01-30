@@ -86,7 +86,7 @@ dependencies {
     /**
      * Kafka
      */
-    implementation ("org.springframework.kafka:spring-kafka:2.8.0")
+    implementation ("org.springframework.kafka:spring-kafka")
 
 }
 

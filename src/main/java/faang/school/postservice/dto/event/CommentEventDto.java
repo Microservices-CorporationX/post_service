@@ -1,4 +1,4 @@
-package faang.school.postservice.dto.events_dto;
+package faang.school.postservice.dto.event;
 
 import lombok.Data;
 
