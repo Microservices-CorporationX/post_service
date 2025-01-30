@@ -12,7 +12,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class LikeListMapperTest {
     private static LikeListMapperImpl likeListMapper;
@@ -56,11 +55,7 @@ public class LikeListMapperTest {
         assertThat(likeList).isNotNull();
         for (int i = 0; i < likeDtoList.size(); i++) {
             assertThat(likeList.get(i)).isNotNull();
-//            assertThat(likeList.get(i).getId()).isEqualTo(likeDtoList.get(i).getId());
-//            assertThat(likeList.get(i).getPost().getId()).isEqualTo(likeDtoList.get(i).getPostId());
-//            assertThat(likeList.get(i).getComment().getId()).isEqualTo(likeDtoList.get(i).getCommentId());
             assertThat(likeList.get(i).getUserId()).isEqualTo(likeDtoList.get(i).getUserId());
-//            assertThat(likeList.get(i).getCreatedAt().format(formatter)).isEqualTo(likeDtoList.get(i).getCreatedAt());
         }
     }
 
