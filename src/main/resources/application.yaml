@@ -9,6 +9,9 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: user
     password: password
+  kafka:
+    port: 9092
+    host: localhost
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
