@@ -53,25 +53,25 @@ spring:
         postViewChannel:
           name: post_view_channel
 
-  kafka:
-    producer:
-      bootstrap-servers: localhost:9092, localhost:9094
-#      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      retries: 10
-      acks: all
-      properties:
-        delivery-timeout-ms: 10000
-        linger-ms: 0
-        request-timeout-ms: 5000
-        enable-idempotence: true
-        max-in-flight-requests-per-connection: 5
-    topics:
-      comment-channel:
-        name: comment_topic
-      post-channel:
-        name: post_published_topic
-
+    kafka:
+      producer:
+        bootstrap-servers: localhost:29092, localhost:29094
+        retries: 10
+        acks: all
+        properties:
+          delivery-timeout-ms: 10000
+          linger-ms: 0
+          request-timeout-ms: 5000
+          enable-idempotence: true
+          max-in-flight-requests-per-connection: 5
+      topics:
+        comment-channel:
+          name: comments_topic
+        post-channel:
+          name: posts_topic
+        partitions: 3
+        replicasCount: 3
+        min-insync-replicas: 2
 
 server:
   port: 8081
@@ -92,7 +92,7 @@ post:
 
 user-service:
   host: localhost
-  port: 8085
+  port: 8080
 project-service:
   host: localhost
   port: 8082

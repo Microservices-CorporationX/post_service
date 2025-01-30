@@ -4,11 +4,12 @@ import faang.school.postservice.event.CommentEvent;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.producer.KafkaCommentProducer;
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class KafkaServiceImpl implements KafkaService{
+public class KafkaServiceImpl implements KafkaService {
 
     private final KafkaCommentProducer kafkaCommentProducer;
 
@@ -28,7 +29,7 @@ public class KafkaServiceImpl implements KafkaService{
     }
 
     @Override
-//    @Async("executorKafkaSender) - ????????
+    @Async("executorKafkaSend")
     public void sendCommentEvent(Comment comment) {
         CommentEvent commentEvent = CommentEvent.builder()
                 .id(comment.getId())
@@ -38,6 +39,6 @@ public class KafkaServiceImpl implements KafkaService{
                 .updateAt(comment.getUpdatedAt())
                 .build();
 
-        kafkaCommentProducer.sendEvent(commentEvent);
+        kafkaCommentProducer.send(commentEvent);
     }
 }

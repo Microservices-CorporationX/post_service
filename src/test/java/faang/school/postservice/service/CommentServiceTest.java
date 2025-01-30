@@ -7,6 +7,7 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.service.kafka.KafkaServiceImpl;
 import faang.school.postservice.validator.CommentValidator;
 import faang.school.postservice.validator.PostValidator;
 import faang.school.postservice.validator.UserValidator;
@@ -50,6 +51,8 @@ public class CommentServiceTest {
     private CommentMapper commentMapper;
     @Mock
     private UserContext userContext;
+    @Mock
+    private KafkaServiceImpl kafkaServiceImpl;
     @InjectMocks
     private CommentService commentService;
 
@@ -68,6 +71,7 @@ public class CommentServiceTest {
         when(postRepository.findById(any())).thenReturn(Optional.of(getPost()));
         when(commentRepository.save(any())).thenReturn(comment);
         when(commentMapper.toDto(any())).thenReturn(commentDto);
+        doNothing().when(kafkaServiceImpl).sendCommentEvent(any());
 
         CommentDto actualResult = commentService.createComment(commentDto);
 
@@ -76,6 +80,7 @@ public class CommentServiceTest {
         verify(postRepository, times(1)).findById(any());
         verify(commentRepository, times(1)).save(any());
         verify(commentMapper, times(1)).toDto(any());
+        verify(kafkaServiceImpl, times(1)).sendCommentEvent(any());
         assertThat(commentDto.getId()).isEqualTo(actualResult.getId());
         assertThat(commentDto.getAuthorId()).isEqualTo(actualResult.getAuthorId());
         assertThat(commentDto.getPostId()).isEqualTo(actualResult.getPostId());
