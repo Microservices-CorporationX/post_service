@@ -27,6 +27,11 @@ dependencies {
     implementation ("org.springframework.retry:spring-retry:2.0.10")
 
     /**
+     * Micrometer
+     */
+//    implementation("io.micrometer:micrometer-core")
+//    implementation("io.micrometer:micrometer-registry-prometheus")
+    /**
      * Database
      */
     implementation("org.liquibase:liquibase-core")
@@ -70,8 +75,8 @@ dependencies {
     /**
      * Metrics
      */
-    implementation("io.micrometer:micrometer-core")
-    implementation("io.micrometer:micrometer-registry-prometheus")
+//    implementation("io.micrometer:micrometer-core")
+//    implementation("io.micrometer:micrometer-registry-prometheus")
 }
 
 tasks.test {
