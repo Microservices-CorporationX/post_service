@@ -28,5 +28,4 @@ public interface PostRepository extends JpaRepository<Post, Long> {
             "FROM Post p " +
             "WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
     List<Post> findReadyToPublish();
-
 }
