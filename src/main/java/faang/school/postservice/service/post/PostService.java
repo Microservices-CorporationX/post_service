@@ -214,6 +214,19 @@ public class PostService {
                 .orElseThrow(EntityNotFoundException::new);
     }
 
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getFeedForUser(Long userId, int batchSize, Optional<Long> postPointerId) {
+        List<Long> userSubscriptions = userServiceClient.getFollowersIds(userId);
+
+        final List<Post> postsBatch = new ArrayList<>();
+        postPointerId.ifPresentOrElse(
+                pointer -> postsBatch.addAll(postRepository.getFeedForUser(userSubscriptions, pointer, batchSize)),
+                () -> postsBatch.addAll(postRepository.getFeedForUser(userSubscriptions, batchSize))
+        );
+
+        return postMapper.toListPostDto(postsBatch);
+    }
+
     @Transactional
     public void checkSpelling() {
         List<Post> posts = postRepository.findByPublishedFalse();

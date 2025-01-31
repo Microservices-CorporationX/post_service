@@ -33,4 +33,30 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     List<Post> findByVerifiedIsNull();
 
+    @Query("""
+            SELECT p
+            FROM Post p
+            WHERE p.published = true
+              AND p.deleted = false
+              AND p.authorId IN :userSubscriptions
+              AND p.publishedAt < (
+                SELECT p2.publishedAt
+                FROM Post p2
+                WHERE p2.id = :postPointerId
+              )
+            ORDER BY p.publishedAt DESC
+            LIMIT :batchSize
+            """)
+    List<Post> getFeedForUser(List<Long> userSubscriptions, Long postPointerId, int batchSize);
+
+    @Query("""
+            SELECT p
+            FROM Post p
+            WHERE p.published = true
+              AND p.deleted = false
+              AND p.authorId IN :userSubscriptions
+            ORDER BY p.publishedAt  DESC
+            LIMIT :batchSize
+            """)
+    List<Post> getFeedForUser(List<Long> userSubscriptions, int batchSize);
 }

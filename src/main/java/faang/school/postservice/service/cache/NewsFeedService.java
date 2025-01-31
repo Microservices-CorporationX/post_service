@@ -6,7 +6,6 @@ import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.post.PostCacheMapper;
 import faang.school.postservice.mapper.user.AuthorCacheMapper;
-import faang.school.postservice.repository.cache_repository.PostCacheRepository;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,6 @@ public class NewsFeedService {
     private final PostService postService;
     private final UserServiceClient userServiceClient;
     private final AuthorCacheMapper authorCacheMapper;
-    private final PostCacheRepository postCacheRepository;
     private final PostCacheMapper postCacheMapper;
     private final PostCacheService postCacheService;
     @Value(value = "${cache.news_feed.max_posts_amount:500}")
