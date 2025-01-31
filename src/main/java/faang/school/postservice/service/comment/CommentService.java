@@ -4,13 +4,18 @@ import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateRequestDto;
 import faang.school.postservice.dto.event.CommentEventDto;
+import faang.school.postservice.dto.event.CommentKafkaEvent;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserForBanEventDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
+import faang.school.postservice.model.redis.UserRedis;
+import faang.school.postservice.producer.KafkaCommentProducer;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.RedisUserRepository;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.comment.CommentValidator;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +41,8 @@ public class CommentService {
     private final UserBanEventPublisher banPublisher;
     private final PostRepository postRepository;
     private final ModerationDictionary moderationDictionary;
+    private final RedisUserRepository redisUserRepository;
+    private final KafkaCommentProducer kafkaCommentProducer;
 
     public CommentResponseDto createComment(CommentRequestDto commentRequestDto) {
         commentValidator.validateAuthorExists(commentRequestDto.getAuthorId());
@@ -53,8 +60,16 @@ public class CommentService {
         log.info("New comment with id: {} created", comment.getId());
 
         CommentEventDto commentEventDto = createCommentEventDto(commentResponseDto);
-        commentEventPublisher.publish(commentEventDto);
-        log.info("Notification about new comment sent to notification service {}", commentEventDto);
+        if (commentEventDto == null) {
+            log.error("Error creating CommentEventDto for comment ID: {}", commentResponseDto.getId());
+        } else {
+            commentEventPublisher.publish(commentEventDto);
+            log.info("Notification about new comment sent to notification service {}", commentEventDto);
+        }
+
+        UserDto userDto = new UserDto(commentRequestDto.getAuthorId(), commentRequestDto.getUserName(), null, null, null);
+        addToRedisAndSendEvents(userDto, commentResponseDto);
+
         return commentResponseDto;
     }
 
@@ -107,5 +122,19 @@ public class CommentService {
             log.info("Author with authorId {} is banned", authorId);
         });
     }
+
+    private void addToRedisAndSendEvents(UserDto userDto, CommentResponseDto commentDto) {
+        log.info("Save user with ID: {} to Redis", userDto.getId());
+        redisUserRepository.save(new UserRedis(userDto.getId(), userDto.getUsername()));
+
+        CommentKafkaEvent commentKafkaEvent = commentMapper.fromDtoToKafkaEvent(commentDto);
+        if (commentKafkaEvent == null) {
+            log.error("Kafka event is null! Comment ID: {}", commentDto.getPostId());
+        } else {
+            log.info("Send event with Comment ID: {} to Kafka", commentDto.getPostId());
+            kafkaCommentProducer.sendEvent(commentKafkaEvent);
+        }
+    }
+
 
 }

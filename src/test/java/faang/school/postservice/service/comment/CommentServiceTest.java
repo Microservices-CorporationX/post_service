@@ -4,15 +4,19 @@ import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateRequestDto;
 import faang.school.postservice.dto.event.CommentEventDto;
+import faang.school.postservice.dto.event.CommentKafkaEvent;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserForBanEventDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.redis.UserRedis;
+import faang.school.postservice.producer.KafkaCommentProducer;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.RedisUserRepository;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.comment.CommentValidator;
 import org.junit.jupiter.api.Test;
@@ -29,6 +33,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -56,6 +61,12 @@ class CommentServiceTest {
 
     @Mock
     private UserBanEventPublisher banPublisher;
+    @Mock
+    private RedisUserRepository redisUserRepository;
+
+    @Mock
+    private KafkaCommentProducer kafkaCommentProducer;
+
 
     @InjectMocks
     private CommentService commentService;
@@ -108,6 +119,8 @@ class CommentServiceTest {
         verify(commentMapper).toEntity(commentRequestDto);
         verify(commentMapper).toDto(comment);
         verify(postRepository).getPostById(VALID_POST_ID);
+        verify(redisUserRepository).save(any(UserRedis.class));
+        verify(kafkaCommentProducer).sendEvent(any(CommentKafkaEvent.class));
 
         ArgumentCaptor<CommentEventDto> eventCaptor = ArgumentCaptor.forClass(CommentEventDto.class);
         verify(commentEventPublisher).publish(eventCaptor.capture());
@@ -122,7 +135,6 @@ class CommentServiceTest {
 
         assertEquals(expectedResponse, actualResponse);
     }
-
     @Test
     void updateComment_shouldUpdateCommentSuccessfully() {
         CommentUpdateRequestDto commentUpdateRequestDto = new CommentUpdateRequestDto();
