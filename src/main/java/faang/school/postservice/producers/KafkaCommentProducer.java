@@ -25,7 +25,8 @@ public class KafkaCommentProducer {
             if (exception != null) {
                 log.error("Failed to send message: {}", exception.getMessage());
             } else {
-                log.debug("Topic: {} Partition: {} Offset: {}",
+                log.debug("Message sent successfully: {} Topic: {} Partition: {} Offset: {}",
+                        result.getRecordMetadata(),
                         result.getRecordMetadata().topic(),
                         result.getRecordMetadata().partition(),
                         result.getRecordMetadata().offset());

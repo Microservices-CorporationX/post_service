@@ -20,7 +20,7 @@ public class KafkaConfigProducer {
     @Value("${spring.data.kafka.topics.comments.replicas}")
     private int replicaCount;
 
-    @Value("${spring.data.kafka.topics.comments.configs.min.insync.replicas}")
+    @Value("${spring.data.kafka.topics.comments.configs.min-insync-replicas}")
     private String configsValue;
 
     @Bean
@@ -28,7 +28,7 @@ public class KafkaConfigProducer {
         return TopicBuilder.name(commentsTopic)
                 .partitions(partitionCount)
                 .replicas(replicaCount)
-                .configs(Map.of("min.insync.replicas",configsValue))
+                .configs(Map.of("min.insync.replicas", configsValue))
                 .build();
     }
 }
