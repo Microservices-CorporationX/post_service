@@ -1,6 +1,6 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.DataValidationException;
+import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.dto.Post.CreatePostDraftDto;
 import faang.school.postservice.dto.Post.PostResponseDto;
 import faang.school.postservice.dto.Post.UpdatePostDto;
