@@ -2,7 +2,7 @@ package faang.school.postservice.util.controller;
 
 import faang.school.postservice.controller.PostController;
 import faang.school.postservice.dto.post.PostDto;
-import faang.school.postservice.exception.PostValidationException;
+import faang.school.postservice.exception.ExternalServiceValidationException;
 import faang.school.postservice.service.PostService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,10 +50,10 @@ public class PostControllerTest {
         inputPost.setAuthorId(TEST_USER_ID);
         inputPost.setContent(null);
 
-        doThrow(new PostValidationException("Content cannot be null or empty"))
+        doThrow(new ExternalServiceValidationException("Content cannot be null or empty"))
                 .when(postService)
                 .createDraft(inputPost);
-        assertThrows(PostValidationException.class, () -> postController.createDraft(inputPost));
+        assertThrows(ExternalServiceValidationException.class, () -> postController.createDraft(inputPost));
         verify(postService, times(1)).createDraft(inputPost);
     }
 

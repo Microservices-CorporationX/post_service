@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static faang.school.postservice.constant.PostErrorMessages.POST_CANNOT_BE_NULL;
-
 @Validated
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +23,7 @@ public class PostController {
     }
 
     @PutMapping(value = "/publish/{postId}")
-    public PostDto publish(@PathVariable @NotNull(message = POST_CANNOT_BE_NULL) Long postId) {
+    public PostDto publish(@PathVariable @NotNull(message = "postId can't be null") Long postId) {
         return postService.publish(postId);
     }
 

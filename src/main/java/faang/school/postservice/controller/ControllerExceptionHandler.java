@@ -18,6 +18,12 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ControllerExceptionHandler {
 
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleRuntimeException(RuntimeException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
     public ErrorResponse handleEntityNotFoundException(EntityNotFoundException e) {
@@ -47,15 +53,16 @@ public class ControllerExceptionHandler {
     public ErrorResponse handleConstraintViolationException(ConstraintViolationException e) {
         String errorMessage = e.getConstraintViolations()
                 .stream()
-                .map(violation -> String.format("Field '%s': %s", violation.getPropertyPath(), violation.getMessage()))
-                .collect(Collectors.joining("; ")); // Собираем все сообщения об ошибках в одну строку
+                .map(violation ->
+                        String.format("Field '%s': %s", violation.getPropertyPath(), violation.getMessage()))
+                .collect(Collectors.joining("; "));
 
         return new ErrorResponse(errorMessage);
     }
 
-    @ExceptionHandler(PostValidationException.class)
+    @ExceptionHandler(ExternalServiceValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handlePostValidationException(PostValidationException e) {
+    public ErrorResponse handlePostValidationException(ExternalServiceValidationException e) {
         return new ErrorResponse(e.getMessage());
     }
 
@@ -72,14 +79,8 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler(ServiceNotAvailableException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleServiceNotAvailableException(ServiceNotAvailableException e) {
-        return new ErrorResponse(e.getMessage());
-    }
-
-    @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleRuntimeException(RuntimeException e) {
+    public ErrorResponse handleServiceNotAvailableException(ServiceNotAvailableException e) {
         return new ErrorResponse(e.getMessage());
     }
 
@@ -90,9 +91,9 @@ public class ControllerExceptionHandler {
     }
 
     @ExceptionHandler(FeignException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleFeignException(FeignException e) {
-        String message = e.contentUTF8(); // Извлекаем текстовое тело ответа
+        String message = e.contentUTF8();
         return new ErrorResponse(message != null && !message.isEmpty() ? message : "Resource not found");
     }
 
