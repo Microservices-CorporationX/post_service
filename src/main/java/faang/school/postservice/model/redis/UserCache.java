@@ -1,14 +1,19 @@
-package faang.school.postservice.model.redishash;
+package faang.school.postservice.model.redis;
 
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.io.Serializable;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.springframework.data.redis.core.RedisHash;
 
-@RedisHash("User")
-public class UserHash implements Serializable {
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@RedisHash(value = "Users", timeToLive = 24L)
+public class UserCache implements Serializable {
   @Id
   private Long id;
 
@@ -18,6 +23,5 @@ public class UserHash implements Serializable {
   @Email(message = "Email must be in right format")
   private String email;
 
-  private List<Long> subscribersIds;
 }
 

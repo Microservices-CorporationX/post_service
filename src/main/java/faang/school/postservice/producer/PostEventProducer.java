@@ -1,19 +1,22 @@
 package faang.school.postservice.producer;
 
-import faang.school.postservice.dto.event.PostEvent;
-import org.apache.kafka.clients.admin.NewTopic;
+import faang.school.postservice.config.kafka.KafkaProperties;
+import faang.school.postservice.dto.event.PostEventDto;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
-public class PostEventProducer extends AbstractEventProducer<PostEvent> {
+@RequiredArgsConstructor
+public class PostEventProducer {
 
-  public PostEventProducer(KafkaTemplate<String, Object> kafkaTemplate, NewTopic topic) {
-    super(kafkaTemplate, topic);
-  }
+  private final KafkaTemplate<String, Object> kafkaTemplate;
+  private final KafkaProperties kafkaProperties;
 
-  @Override
-  public void sendEvent(PostEvent event) {
-    super.sendEvent(event);
+  public void sendEvent(PostEventDto event) {
+    log.info("Sending New Post Event with Followers to Kafka");
+    kafkaTemplate.send(kafkaProperties.getPostsTopic(), event);
   }
 }

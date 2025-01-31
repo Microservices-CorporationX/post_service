@@ -42,7 +42,7 @@ spring:
     kafka:
       bootstrap-servers: "localhost:9092"
       topic:
-        posts: "posts"
+        posts: "post_topic"
 
   task:
     execution:
@@ -81,7 +81,7 @@ services:
 
 user-service:
   host: localhost
-  port: 8080
+  port: 8088
 project-service:
   host: localhost
   port: 8082
