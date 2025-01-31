@@ -17,6 +17,8 @@ public class KafkaGeneralConfig {
     private String port;
     @Value(value = "${spring.kafka.host}")
     private String host;
+    @Value(value = "${spring.kafka.topics_names}")
+    private String postsTopicName;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -27,6 +29,6 @@ public class KafkaGeneralConfig {
 
     @Bean
     public NewTopic postTopic() {
-        return new NewTopic("posts", 3, (short) 1);
+        return new NewTopic(postsTopicName, 1, (short) 1);
     }
 }

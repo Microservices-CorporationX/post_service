@@ -2,9 +2,9 @@ package faang.school.postservice.kafka_publishers;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.kafka_events.PostKafkaEventDto;
-import faang.school.postservice.dto.user.UserDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.retry.annotation.Backoff;
@@ -24,13 +24,16 @@ public class KafkaPostPublisher {
     private final KafkaTemplate<String, PostKafkaEventDto> kafkaTemplate;
     private final UserServiceClient userServiceClient;
 
+    @Value(value = "${spring.kafka.topics_names}")
+    private String postsTopicName;
+
     public void sendPostEvent(PostKafkaEventDto postEvent) {
         try {
             List<Long> postAuthorFollowers = fetchPostAuthorFollowers(postEvent.getAuthorId());
             postEvent.setAuthorFollowersIds(postAuthorFollowers);
 
             CompletableFuture<SendResult<String, PostKafkaEventDto>> future = kafkaTemplate.send(
-                    "posts",
+                    postsTopicName,
                     postEvent.getPostId().toString(),
                     postEvent
             );
@@ -38,7 +41,7 @@ public class KafkaPostPublisher {
             future.whenComplete((result, exception) -> {
                 if (exception == null) {
                     log.info("Successfully sent PostCache with ID [{}] to topic [{}] at offset [{}]",
-                            postEvent.getPostId(), "posts", result.getRecordMetadata().offset());
+                            postEvent.getPostId(), postsTopicName, result.getRecordMetadata().offset());
                 } else {
                     log.error("Failed to send PostCache [{}] due to error", postEvent, exception);
                 }
@@ -54,11 +57,8 @@ public class KafkaPostPublisher {
             backoff = @Backoff(delay = 3000)
     )
     protected List<Long> fetchPostAuthorFollowers(Long authorId) {
-        return Optional.ofNullable(userServiceClient.getFollowers(authorId))
-                .orElseGet(Collections::emptyList)
-                .stream()
-                .map(UserDto::getId)
-                .toList();
+        return Optional.ofNullable(userServiceClient.getFollowersIds(authorId))
+                .orElseGet(Collections::emptyList);
     }
 
     @Recover

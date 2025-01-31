@@ -1,7 +1,6 @@
 package faang.school.postservice.config.redis;
 
 import faang.school.postservice.cache_entities.AuthorCache;
-import faang.school.postservice.cache_entities.NewsFeedCache;
 import faang.school.postservice.cache_entities.PostCache;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -50,12 +49,11 @@ public class RedisConfig {
     public class RedisKeyspaceConfig extends KeyspaceConfiguration {
         @Override
         protected Iterable<KeyspaceSettings> initialConfiguration() {
-            KeyspaceSettings feedKeyspaceSettings = new KeyspaceSettings(NewsFeedCache.class, "Newsfeed");
             KeyspaceSettings authorKeyspaceSettings = new KeyspaceSettings(AuthorCache.class, "Author");
             authorKeyspaceSettings.setTimeToLive(TimeUnit.HOURS.toSeconds(authorCacheTtl));
             KeyspaceSettings postKeyspaceSettings = new KeyspaceSettings(PostCache.class, "Post");
             postKeyspaceSettings.setTimeToLive(TimeUnit.HOURS.toSeconds(postCacheTtl));
-            return List.of(feedKeyspaceSettings, postKeyspaceSettings, authorKeyspaceSettings);
+            return List.of(postKeyspaceSettings, authorKeyspaceSettings);
         }
     }
 }

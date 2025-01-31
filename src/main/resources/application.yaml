@@ -12,6 +12,8 @@ spring:
   kafka:
     port: 9092
     host: localhost
+    group_id: news_feed
+    topics_names: posts
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -69,6 +71,8 @@ cache:
     ttl: 24
   post:
     ttl: 24
+  news_feed:
+    max_posts_amount: 500
 
 user-service:
   host: localhost

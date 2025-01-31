@@ -11,7 +11,7 @@ public interface PostCacheMapper {
     @Mapping(source = "id", target = "postId")
     @Mapping(target = "countViews", constant = "0")
     @Mapping(target = "lastThreeComments", ignore = true)
-    @Mapping(target = "author", ignore = true)
+    @Mapping(target = "authorId", ignore = true)
     PostCache toCache(PostResponseDto postResponseDto);
 
     @Mapping(source = "postId", target = "id")
