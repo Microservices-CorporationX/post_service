@@ -14,6 +14,7 @@ import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
+import faang.school.postservice.validator.post.ContentValidator;
 import faang.school.postservice.validator.post.PostValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,8 @@ class PostServiceTest {
     private ResourceService resourceService;
     @Mock
     private ImageResizeService imageResizeService;
+    @Mock
+    private ContentValidator contentValidator;
     @InjectMocks
     private PostService postService;
     @Mock
@@ -308,5 +311,18 @@ class PostServiceTest {
 
         verify(postRepository, times(1)).findNotVerifiedPots();
         verify(userBanPublisher, times(0)).publish(usersIdsForBanCapture.capture());
+    }
+
+    @Test
+    void testCheckText() {
+        Post post = new Post();
+        List<Post> posts = List.of(post);
+        when(postRepository.findReadyToPublish()).thenReturn(posts);
+
+        postService.checkText();
+
+        verify(postRepository).findReadyToPublish();
+        verify(contentValidator).processPost(post);
+        verify(postRepository).saveAll(posts);
     }
 }

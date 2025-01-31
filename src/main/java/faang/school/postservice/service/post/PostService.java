@@ -15,6 +15,7 @@ import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
+import faang.school.postservice.validator.post.ContentValidator;
 import faang.school.postservice.validator.post.PostValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,7 @@ public class PostService {
     private final ResourceService resourceService;
     private final ImageResizeService imageResizeService;
     private final UserBanPublisher userBanPublisher;
+    private final ContentValidator contentValidator;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -211,5 +213,11 @@ public class PostService {
                 )
                 .distinct()
                 .toList();
+    }
+
+    public void checkText() {
+        List<Post> nonPublishedPosts = postRepository.findReadyToPublish();
+        nonPublishedPosts.forEach(contentValidator::processPost);
+        postRepository.saveAll(nonPublishedPosts);
     }
 }

@@ -30,6 +30,8 @@ spring:
           name: ban_user
         comment_channel:
           name: comment_channel
+        ad_bought_channel:
+          name: ad_bought_channel
 
   servlet:
     multipart:
@@ -87,8 +89,4 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
 
-banner:
-  minimum-size-of-unverified-posts: 5
-  cron: 0 0 0 * * *
-  zone: Europe/Moscow
-  thread-pool: 1
+
