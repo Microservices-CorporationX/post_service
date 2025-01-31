@@ -34,13 +34,10 @@ dependencies {
     /**
      * S3
      */
-  //  implementation("software.amazon.awssdk:aws-sdk-java:2.30.0")
     implementation("software.amazon.awssdk:s3:2.30.0")
-    //  implementation("software.amazon.awssdk:netty-nio-client:2.17.89")
     implementation("software.amazon.awssdk:url-connection-client:2.30.0")
     implementation("software.amazon.awssdk:regions:2.30.0")
     runtimeOnly ("aws.smithy.kotlin:aws-credentials-jvm:1.4.0")
-    //   implementation("software.amazon.awssdk:credentials:2.30.0")
     implementation("net.coobird:thumbnailator:0.4.14")
 
     /**
