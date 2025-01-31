@@ -9,7 +9,11 @@ import faang.school.postservice.filter.post.PostFilter;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producer.KafkaLikeProducer;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.publisher.RedisBanMessagePublisher;
+import faang.school.postservice.redis.service.AuthorCacheService;
+import faang.school.postservice.redis.service.PostCacheService;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.sort.PostField;
 import faang.school.postservice.sort.SortBy;
@@ -38,6 +42,9 @@ public class PostService {
     private final List<SortBy> sort;
     private final CommentService commentService;
     private final RedisBanMessagePublisher redisBanMessagePublisher;
+    private final AuthorCacheService authorCacheService;
+    private final EventsGenerator eventsGenerator;
+    private final KafkaPostProducer kafkaPostProducer;
 
     public PostDto createPost(PostDto postDto) {
         log.info("validate post dto argument");
@@ -51,7 +58,10 @@ public class PostService {
         post.setDeleted(false);
 
         log.info("saving new post in db");
-        postRepository.save(post);
+        savePost(post);
+        authorCacheService.saveAuthorCache(post.getAuthorId());
+        eventsGenerator.savePostCache(postDto);
+        kafkaPostProducer.sendPostEvent(postDto);
 
         log.info("mapping entity to postDto");
         return postMapper.toDto(post);
