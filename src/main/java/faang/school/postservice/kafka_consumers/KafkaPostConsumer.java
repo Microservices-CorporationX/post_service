@@ -1,7 +1,7 @@
 package faang.school.postservice.kafka_consumers;
 
 import faang.school.postservice.dto.kafka_events.PostKafkaEventDto;
-import faang.school.postservice.service.cache.NewsFeedCacheService;
+import faang.school.postservice.service.cache.NewsFeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class KafkaPostConsumer {
 
-    private final NewsFeedCacheService newsFeedCacheService;
+    private final NewsFeedService newsFeedService;
 
     @KafkaListener(
             topics = "${spring.kafka.topics_names}",
@@ -23,7 +23,7 @@ public class KafkaPostConsumer {
     public void handleNewPost(PostKafkaEventDto postEvent, Acknowledgment ack) {
         try {
             postEvent.getAuthorFollowersIds().forEach(followerId ->
-                    newsFeedCacheService.addPostToNewsFeed(postEvent, followerId)
+                    newsFeedService.addPostToNewsFeed(postEvent, followerId)
             );
             ack.acknowledge();
         } catch (Exception e) {

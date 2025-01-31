@@ -12,4 +12,6 @@ import org.mapstruct.ReportingPolicy;
 public interface AuthorCacheMapper {
     @Mapping(source = "id", target = "userId")
     AuthorCache toAuthorCache(UserDto userDto);
+    @Mapping(source = "userId", target = "id")
+    UserDto toUserDto(AuthorCache authorCache);
 }

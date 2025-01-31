@@ -17,6 +17,7 @@ public class PostResponseDto {
     private Long id;
     private String content;
     private Long authorId;
+    private String authorName;
     private boolean published;
     private Long projectId;
     private LocalDateTime createdAt;

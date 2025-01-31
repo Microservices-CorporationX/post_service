@@ -19,6 +19,7 @@ public interface PostMapper {
 
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "audio", ignore = true)
+    @Mapping(target = "authorName", ignore = true)
     @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapLikesToLikeIds")
     @Mapping(source = "comments", target = "commentIds", qualifiedByName = "mapCommentsToCommentIds")
     PostResponseDto toDto(Post post);
@@ -27,6 +28,7 @@ public interface PostMapper {
 
     @Mapping(target = "images", ignore = true)
     @Mapping(target = "audio", ignore = true)
+    @Mapping(target = "authorName", ignore = true)
     @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapLikesToLikeIds")
     @Mapping(source = "comments", target = "commentIds", qualifiedByName = "mapCommentsToCommentIds")
     List<PostResponseDto> toListPostDto(List<Post> posts);

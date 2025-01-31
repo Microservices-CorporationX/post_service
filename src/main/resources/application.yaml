@@ -74,6 +74,7 @@ cache:
   news_feed:
     prefix_name: News_Feed
     max_posts_amount: 500
+    page_size: 20
 
 user-service:
   host: localhost

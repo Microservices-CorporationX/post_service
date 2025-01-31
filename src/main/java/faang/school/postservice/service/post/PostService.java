@@ -1,5 +1,7 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.cache_entities.AuthorCache;
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.dto.kafka_events.PostKafkaEventDto;
 import faang.school.postservice.dto.post.PostFilterDto;
@@ -40,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -66,6 +69,7 @@ public class PostService {
     private final PostValidator postValidator;
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
+    private final UserServiceClient userServiceClient;
     private final KafkaPostPublisher kafkaPostPublisher;
 
     @Transactional
@@ -89,6 +93,7 @@ public class PostService {
         post = postRepository.save(post);
 
         PostResponseDto responseDto = postMapper.toDto(post);
+        responseDto.setAuthorName(getAuthorName(post.getAuthorId()));
         populateResourceUrls(responseDto, post);
         return responseDto;
     }
@@ -162,6 +167,15 @@ public class PostService {
             resourceService.deleteResources(resourceIds);
             log.info("{} resources deleted successfully", resourceIds.size());
         }
+    }
+
+    private String getAuthorName(Long authorId) {
+        AuthorCache authorCache = authorCacheService.getAuthorCacheById(authorId);
+        if (authorCache != null) {
+            return authorCache.getUsername();
+        }
+        log.info("Fetching user {} from UserService", authorId);
+        return userServiceClient.getUser(authorId).getUsername();
     }
 
     public PostResponseDto publishPost(Long id) {

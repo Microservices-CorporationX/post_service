@@ -21,6 +21,7 @@ public class PostCache implements Serializable {
     private Long postId;
     private String content;
     private Long authorId;
+    private String authorName;
     private Integer countLikes;
     private Integer countViews;
     private List<CommentResponseDto> lastThreeComments;
