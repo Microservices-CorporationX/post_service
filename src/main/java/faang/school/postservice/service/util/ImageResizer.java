@@ -27,7 +27,7 @@ public class ImageResizer {
     public MultipartFile resizeImage(MultipartFile file) throws IOException {
         BufferedImage originalImage = ImageIO.read(file.getInputStream());
         if (originalImage == null) {
-            throw new IOException("Failed to read image. The file might be corrupted or in an unsupported format.");
+            throw new IOException("Failed to read image. The image file might be corrupted or in an unsupported format.");
         }
 
         if (isResizingRequired(originalImage)) {

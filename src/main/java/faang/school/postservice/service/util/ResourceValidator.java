@@ -46,11 +46,10 @@ public class ResourceValidator {
         }
     }
 
-    private void validateAvailableSpace(
-            int numResourcesInPost, int numResourcesToAdd) {
+    private void validateAvailableSpace(int numResourcesInPost, int numResourcesToAdd) {
         if (numResourcesInPost + numResourcesToAdd > maxImagesPerPost) {
             throw new MediaFileException(
-                    String.format("You cannot attach more than %d images to a post." +
+                    String.format("Cannot attach more than %d images to a post." +
                                     " This post has %d images attached and you've tried to add %d more images.",
                             maxImagesPerPost, numResourcesInPost, numResourcesToAdd));
         }
