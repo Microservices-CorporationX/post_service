@@ -32,7 +32,7 @@ public class RedisConfig {
                 objectMapper.getPolymorphicTypeValidator(),
                 ObjectMapper.DefaultTyping.NON_FINAL
         );
-        return new Jackson2JsonRedisSerializer<>(Object.class);
+        return new Jackson2JsonRedisSerializer<>(objectMapper, Object.class);
     }
 
     @Bean

@@ -1,7 +1,10 @@
 package faang.school.postservice.service.redis;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.dto.post.PostRedis;
 import faang.school.postservice.dto.user.UserNFDto;
+import faang.school.postservice.event.PostCommentEvent;
 import faang.school.postservice.exception.RedisTransactionFailedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +26,9 @@ public class RedisCacheServiceImpl implements RedisCacheService {
 
     private final Environment environment;
     private final RedisTemplate<String, Object> redisTemplate;
+    private final ObjectMapper objectMapper;
 
-    private static final RedisScript<Long> INCREMENT_VIEWS_POST_SCRIPT = RedisScript.of(
+    private static final RedisScript<Long> POST_INCREMENT_VIEWS_SCRIPT = RedisScript.of(
             """
                     local key = KEYS[1]
                     local ttl = tonumber(ARGV[1])
@@ -39,12 +43,12 @@ public class RedisCacheServiceImpl implements RedisCacheService {
                     redis.call('SET', key, cjson.encode(postObj))
                     redis.call('EXPIRE', key, ttl)
                                 
-                    return postObj.views
+                    return 1
                     """,
             Long.class
     );
 
-    private static final RedisScript<Long> INCREMENT_LIKES_POST_SCRIPT = RedisScript.of(
+    private static final RedisScript<Long> POST_INCREMENT_LIKES_SCRIPT = RedisScript.of(
             """
                     local key = KEYS[1]
                     local ttl = tonumber(ARGV[1])
@@ -59,7 +63,31 @@ public class RedisCacheServiceImpl implements RedisCacheService {
                     redis.call('SET', key, cjson.encode(postObj))
                     redis.call('EXPIRE', key, ttl)
                                 
-                    return postObj.views
+                    return 1
+                    """,
+            Long.class
+    );
+
+    private static final RedisScript<Long> POST_ADD_COMMENT_SCRIPT = RedisScript.of(
+            """
+                    local key = KEYS[1]
+                    local commentJson = ARGV[1]
+                                        
+                    local post = redis.call('GET', key)
+                    if not post then
+                        return 0
+                    end
+                                        
+                    local postObj = cjson.decode(post)
+                    local comment = cjson.decode(commentJson)
+                    if not postObj.comments then
+                        postObj.comments = {}
+                    end
+                    table.insert(postObj.comments, comment)
+                                        
+                    redis.call('SET', key, cjson.encode(postObj))
+                    
+                    return 1
                     """,
             Long.class
     );
@@ -94,7 +122,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
         int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
         try {
             Long updatedViews = redisTemplate.execute(
-                    INCREMENT_VIEWS_POST_SCRIPT,
+                    POST_INCREMENT_VIEWS_SCRIPT,
                     Collections.singletonList(key),
                     ttl
             );
@@ -121,7 +149,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
         int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
         try {
             Long updatedLikes = redisTemplate.execute(
-                    INCREMENT_LIKES_POST_SCRIPT,
+                    POST_INCREMENT_LIKES_SCRIPT,
                     Collections.singletonList(key),
                     ttl
             );
@@ -131,6 +159,35 @@ public class RedisCacheServiceImpl implements RedisCacheService {
             } else {
                 log.info("Updated likes for post {}: {}", postId, updatedLikes);
             }
+        } catch (RedisTransactionFailedException e) {
+            log.error("Redis transaction failed", e);
+            throw e;
+        }
+    }
+
+    @Retryable(
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000, multiplier = 2),
+            retryFor = RedisTransactionFailedException.class
+    )
+    @Override
+    public void addCommentForPost(PostCommentEvent event) {
+        String key = environment.getRequiredProperty("spring.data.redis.prefix-posts") + event.getPostId();
+        try {
+            String commentJson = objectMapper.writeValueAsString(event);
+            Long updatedComments = redisTemplate.execute(
+                    POST_ADD_COMMENT_SCRIPT,
+                    Collections.singletonList(key),
+                    commentJson
+            );
+            if (updatedComments == null || updatedComments == 0) {
+                log.warn("Post {} not found in Redis", event.getPostId());
+            } else {
+                log.info("Updated comments for post {}: {}", event.getPostId(), updatedComments);
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Error serializing comment", e);
+            throw new RuntimeException("Error serializing comment", e);
         } catch (RedisTransactionFailedException e) {
             log.error("Redis transaction failed", e);
             throw e;

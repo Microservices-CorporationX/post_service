@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class KafkaLikeConsumer {
+public class KafkaPostLikeConsumer {
     private final RedisCacheService redisCacheService;
 
-    @KafkaListener(topics = "${spring.kafka.topics.like}")
+    @KafkaListener(topics = "${spring.kafka.topics.post-like}")
     public void listen(PostLikeEvent event, Acknowledgment ack) {
         log.info("Received like event: {}", event);
         try {
