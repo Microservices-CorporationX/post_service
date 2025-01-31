@@ -10,15 +10,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
-class CommentModeratorTest {
+class CommentModeratorSchedulerTest {
     @Mock
     CommentService commentService;
     @InjectMocks
-    CommentModerator commentModerator;
+    CommentModeratorScheduler commentModeratorScheduler;
 
     @Test
     void testModerateCommentsToOffensiveContent() {
-        commentModerator.moderateCommentsToOffensiveContent();
+        commentModeratorScheduler.moderateCommentsToOffensiveContent();
         verify(commentService).checkProfanities();
     }
 }

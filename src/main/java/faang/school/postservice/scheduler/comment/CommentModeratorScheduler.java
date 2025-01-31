@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Component
 @Slf4j
-public class CommentModerator {
+public class CommentModeratorScheduler {
     private final CommentService commentService;
 
     @Async("moderationCommentThreadPool")
