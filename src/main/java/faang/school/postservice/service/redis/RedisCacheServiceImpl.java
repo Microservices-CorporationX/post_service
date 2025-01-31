@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 
 
 @Slf4j
@@ -44,7 +43,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
                     redis.call('SET', key, cjson.encode(postObj))
                     redis.call('EXPIRE', key, ttl)
                                 
-                    return postObj.views
+                    return 1
                     """,
             Long.class
     );
@@ -64,7 +63,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
                     redis.call('SET', key, cjson.encode(postObj))
                     redis.call('EXPIRE', key, ttl)
                                 
-                    return postObj.views
+                    return 1
                     """,
             Long.class
     );
@@ -72,8 +71,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
     private static final RedisScript<Long> POST_ADD_COMMENT_SCRIPT = RedisScript.of(
             """
                     local key = KEYS[1]
-                    local ttl = tonumber(ARGV[1])
-                    local commentJson = ARGV[2]
+                    local commentJson = ARGV[1]
                                         
                     local post = redis.call('GET', key)
                     if not post then
@@ -88,9 +86,8 @@ public class RedisCacheServiceImpl implements RedisCacheService {
                     table.insert(postObj.comments, comment)
                                         
                     redis.call('SET', key, cjson.encode(postObj))
-                    redis.call('EXPIRE', key, ttl)
-                                        
-                    return #postObj.comments.count
+                    
+                    return 1
                     """,
             Long.class
     );
@@ -176,13 +173,11 @@ public class RedisCacheServiceImpl implements RedisCacheService {
     @Override
     public void addCommentForPost(PostCommentEvent event) {
         String key = environment.getRequiredProperty("spring.data.redis.prefix-posts") + event.getPostId();
-        int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts"));
         try {
             String commentJson = objectMapper.writeValueAsString(event);
             Long updatedComments = redisTemplate.execute(
                     POST_ADD_COMMENT_SCRIPT,
                     Collections.singletonList(key),
-                    ttl,
                     commentJson
             );
             if (updatedComments == null || updatedComments == 0) {

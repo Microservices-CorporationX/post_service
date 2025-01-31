@@ -19,13 +19,13 @@ import java.util.List;
 public class FeedServiceImpl implements FeedService {
     private final RedisTemplate<String, Object> redisLettuceTemplate;
 
-    @Value("${spring.data.redis.prefix-feeds}")
+    @Value("${spring.data.redis.prefix-feeds:feeds}")
     private String prefixFeed;
 
-    @Value("${spring.data.redis.max-feeds}")
+    @Value("${spring.data.redis.max-feeds:500}")
     private int maxFeeds;
 
-    @Value("${spring.data.redis.ttl-feeds}")
+    @Value("${spring.data.redis.ttl-feeds:1}")
     private int ttl;
 
     private static final RedisScript<Long> FEED_UPDATE_SCRIPT = RedisScript.of(
@@ -35,13 +35,16 @@ public class FeedServiceImpl implements FeedService {
                     local ttlSeconds = ARGV[2]
                     local maxFeeds = tonumber(ARGV[3])
                     local score = tonumber(ARGV[4])
+                    
                     redis.call('ZADD', key, score, postId)
                     redis.call('EXPIRE', key, ttlSeconds)
+                    
                     local count = redis.call('ZCARD', key)
                     if count > maxFeeds then
                         local removeCount = count - maxFeeds
                         redis.call('ZREMRANGEBYRANK', key, 0, removeCount - 1)
                     end
+                    
                     return 1
                     """,
             Long.class

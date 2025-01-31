@@ -99,7 +99,7 @@ spring:
         threads-count: 10
 
 server:
-  port: 8081
+  port: 8975
 
 logging:
   level:
@@ -114,7 +114,7 @@ services:
 
 user-service:
   host: localhost
-  port: 8087
+  port: 14546
 project-service:
   host: localhost
   port: 8082
