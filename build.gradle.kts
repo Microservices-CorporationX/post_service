@@ -18,7 +18,6 @@ dependencies {
      */
     implementation(platform("software.amazon.awssdk:bom:2.30.10"))
     implementation("software.amazon.awssdk:s3")
-    implementation("software.amazon.awssdk:netty-nio-client")
     /**
      * Spring Swagger
      */

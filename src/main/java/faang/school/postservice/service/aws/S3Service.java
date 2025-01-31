@@ -1,42 +1,48 @@
 package faang.school.postservice.service.aws;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.core.async.AsyncRequestBody;
 
-import java.util.ArrayList;
-import java.util.List;
+import software.amazon.awssdk.services.s3.S3AsyncClient;
+
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import java.util.concurrent.CompletableFuture;
 
-@Service
-@RequiredArgsConstructor
 public class S3Service {
-    private final S3Actions s3Actions;
 
-    public CompletableFuture<Boolean> checkAndRecreateBucket(String bucketName) {
-        return s3Actions.listBuckets()
-                .thenApply(buckets -> buckets.stream().anyMatch(bucket -> bucket.name().equals(bucketName)))
-                .thenCompose(exists -> {
-                    if (!exists) {
-                        return s3Actions.createBucketAsync(bucketName).thenApply(bucket -> true);
-                    }
-                    return CompletableFuture.completedFuture(true);
+    private static final Logger logger = LoggerFactory.getLogger(S3Service.class);
+    private static S3AsyncClient s3AsyncClient;
+
+
+    public CompletableFuture<Void> uploadFile(String bucketName, String key, byte[] fileBytes) {
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        return s3AsyncClient.putObject(putObjectRequest, AsyncRequestBody.fromBytes(fileBytes))
+                .thenAccept(response -> logger.info("File uploaded successfully: {}", key))
+                .exceptionally(ex -> {
+                    logger.error("Failed to upload file: {}", key, ex);
+                    throw new RuntimeException("Failed to upload file", ex);
                 });
     }
 
-    public CompletableFuture<Void> addFile(String bucketName, String key, byte[] fileBytes) {
-        return s3Actions.uploadFile(bucketName, key, fileBytes);
+    public CompletableFuture<Void> deleteFile(String bucketName, String key) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucketName)
+                .key(key)
+                .build();
+
+        return s3AsyncClient.deleteObject(deleteObjectRequest)
+                .thenAccept(response -> logger.info("File deleted successfully: {}", key))
+                .exceptionally(ex -> {
+                    logger.error("Failed to delete file: {}", key, ex);
+                    throw new RuntimeException("Failed to delete file", ex);
+                });
     }
 
-    public CompletableFuture<Void> removeFile(String bucketName, String key) {
-        return s3Actions.deleteFile(bucketName, key);
-    }
-
-    public CompletableFuture<List<String>> listFiles(String bucketName) {
-        List<String> objectKeys = new ArrayList<>();
-        return s3Actions.listAllObjectsAsync(bucketName).thenApply(v -> objectKeys);
-    }
-
-    public CompletableFuture<byte[]> getFileById(String bucketName, String key, String path) {
-        return s3Actions.getObjectBytesAsync(bucketName, key);
-    }
 }

@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
+
 
 
 @RequiredArgsConstructor
@@ -22,7 +22,7 @@ public class FileService {
     private final S3Service s3Service;
     private final AwsS3ApiConfig awsS3ApiConfig;
 
-    public List<String> uploadFiles(List<MultipartFile> files) {
+    public List<String> uploadFiles(Long postId, List<MultipartFile> files) {
 
         if (files.size() > 10) {
             throw new IllegalArgumentException("Cannot upload more than 10 files per post");
@@ -50,9 +50,8 @@ public class FileService {
                     }
                 }
 
-                String key = UUID.randomUUID() + "-" + file.getOriginalFilename();
                 byte[] fileBytes = image != null ? bufferedImageToByteArray(image, file.getContentType()) : file.getBytes();
-                s3Service.addFile(awsS3ApiConfig.getBucket(), key, fileBytes).join();
+                s3Service.uploadFile(awsS3ApiConfig.getBucket(), postId.toString(), fileBytes).join();
             } catch (IOException e) {
                 throw new RuntimeException("Failed to process file", e);
             }
@@ -62,7 +61,7 @@ public class FileService {
 
     public void deleteFiles(List<String> fileIds) {
         for (String fileId : fileIds) {
-            s3Service.removeFile(awsS3ApiConfig.getBucket(), fileId).join();
+            s3Service.deleteFile(awsS3ApiConfig.getBucket(), fileId).join();
         }
     }
 

@@ -21,7 +21,7 @@ public class FileController {
 
     @PostMapping
     public void addFiles(@RequestParam List<MultipartFile> files, @RequestParam("postId") Long postId) {
-        List<String> fileKeys = fileService.uploadFiles(files);
+        List<String> fileKeys = fileService.uploadFiles(postId, files);
         //postService.addFilesToPost(postId, fileKeys);
         //fileKey
     }
