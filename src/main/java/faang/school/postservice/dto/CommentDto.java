@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Schema(description = "DTO representing a comment, including content, author, likes, and timestamps")
-public class CommentDto {
+public class CommentDto implements Serializable {
     @Schema(description = "Unique identifier for the comment", example = "1")
     private Long id;
     @NotBlank

@@ -5,13 +5,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.data.redis.core.RedisHash;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Schema(description = "DTO representing a post, including content, author, likes, comments, and timestamps")
 @Data
-public class PostDto {
+@RedisHash(value = "post")
+public class PostDto implements Serializable {
     @Schema(description = "Unique identifier of the post", example = "1")
     private Long id;
 
@@ -28,8 +31,6 @@ public class PostDto {
     private Long projectId;
     @Schema(description = "List of IDs of likes associated with the post", example = "[1, 2, 3]")
     private List<Long> likeIds;
-    @Schema(description = "List of IDs of comments associated with the post", example = "[101, 102, 103]")
-    private List<Long> commentIds;
     @Schema(description = "Indicates whether the post is deleted", example = "false")
     private Boolean deleted;
     @Schema(description = "Timestamp when the post was created", example = "2024-12-13T10:15:30")
@@ -40,4 +41,5 @@ public class PostDto {
     private LocalDateTime publishedAt;
     @Schema(description = "Timestamp when the post is scheduled to be published", example = "2024-12-14T12:00:00")
     private LocalDateTime scheduledAt;
+    private List<CommentDto> comments;
 }

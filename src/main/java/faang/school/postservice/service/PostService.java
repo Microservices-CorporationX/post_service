@@ -11,8 +11,10 @@ import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.RedisBanMessagePublisher;
+import faang.school.postservice.redis.repository.PostCacheRepository;
 import faang.school.postservice.redis.repository.UserCacheRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.sender.async.AsyncPostEventSender;
 import faang.school.postservice.sort.PostField;
 import faang.school.postservice.sort.SortBy;
 import faang.school.postservice.validator.PostServiceValidator;
@@ -41,6 +43,8 @@ public class PostService {
     private final CommentService commentService;
     private final RedisBanMessagePublisher redisBanMessagePublisher;
     private final UserCacheRepository userCacheRepository;
+    private final PostCacheRepository postCacheRepository;
+    private final AsyncPostEventSender asyncPostEventSender;
 
     public PostDto createPost(PostDto postDto) {
         log.info("validate post dto argument");
@@ -55,6 +59,12 @@ public class PostService {
 
         log.info("saving new post in db");
         postRepository.save(post);
+
+        log.info("caching post");
+        postCacheRepository.cachePost(postDto);
+
+        log.info("send post event");
+        asyncPostEventSender.sendPostEvents(post);
 
         log.info("mapping entity to postDto");
         return postMapper.toDto(post);
