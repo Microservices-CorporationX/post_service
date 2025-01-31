@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/like")
+@RequestMapping("/v1/likes")
 public class LikeController {
 
     private final LikeService likeService;

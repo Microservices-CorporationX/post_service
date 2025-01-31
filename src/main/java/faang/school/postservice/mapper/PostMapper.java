@@ -19,7 +19,7 @@ public interface PostMapper {
     Post toEntity(PostCreateDto dto);
 
     @Mapping(target = "likeCount",
-            expression = "java(entity.getLikes() != null ? entity.getLikes().size() : 0)")
+            expression = "java(entity.getLikes().size())")
     PostReadDto toDto(Post entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
