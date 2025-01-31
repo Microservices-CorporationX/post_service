@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class PostCacheRepository {
 
-    private final RedisTemplate<Long, Object> redisTemplate;
+    private final RedisTemplate<Long, PostDto> redisTemplate;
     private final JedisConfig redisConfig;
 
     public void cachePost(PostDto post) {
@@ -20,6 +20,6 @@ public class PostCacheRepository {
     }
 
     public PostDto getPostBy(Long postId) {
-        return (PostDto) redisTemplate.opsForValue().get(postId);
+        return redisTemplate.opsForValue().get(postId);
     }
 }
