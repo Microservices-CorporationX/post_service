@@ -10,13 +10,11 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.Named;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface CommentMapper {
 
     @Mapping(target = "post", ignore = true)
@@ -25,18 +23,14 @@ public interface CommentMapper {
     CommentCreateDto toDto(Comment comment);
 
     @Mapping(source = "post.id", target = "postId")
-    @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapToIds")
+    @Mapping(source = "likes", target = "likeIds", qualifiedByName = "mapToIds",
+            conditionExpression = "java(comment.getLikes() != null)")
     CommentReadDto toReadDto(Comment comment);
 
     Comment update(@MappingTarget Comment comment, CommentUpdateDto dto);
 
-
     @Named("mapToIds")
     default List<Long> mapToIds(@Nullable List<Like> likes) {
-        if (likes != null) {
-            return likes.stream().map(Like::getId).toList();
-        } else {
-            return null;
-        }
+        return likes.stream().map(Like::getId).toList();
     }
 }

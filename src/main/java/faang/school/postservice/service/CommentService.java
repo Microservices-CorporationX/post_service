@@ -1,6 +1,5 @@
 package faang.school.postservice.service;
 
-import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
