@@ -30,6 +30,8 @@ spring:
           name: ban_user
         comment_channel:
           name: comment_channel
+        ad_bought_channel:
+          name: ad_bought_channel
 
   servlet:
     multipart:
@@ -76,11 +78,6 @@ moderation:
   zone: Europe/Moscow
   thread-pool-size: 1
 
-post-correction:
-  thread-pool-size: 1
-  cron: 0 0 0 * * *
-  api-url: https://speller.yandex.net/services/spellservice.json
-
 api:
   version: "/api/v1"
 
@@ -91,8 +88,4 @@ springdoc:
     path: /swagger-ui.html
     enabled: true
 
-banner:
-  minimum-size-of-unverified-posts: 5
-  cron: 0 0 0 * * *
-  zone: Europe/Moscow
-  thread-pool: 1
+
