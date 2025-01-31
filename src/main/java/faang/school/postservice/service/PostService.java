@@ -25,8 +25,8 @@ public class PostService {
         Post post = postMapper.fromCreateDto(postDraftDto);
         postValidator.validatePostAuthorExist(post);
         postValidator.validatePostDraftInfo(post);
-        post = postRepository.save(post);
-        return postMapper.toResponseDto(post);
+        Post savedPost = postRepository.save(post);
+        return postMapper.toResponseDto(savedPost);
     }
 
     public PostResponseDto publishPost(long postId) {
@@ -35,8 +35,8 @@ public class PostService {
         postValidator.validateNotPublished(post);
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
-        post = postRepository.save(post);
-        return postMapper.toResponseDto(post);
+        Post savedPost = postRepository.save(post);
+        return postMapper.toResponseDto(savedPost);
     }
 
     public PostResponseDto updatePost(UpdatePostDto postDto) {
@@ -44,8 +44,8 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + postDto.getId()));
         post = postMapper.update(post, postDto);
         postValidator.validatePostDraftInfo(post);
-        post = postRepository.save(post);
-        return postMapper.toResponseDto(post);
+        Post savedPost = postRepository.save(post);
+        return postMapper.toResponseDto(savedPost);
     }
 
     public PostResponseDto safeDeletePost(long id) {
@@ -53,8 +53,8 @@ public class PostService {
                 .orElseThrow(() -> new EntityNotFoundException("Post not found with id: " + id));
         postValidator.validateNotDeleted(post);
         post.setDeleted(true);
-        post = postRepository.save(post);
-        return postMapper.toResponseDto(post);
+        Post savedPost = postRepository.save(post);
+        return postMapper.toResponseDto(savedPost);
     }
 
     public PostResponseDto getPost(long id) {
