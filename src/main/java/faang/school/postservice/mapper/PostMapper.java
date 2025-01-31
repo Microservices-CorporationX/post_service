@@ -18,7 +18,7 @@ import org.mapstruct.ReportingPolicy;
 public interface PostMapper {
     Post toEntity(PostCreateDto dto);
 
-    @Mapping(target = "likeCount",
+    @Mapping(target = "likesCount",
             expression = "java(entity.getLikes().size())")
     PostReadDto toDto(Post entity);
 
