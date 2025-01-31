@@ -26,6 +26,10 @@ spring:
           name: post_view_channel
         calculations_channel:
           name: calculations_channel
+        ban_user_channel:
+          name: ban_user
+        comment_channel:
+          name: comment_channel
         ad_bought_channel:
           name: ad_bought_channel
 

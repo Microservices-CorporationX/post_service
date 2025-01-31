@@ -23,9 +23,12 @@ public interface PostRepository extends CrudRepository<Post, Long> {
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.likes WHERE p.authorId = :authorId")
     List<Post> findByAuthorIdWithLikes(long authorId);
 
-    @Query("SELECT p FROM Post p WHERE p.published = false AND p.deleted = false AND p.scheduledAt <= CURRENT_TIMESTAMP")
+    @Query("SELECT p FROM Post p WHERE p.published = false AND p.deleted = false AND (p.scheduledAt IS NULL OR p.scheduledAt <= CURRENT_TIMESTAMP)")
     List<Post> findReadyToPublish();
 
     @Query("SELECT p FROM Post p WHERE p.verifiedDate = NULL OR p.updatedAt >= :lastDayDate")
     Optional<List<Post>> findNotCheckedToVerificationPosts(@Param("lastDayDate") LocalDateTime lastDayDate);
+
+    @Query("SELECT p FROM Post p WHERE p.verified = FALSE")
+    Optional<List<Post>> findNotVerifiedPots();
 }

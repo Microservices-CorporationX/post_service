@@ -1,8 +1,8 @@
-package faang.school.postservice.publisher.postview;
+package faang.school.postservice.publisher.comment;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.dto.analytics.AnalyticsEventDto;
+import faang.school.postservice.dto.comment.CommentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,20 +12,20 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class PostViewEventPublisher {
+public class CommentEventPublisher  {
+
     private final RedisTemplate<String, Object> redisTemplate;
     private final ObjectMapper objectMapper;
 
-    @Value("${spring.data.redis.channels.post_view_channel.name}")
-    private String topic;
+    @Value("${spring.data.redis.channels.comment_channel.name}")
+    private String commentChannel;
 
-    public void publish(AnalyticsEventDto postViewEvent) {
+    public void publish(CommentEvent event) {
         try {
-            log.info("event publication: {}", postViewEvent);
-            String stringValue = objectMapper.writeValueAsString(postViewEvent);
-            redisTemplate.convertAndSend(topic, stringValue);
+            String json = objectMapper.writeValueAsString(event);
+            redisTemplate.convertAndSend(commentChannel, json);
         } catch (JsonProcessingException e) {
-            log.error("failed to serialize: {}", postViewEvent, e);
+            log.error("Error converting object {} to JSON: {}", event, e.getMessage());
             throw new RuntimeException(e);
         }
     }

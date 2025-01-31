@@ -1,10 +1,12 @@
 package faang.school.postservice.service.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.comment.CommentEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
@@ -34,17 +36,26 @@ class CommentServiceTest {
     CommentRepository commentRepository;
     @Mock
     CommentMapper commentMapper;
+    @Mock
+    CommentEventPublisher commentEventPublisher;
     @InjectMocks
     CommentService commentService;
 
     @Test
     void testCreate() {
-        CommentDto commentDto = CommentDto.builder().content("1234").postId(1L).build();
-        Mockito.when(postService.findEntityById(anyLong())).thenReturn(new Post());
-        Mockito.when(commentMapper.toEntity(any())).thenReturn(new Comment());
+        CommentDto commentDto = CommentDto.builder()
+                .authorId(1L)
+                .content("1234")
+                .postId(1L)
+                .build();
+        Comment comment = Comment.builder().id(3L).authorId(2L).build();
+        Mockito.when(postService.findEntityById(anyLong())).thenReturn(Post.builder().id(2L).build());
+        Mockito.when(commentMapper.toEntity(any())).thenReturn(comment);
+        Mockito.when(commentRepository.save(comment)).thenReturn(comment);
 
         commentService.createComment(commentDto);
         Mockito.verify(commentRepository, times(1)).save(any());
+        Mockito.verify(commentEventPublisher, times(1)).publish(any());
     }
 
     @Test

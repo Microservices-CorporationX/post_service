@@ -4,25 +4,33 @@ import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.analytics.AnalyticsEventDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
+import faang.school.postservice.dto.user.BanUsersDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
+import faang.school.postservice.publisher.user.UserBanPublisher;
 import faang.school.postservice.repository.PostRepository;
-import faang.school.postservice.service.ResourceService;
 import faang.school.postservice.service.image.ImageResizeService;
+import faang.school.postservice.service.resource.ResourceService;
+import faang.school.postservice.validator.post.ContentValidator;
 import faang.school.postservice.validator.post.PostValidator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,6 +42,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -56,8 +65,20 @@ class PostServiceTest {
     private ResourceService resourceService;
     @Mock
     private ImageResizeService imageResizeService;
+    @Mock
+    private ContentValidator contentValidator;
     @InjectMocks
     private PostService postService;
+    @Mock
+    private UserBanPublisher userBanPublisher;
+    @Captor
+    private ArgumentCaptor<BanUsersDto> usersIdsForBanCapture = ArgumentCaptor.forClass(BanUsersDto.class);
+    private int minimumSizeOfUnverifiedPosts = 5;
+
+    @BeforeEach
+    void setup() {
+        ReflectionTestUtils.setField(postService, "minimumSizeOfUnverifiedPosts", minimumSizeOfUnverifiedPosts);
+    }
 
     @Test
     void testFindEntityByIdFounded() {
@@ -241,5 +262,67 @@ class PostServiceTest {
                 Post.builder().published(false).createdAt(LocalDateTime.now().minusDays(1)).deleted(false).build(),
                 Post.builder().published(false).createdAt(LocalDateTime.now().minusDays(2)).deleted(false).build()
         );
+    }
+
+    @Test
+    void testToBanUsers_ShouldSuccessPublish() {
+        List<Post> postsForBan = getPostsForBan(minimumSizeOfUnverifiedPosts);
+        when(postRepository.findNotVerifiedPots())
+                .thenReturn(Optional.of(postsForBan));
+
+        postService.banUsers();
+
+        verify(postRepository, times(1)).findNotVerifiedPots();
+        verify(userBanPublisher, times(1)).publish(usersIdsForBanCapture.capture());
+        assertEquals(1, usersIdsForBanCapture.getValue().usersIds().size());
+        assertEquals(minimumSizeOfUnverifiedPosts, usersIdsForBanCapture.getValue().usersIds().get(0));
+    }
+
+    private List<Post> getPostsForBan(int size) {
+        List<Post> posts = new ArrayList<>();
+        for (int i = 1; i <= size; i++) {
+            posts.add(Post
+                    .builder()
+                    .id((long) i)
+                    .authorId(5L)
+                    .build());
+        }
+        return posts;
+    }
+
+    @Test
+    void testToBanUsers_ShouldNotFoundUnVerifiedPosts() {
+        when(postRepository.findNotVerifiedPots())
+                .thenReturn(Optional.empty());
+
+        postService.banUsers();
+
+        verify(postRepository, times(1)).findNotVerifiedPots();
+        verify(userBanPublisher, never()).publish(usersIdsForBanCapture.capture());
+    }
+
+    @Test
+    void testToBanUsers_ShouldNotFoundUsersWhichUnVerifiedPostsMoreThanMinimum() {
+        List<Post> postsForBan = getPostsForBan(minimumSizeOfUnverifiedPosts - 1);
+        when(postRepository.findNotVerifiedPots())
+                .thenReturn(Optional.of(postsForBan));
+
+        postService.banUsers();
+
+        verify(postRepository, times(1)).findNotVerifiedPots();
+        verify(userBanPublisher, times(0)).publish(usersIdsForBanCapture.capture());
+    }
+
+    @Test
+    void testCheckText() {
+        Post post = new Post();
+        List<Post> posts = List.of(post);
+        when(postRepository.findReadyToPublish()).thenReturn(posts);
+
+        postService.checkText();
+
+        verify(postRepository).findReadyToPublish();
+        verify(contentValidator).processPost(post);
+        verify(postRepository).saveAll(posts);
     }
 }
