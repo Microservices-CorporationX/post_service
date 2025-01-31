@@ -41,3 +41,16 @@ project-service:
 payment-service:
   host: localhost
   port: 9080
+
+aws:
+  s3:
+    endpoint: http://localhost:9000
+    accessKey: user
+    secretKey: password
+    bucket: corpbucket
+    maxConcurrency: 50
+    connectionTimeout: 60s
+    readTimeout: 60s
+    writeTimeout: 60s
+    apiCallTimeout: 2m
+    apiCallAttemptTimeout: 90s
