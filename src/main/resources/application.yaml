@@ -72,6 +72,7 @@ cache:
   post:
     ttl: 24
   news_feed:
+    prefix_name: News_Feed
     max_posts_amount: 500
 
 user-service:

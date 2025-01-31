@@ -14,11 +14,12 @@ public class NewsFeedCacheService {
 
     @Value(value = "${cache.news_feed.max_posts_amount:500}")
     private int maxPostsAmountInCacheFeed;
-    private final String NEWS_FEED_PREFIX = "news_feed:";
+    @Value("${cache.news_feed.prefix_name}")
+    private String newsFeedPrefix;
     private final RedisTemplate<String, String> redisTemplate;
 
     public void addPostToNewsFeed(PostKafkaEventDto postEventDto, Long followerId) {
-        String redisKey = NEWS_FEED_PREFIX + followerId;
+        String redisKey = newsFeedPrefix + followerId;
         String postId = String.valueOf(postEventDto.getPostId());
         long timestamp = System.currentTimeMillis();
         try {
