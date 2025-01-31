@@ -1,7 +1,6 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.CommentNotFoundException;
 import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Comment;
@@ -27,7 +26,7 @@ public class CommentService {
 
     @Transactional(readOnly = true)
     public List<Comment> getCommentsByPostId(Long postId) {
-        postService.getPostById(postId);
+        postService.get(postId);
 
         return commentRepository.findAllByPostId(postId).stream()
                 .sorted(Comparator.comparing(Comment::getCreatedAt))
@@ -36,7 +35,7 @@ public class CommentService {
 
     @Transactional
     public Comment createComment(Comment comment, Long postId, Long authorId) {
-        Post post = postService.getPostById(postId);
+        Post post = postService.get(postId);
         try {
             userServiceClient.getUser(authorId);
         } catch (FeignException e) {

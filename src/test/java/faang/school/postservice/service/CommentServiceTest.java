@@ -81,17 +81,17 @@ public class CommentServiceTest {
 
         assertEquals(expected, result);
         verify(commentRepository, times(1)).findAllByPostId(POST_ID);
-        verify(postService, times(1)).getPostById(POST_ID);
+        verify(postService, times(1)).get(POST_ID);
     }
 
     @Test
     public void createCommentTest() {
-        when(postService.getPostById(POST_ID)).thenReturn(post);
+        when(postService.get(POST_ID)).thenReturn(post);
 
         commentService.createComment(comment, POST_ID, AUTHOR_ID);
 
         verify(userServiceClient, times(1)).getUser(AUTHOR_ID);
-        verify(postService, times(1)).getPostById(POST_ID);
+        verify(postService, times(1)).get(POST_ID);
         verify(commentRepository, times(1)).save(commentCaptor.capture());
         Comment captured = commentCaptor.getValue();
         assertEquals(post, captured.getPost());
@@ -101,11 +101,11 @@ public class CommentServiceTest {
     @Test
     public void createCommentTest_throwsUserNotFoundException() {
         when(userServiceClient.getUser(AUTHOR_ID)).thenThrow(FeignException.NotFound.class);
-        when(postService.getPostById(POST_ID)).thenReturn(post);
+        when(postService.get(POST_ID)).thenReturn(post);
 
         assertThrows(UserNotFoundException.class, () ->
                 commentService.createComment(comment, POST_ID, AUTHOR_ID));
-        verify(postService, times(1)).getPostById(POST_ID);
+        verify(postService, times(1)).get(POST_ID);
     }
 
     @Test
