@@ -1,9 +1,6 @@
 package faang.school.postservice.dto.feedheat;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
@@ -11,6 +8,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Getter
+@EqualsAndHashCode
 public class FeedHeatEvent {
     private List<Long> userIds;
 }

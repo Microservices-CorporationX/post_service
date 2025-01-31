@@ -1,10 +1,12 @@
 package faang.school.postservice.service.like;
 
 import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.event.LikePostEvent;
 import faang.school.postservice.mapper.like.LikeMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.like.LikePostEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -47,6 +49,8 @@ public class LikeServiceTest {
     private PostRepository postRepository;
     @Mock
     private CommentRepository commentRepository;
+    @Mock
+    private LikePostEventPublisher likePostEventPublisher;
     @Captor
     private ArgumentCaptor<Like> likeCaptor;
 
@@ -82,6 +86,8 @@ public class LikeServiceTest {
         Like like = likeCaptor.getValue();
 
         verify(likeRepository, times(1)).save(like);
+        verify(likePostEventPublisher, times(1))
+                .publish(new LikePostEvent(likeDto.getUserId(), postId));
         assertEquals(likeDto, actualDto);
     }
 

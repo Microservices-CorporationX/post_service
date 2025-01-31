@@ -6,6 +6,7 @@ import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.user.BanUsersDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.helper.UserCacheWriter;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
@@ -33,6 +34,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -71,13 +73,18 @@ class PostServiceTest {
     private PostService postService;
     @Mock
     private UserBanPublisher userBanPublisher;
+    private UserCacheWriter userCacheWriter;
     @Captor
     private ArgumentCaptor<BanUsersDto> usersIdsForBanCapture = ArgumentCaptor.forClass(BanUsersDto.class);
     private int minimumSizeOfUnverifiedPosts = 5;
+    private int eventPartitioningBatchSize = 3;
 
     @BeforeEach
     void setup() {
         ReflectionTestUtils.setField(postService, "minimumSizeOfUnverifiedPosts", minimumSizeOfUnverifiedPosts);
+        ReflectionTestUtils.setField(postService, "eventPartitioningBatchSize", eventPartitioningBatchSize);
+        ReflectionTestUtils.setField(postService, "sendEventsThreadPool", Executors.newFixedThreadPool(3));
+        ReflectionTestUtils.setField(postService, "writeToCacheThreadPool", Executors.newFixedThreadPool(3));
     }
 
     @Test
@@ -122,7 +129,6 @@ class PostServiceTest {
     @Test
     void testPublish() {
         Mockito.when(postRepository.findById(anyLong())).thenReturn(Optional.of(new Post()));
-        Mockito.when(postRepository.save(any())).thenReturn(new Post());
         Mockito.when(postMapper.toDto(any())).thenReturn(PostDto.builder().build());
 
         PostDto post = assertDoesNotThrow(() -> postService.publish(1));
@@ -225,7 +231,6 @@ class PostServiceTest {
 
         postService.getAllPublishedByAuthorId(userId);
 
-        verify(userContext).getUserId();
         verify(postViewEventMapper, times(numberOfInvocations)).toAnalyticsEventDto(any(), eq(userId));
         verify(postViewEventPublisher, times(numberOfInvocations)).publish(any());
     }

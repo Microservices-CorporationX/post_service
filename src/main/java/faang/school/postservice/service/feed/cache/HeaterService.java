@@ -97,7 +97,7 @@ public class HeaterService {
         try {
             return userServiceClient.getUserIds(page, pageSize);
         } catch (Exception e) {
-            log.error("Error when getting user from UserService", e);
+            log.error("Error when getting users from UserService", e);
             throw e;
         }
     }
