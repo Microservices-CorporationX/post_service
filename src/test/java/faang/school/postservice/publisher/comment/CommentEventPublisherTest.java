@@ -11,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
@@ -53,6 +55,10 @@ public class CommentEventPublisherTest {
     }
 
     private CommentEvent prepareEvent() {
-        return new CommentEvent(1L, 2L, 3L, "1234");
+        return new CommentEvent(1L,
+                2L,
+                3L,
+                "1234",
+                LocalDateTime.now());
     }
 }

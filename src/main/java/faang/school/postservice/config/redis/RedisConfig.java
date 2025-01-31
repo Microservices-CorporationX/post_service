@@ -38,6 +38,7 @@ public class RedisConfig {
         template.setConnectionFactory(jedisConnectionFactory());
         template.setKeySerializer(new StringRedisSerializer());
         template.setValueSerializer(new StringRedisSerializer());
+        template.setEnableTransactionSupport(true);
         return template;
     }
 

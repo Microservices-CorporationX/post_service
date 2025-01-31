@@ -1,0 +1,1 @@
+CREATE INDEX idx_comment_post_created_at ON comment (post_id, created_at DESC);
