@@ -10,8 +10,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -30,11 +30,13 @@ public class FeedCacher {
         List<FeedDto> feeds = new ArrayList<>();
         feedDtos.forEach(feedDto -> {
             FeedDto existingFeed = feedService.findById(feedDto.getUserId());
-            List<Long> updatedPosts = new ArrayList<>(feedDto.getPostIds());
+            Set<Long> updatedPosts = new LinkedHashSet<>(feedDto.getPostIds());
             updatedPosts.addAll(existingFeed.getPostIds());
 
             if (updatedPosts.size() > feedSize) {
-                updatedPosts = updatedPosts.subList(0, feedSize);
+                updatedPosts = updatedPosts.stream()
+                        .limit(feedSize)
+                        .collect(Collectors.toSet());
             }
 
             existingFeed.setPostIds(updatedPosts);

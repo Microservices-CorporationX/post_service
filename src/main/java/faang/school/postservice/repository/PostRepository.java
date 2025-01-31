@@ -38,7 +38,7 @@ public interface PostRepository extends CrudRepository<Post, Long> {
             WHERE p.authorId IN(:follweeIds)
             ORDER BY p.publishedAt desc LIMIT :limit
             """)
-    Optional<List<Long>> findLastFolloweePostIds(@Param("follweeIds") List<Long> follweeIds, @Param("limit") int limit);
+    Optional<Set<Long>> findLastFolloweePostIds(@Param("follweeIds") List<Long> follweeIds, @Param("limit") int limit);
 
     @Query("SELECT p FROM Post p WHERE p.id IN (:postIds)")
     Optional<List<Post>> findAllByIds(@Param("postIds") Set<Long> postIds);

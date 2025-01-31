@@ -14,7 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 @Service
@@ -22,7 +22,7 @@ import java.util.List;
 public class FeedServiceImpl implements FeedService {
 
     private final FeedCacheRepository feedCacheRepository;
-    @Value("${heater.partitions:1000}")
+    @Value("${partitions.heater:1000}")
     private int partitionSize;
     @Value("${cache.memory.max-feed-size:500}")
     private int feedSize;
@@ -53,7 +53,7 @@ public class FeedServiceImpl implements FeedService {
         return feedCacheRepository.findById(userId)
                 .orElse(FeedDto.builder()
                         .userId(userId)
-                        .postIds(new ArrayList<>())
+                        .postIds(new LinkedHashSet<>())
                         .build());
     }
 }

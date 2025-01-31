@@ -19,6 +19,10 @@ public class KafkaTopicConfig {
     private String feedTopic;
     @Value("${spring.kafka.topics.feed.partitions:2}")
     private int feedPartitions;
+    @Value("${spring.kafka.topics.post-create.name:post_create}")
+    private String postCreateTopic;
+    @Value("${spring.kafka.topics.post-create.partitions:2}")
+    private int postCreatePartitions;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -30,5 +34,10 @@ public class KafkaTopicConfig {
     @Bean
     public NewTopic feedTopic() {
         return new NewTopic(feedTopic, feedPartitions, (short) 1);
+    }
+
+    @Bean
+    public NewTopic postCreatedTopic() {
+        return new NewTopic(postCreateTopic, postCreatePartitions, (short) 1);
     }
 }

@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 @Configuration
 public class PublisherExecutorService {
 
-    @Value("${spring.kafka.topics.feed.executor:2}")
+    @Value("${spring.kafka.topics.executor:2}")
     private int kafkaExecutorPoolSize;
 
     @Bean

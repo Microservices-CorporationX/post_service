@@ -9,7 +9,7 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Data
@@ -21,7 +21,7 @@ public class FeedDto implements Serializable {
 
     @Id
     private String userId;
-    private List<Long> postIds;
+    private Set<Long> postIds;
 
     @TimeToLive(unit = TimeUnit.DAYS)
     private Long ttl;

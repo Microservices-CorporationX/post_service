@@ -9,6 +9,7 @@ import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
 import faang.school.postservice.dto.user.BanUsersDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.kafka.producer.ProducerFacade;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
@@ -52,6 +53,7 @@ public class PostService {
     private final ImageResizeService imageResizeService;
     private final UserBanPublisher userBanPublisher;
     private final CacheFacade<PostCache> postCacheFacade;
+    private final ProducerFacade<PostCache> postProducerFacade;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -80,7 +82,9 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
         Post createdPost = postRepository.save(post);
-        postCacheFacade.cacheWithDetails(postMapper.toCache(createdPost));
+        var postCache = postMapper.toCache(createdPost);
+        postCacheFacade.cacheWithDetails(postCache);
+        postProducerFacade.publish(postCache);
         return postMapper.toDto(createdPost);
     }
 
@@ -219,7 +223,7 @@ public class PostService {
     }
 
     @SneakyThrows
-    public List<Long> getLastFolloweePostIds(List<Long> follweeIds, int limit) {
+    public Set<Long> getLastFolloweePostIds(List<Long> follweeIds, int limit) {
         return postRepository.findLastFolloweePostIds(follweeIds, limit)
                 .orElseThrow(() -> new EntityNotFoundException("Posts not found"));
     }

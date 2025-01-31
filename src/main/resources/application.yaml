@@ -50,10 +50,13 @@ spring:
       group-id: 1
     bootstrap-servers: localhost:9092
     topics:
+      executor: 2
       feed:
         name: feed
         partitions: 2
-        executor: 2
+      post-create:
+        name: post_create
+        partitions: 2
 
 server:
   port: 8081
@@ -117,5 +120,6 @@ cache:
   memory:
     max-feed-size: 500
 
-heater:
-  partitions: 1000
+partitions:
+  heater: 1000
+  post-create: 1000
