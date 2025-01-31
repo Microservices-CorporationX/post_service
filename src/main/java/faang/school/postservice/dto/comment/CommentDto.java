@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -21,14 +22,11 @@ public class CommentDto {
     @Size(max = 4096, message = "Content must contain fewer than 4096 characters")
     private String content;
 
-    @NotNull
     private Long authorId;
-
     private List<Long> likeIds;
-
-    @NotNull
     private Long postId;
-
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private String largeImageFileKey;
     private String smallImageFileKey;
 }

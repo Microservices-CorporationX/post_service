@@ -1,5 +1,6 @@
 package faang.school.postservice.service;
 
+import faang.school.postservice.exception.PostNotFoundException;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
@@ -12,8 +13,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class PostService {
     private final PostRepository postRepository;
     private final ExternalService externalService;
@@ -91,6 +92,6 @@ public class PostService {
 
     public Post getPostById(Long id) {
         return postRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("There is no post with id: " + id));
+                .orElseThrow(() -> new PostNotFoundException("There is no post with id: " + id));
     }
 }

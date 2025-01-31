@@ -2,35 +2,75 @@ package faang.school.postservice.service;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.exception.CommentNotFoundException;
+import faang.school.postservice.exception.UserNotFoundException;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-@Service
+import java.util.Comparator;
+import java.util.List;
+
+@Slf4j
 @RequiredArgsConstructor
+@Service
 public class CommentService {
     private final CommentRepository commentRepository;
     private final PostService postService;
-    private final UserServiceClient userService;
+    private final UserServiceClient userServiceClient;
+    private final CommentValidator commentValidator;
 
+    @Transactional(readOnly = true)
+    public List<Comment> getCommentsByPostId(Long postId) {
+        postService.getPostById(postId);
+
+        return commentRepository.findAllByPostId(postId).stream()
+                .sorted(Comparator.comparing(Comment::getCreatedAt))
+                .toList();
+    }
+
+    @Transactional
     public Comment createComment(Comment comment, Long postId, Long authorId) {
         Post post = postService.getPostById(postId);
-        UserDto user = userService.getUser(authorId);
-
-        if (post == null) {
-            throw new IllegalArgumentException("There is no post with id: " + postId);
-        }
-
-        if (user == null) {
-            throw new IllegalArgumentException("There is no user with id: " + authorId);
+        try {
+            userServiceClient.getUser(authorId);
+        } catch (FeignException e) {
+            throw new UserNotFoundException("User with id = " + authorId + " was not found");
         }
 
         comment.setPost(post);
+        comment.setAuthorId(authorId);
 
-        Comment created = commentRepository.save(comment);
+        return commentRepository.save(comment);
+    }
 
-        return created;
+    @Transactional
+    public Comment updateComment(Long commentId, Comment updatedComment, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("There is no comment with id; " + commentId));
+
+        commentValidator.validateAuthor(comment, userId);
+        commentValidator.validateCommentUpdate(updatedComment);
+
+        String updatedContent = updatedComment.getContent();
+        comment.setContent(updatedContent);
+
+        return commentRepository.save(comment);
+    }
+
+    @Transactional
+    public Comment deleteComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new CommentNotFoundException("There is no comment with id + " + commentId));
+        commentValidator.validateAuthor(comment, userId);
+
+        commentRepository.delete(comment);
+
+        return comment;
     }
 }
