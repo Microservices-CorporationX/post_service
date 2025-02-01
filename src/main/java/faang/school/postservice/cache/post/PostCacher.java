@@ -16,14 +16,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class PostCacher extends CacheHandler<PostCache> {
 
-    @Value("${spring.kafka.topics.post-create.name:post_create}")
-    private String postCreateTopic;
-    @Value("${partitions.post-create:1000}")
-    private int postCreatePartitions;
     private final Long cacheTtl;
     private final PostCacheRepository postCacheRepository;
-    private final KafkaSender kafkaSender;
-    private final UserServiceClient userServiceClient;
 
     @Override
     @Async("cacheExecutor")

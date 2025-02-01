@@ -38,7 +38,10 @@ public class KafkaConsumerConfig {
         props.put(
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
                 JsonDeserializer.class);
-        return new DefaultKafkaConsumerFactory<>(props);
+        var keyDeserializer = new JsonDeserializer<String>();
+        var valueDeserializer = new JsonDeserializer<Object>();
+        valueDeserializer.addTrustedPackages("faang.school.postservice.dto.post");
+        return new DefaultKafkaConsumerFactory<>(props, keyDeserializer, valueDeserializer);
     }
 
     @Bean
