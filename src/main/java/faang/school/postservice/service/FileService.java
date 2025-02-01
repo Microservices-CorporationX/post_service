@@ -5,15 +5,21 @@ import faang.school.postservice.service.aws.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.CompletionException;
 
 
 @RequiredArgsConstructor
@@ -51,7 +57,13 @@ public class FileService {
                 }
 
                 byte[] fileBytes = image != null ? bufferedImageToByteArray(image, file.getContentType()) : file.getBytes();
-                s3Service.uploadFile(awsS3ApiConfig.getBucket(), postId.toString(), fileBytes).join();
+                Map<String, String> metadata = new HashMap<>();
+                metadata.put("Content-Type", contentType);
+                metadata.put("Content-Length", String.valueOf(fileBytes.length));
+                metadata.put("Original-Filename", file.getOriginalFilename());
+                String key = "post/" + postId + "/" + UUID.randomUUID();
+                PutObjectResponse result = s3Service.uploadFileAsync(awsS3ApiConfig.getBucket(), key, metadata, fileBytes).join();
+                fileKeys.add(result.eTag());
             } catch (IOException e) {
                 throw new RuntimeException("Failed to process file", e);
             }
@@ -61,37 +73,62 @@ public class FileService {
 
     public void deleteFiles(List<String> fileIds) {
         for (String fileId : fileIds) {
-            s3Service.deleteFile(awsS3ApiConfig.getBucket(), fileId).join();
+            s3Service.deleteFileAsync(awsS3ApiConfig.getBucket(), fileId).join();
         }
     }
 
-    public List<String> getFileKeysByPostId(Long postId) {
-        // Implement the logic to retrieve file keys by postId
-        // This is a placeholder implementation
-        return List.of("fileKey1", "fileKey2", "fileKey3");
+    public String getPresignedUrl(String fileId) {
+        return s3Service.createPresignedGetUrl(awsS3ApiConfig.getBucket(), fileId);
     }
 
-
     private BufferedImage resizeImageIfNeeded(BufferedImage image) {
+        //assuming image size cannot be different
         int width = image.getWidth();
         int height = image.getHeight();
-        if (width > 1080 || height > 1080) {
-            int newWidth = width > 1080 ? 1080 : width;
-            int newHeight = height > 1080 ? 1080 : height;
+        int newWidth = width;
+        int newHeight = height;
+
+        if (width == height) {
+            newWidth = Math.min(newWidth, 1080);
+            newHeight = newWidth;
+
+        } else {
+            float aspectRatio = (float) width / height;
+            newWidth = Math.min(newWidth, 1080);
+            newHeight = Math.round(1080 / aspectRatio);
+            if (newHeight > 566) {
+                newHeight =  Math.min(newWidth, 566);
+                newWidth = Math.round(newHeight * aspectRatio);
+            }
+        }
+
+        if (width != newWidth || height != newHeight) {
             Image tmp = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
-            BufferedImage resized = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
+            BufferedImage resized = new BufferedImage(newWidth, newHeight,  BufferedImage.TYPE_INT_RGB);
             Graphics2D g2d = resized.createGraphics();
-            g2d.drawImage(tmp, 0, 0, null);
+            //g2d.drawImage(tmp, 0, 0, null);
+            AffineTransform at = AffineTransform.getScaleInstance((double) newWidth / width, (double) newHeight / height);
+            g2d.drawRenderedImage(image, at);
             g2d.dispose();
             return resized;
         }
+
         return image;
     }
 
     private byte[] bufferedImageToByteArray(BufferedImage image, String contentType) throws IOException {
+        if (image == null) {
+            throw new IllegalArgumentException("BufferedImage is null");
+        }
+
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        String formatName = contentType.split("/")[1];
-        ImageIO.write(image, formatName, baos);
+        String formatName = contentType != null && contentType.contains("/") ? contentType.split("/")[1] : "png";
+
+        boolean result = ImageIO.write(image, formatName, baos);
+        if (!result) {
+            throw new IOException("Failed to write image to ByteArrayOutputStream");
+        }
+
         return baos.toByteArray();
     }
 }

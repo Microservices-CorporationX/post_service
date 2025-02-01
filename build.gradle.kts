@@ -16,7 +16,7 @@ dependencies {
     /**
      * AWS S3
      */
-    implementation(platform("software.amazon.awssdk:bom:2.30.10"))
+    implementation(platform("software.amazon.awssdk:bom:2.21.30"))
     implementation("software.amazon.awssdk:s3")
     /**
      * Spring Swagger
