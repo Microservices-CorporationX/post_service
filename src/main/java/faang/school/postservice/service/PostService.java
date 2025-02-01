@@ -89,4 +89,8 @@ public class PostService {
                 .sorted(Comparator.comparing(Post::getPublishedAt).reversed())
                 .toList();
     }
+
+    public List<Post> findPostsByResourceKeys(List<String> resourceKeys) {
+        return postRepository.findPostsByResourceKeys(resourceKeys);
+    }
 }

@@ -4,12 +4,16 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.core.async.AsyncRequestBody;
+import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.services.s3.S3AsyncClient;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
@@ -80,5 +84,26 @@ public class S3Service {
         logger.info("HTTP method: [{}]", presignedRequest.httpRequest().method());
 
         return presignedRequest.url().toExternalForm();
+    }
+
+    public byte[] getObjectBytes(String bucketName, String keyName) {
+        try {
+            GetObjectRequest objectRequest = GetObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(keyName)
+                    .build();
+
+            CompletableFuture<ResponseBytes<GetObjectResponse>> future =
+                    s3AsyncClient.getObject(objectRequest, AsyncResponseTransformer.toBytes());
+
+            ResponseBytes<GetObjectResponse> responseBytes = future.join();
+
+            return responseBytes.asByteArray();
+        } catch (
+                S3Exception e) {
+            logger.error(e.awsErrorDetails().errorMessage());
+            System.exit(1);
+        }
+        return new byte[0];
     }
 }

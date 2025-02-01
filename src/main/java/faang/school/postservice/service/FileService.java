@@ -1,15 +1,17 @@
 package faang.school.postservice.service;
 
 import faang.school.postservice.config.AwsS3ApiConfig;
+import faang.school.postservice.model.Post;
+import faang.school.postservice.model.Resource;
 import faang.school.postservice.service.aws.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -19,66 +21,101 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CompletionException;
-
 
 @RequiredArgsConstructor
 @Service
 public class FileService {
-    private final S3Service s3Service;
     private final AwsS3ApiConfig awsS3ApiConfig;
+    private final S3Service s3Service;
+    private final PostService postService;
 
     public List<String> uploadFiles(Long postId, List<MultipartFile> files) {
-
-        if (files.size() > 10) {
-            throw new IllegalArgumentException("Cannot upload more than 10 files per post");
-        }
-
         List<String> fileKeys = new ArrayList<>();
 
-        for (MultipartFile file : files) {
-            if (file.getSize() > 5 * 1024 * 1024) {
-                throw new IllegalArgumentException("File size must be less than or equal to 5MB");
-            }
-
-            String contentType = file.getContentType();
-            if (contentType == null || (!contentType.startsWith("video/") && !contentType.startsWith("audio/") && !contentType.startsWith("image/"))) {
-                throw new IllegalArgumentException("Unsupported file type");
-            }
-
+        files.forEach(file -> {
+            validateFile(file);
             try {
-                BufferedImage image = null;
-
-                if (contentType.startsWith("image/")) {
-                    image = ImageIO.read(file.getInputStream());
-                    if (image != null) {
-                        image = resizeImageIfNeeded(image);
-                    }
-                }
-
-                byte[] fileBytes = image != null ? bufferedImageToByteArray(image, file.getContentType()) : file.getBytes();
-                Map<String, String> metadata = new HashMap<>();
-                metadata.put("Content-Type", contentType);
-                metadata.put("Content-Length", String.valueOf(fileBytes.length));
-                metadata.put("Original-Filename", file.getOriginalFilename());
-                String key = "post/" + postId + "/" + UUID.randomUUID();
-                PutObjectResponse result = s3Service.uploadFileAsync(awsS3ApiConfig.getBucket(), key, metadata, fileBytes).join();
-                fileKeys.add(result.eTag());
+                byte[] fileBytes = processFile(file);
+                String key = uploadFileToS3(postId, file, fileBytes);
+                fileKeys.add(key);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to process file", e);
             }
-        }
-        return List.of(); // Return the list of file keys
+        });
+
+        updatePostWithResources(postId, fileKeys);
+
+        return fileKeys;
     }
 
     public void deleteFiles(List<String> fileIds) {
         for (String fileId : fileIds) {
             s3Service.deleteFileAsync(awsS3ApiConfig.getBucket(), fileId).join();
         }
+
+        List<Post> postsToUpdate = postService.findPostsByResourceKeys(fileIds);
+        for (Post post : postsToUpdate) {
+            List<Resource> resources = post.getResources();
+            resources.removeIf(resource -> fileIds.contains(resource.getKey()));
+            postService.update(post);
+        }
     }
 
     public String getPresignedUrl(String fileId) {
         return s3Service.createPresignedGetUrl(awsS3ApiConfig.getBucket(), fileId);
+    }
+
+    public byte[] getObjectBytes(String fileId) {
+        return s3Service.getObjectBytes(awsS3ApiConfig.getBucket(), fileId);
+    }
+
+    private void validateFile(MultipartFile file) {
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("File size must be less than or equal to 5MB");
+        }
+
+        String contentType = file.getContentType();
+        if (contentType == null || (!contentType.startsWith("video/")
+                && !contentType.startsWith("audio/")
+                && !contentType.startsWith("image/"))) {
+            throw new IllegalArgumentException("Unsupported file type");
+        }
+    }
+
+    private byte[] processFile(MultipartFile file) throws IOException {
+        String contentType = file.getContentType();
+        BufferedImage image = null;
+
+        if (contentType != null && contentType.startsWith("image/")) {
+            image = ImageIO.read(file.getInputStream());
+            if (image != null) {
+                image = resizeImageIfNeeded(image);
+            }
+        }
+
+        return image != null ? bufferedImageToByteArray(image, contentType) : file.getBytes();
+    }
+
+    private String uploadFileToS3(Long postId, MultipartFile file, byte[] fileBytes) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("Content-Type", file.getContentType());
+        metadata.put("Content-Length", String.valueOf(fileBytes.length));
+        metadata.put("Original-Filename", file.getOriginalFilename());
+        String key = "post/" + postId + "/" + UUID.randomUUID();
+        PutObjectResponse result = s3Service.uploadFileAsync(awsS3ApiConfig.getBucket(), key, metadata, fileBytes).join();
+        return result.eTag();
+    }
+
+    private void updatePostWithResources(Long postId, List<String> fileKeys) {
+        Post postToUpdate = postService.get(postId);
+        List<Resource> resources = postToUpdate.getResources();
+        fileKeys.forEach(key -> {
+            resources.add(Resource.builder()
+                    .key(key)
+                    .post(postToUpdate)
+                    .build());
+        });
+        postService.update(postToUpdate);
     }
 
     private BufferedImage resizeImageIfNeeded(BufferedImage image) {
@@ -91,23 +128,24 @@ public class FileService {
         if (width == height) {
             newWidth = Math.min(newWidth, 1080);
             newHeight = newWidth;
-
         } else {
             float aspectRatio = (float) width / height;
             newWidth = Math.min(newWidth, 1080);
             newHeight = Math.round(1080 / aspectRatio);
             if (newHeight > 566) {
-                newHeight =  Math.min(newWidth, 566);
+                newHeight = Math.min(newWidth, 566);
                 newWidth = Math.round(newHeight * aspectRatio);
             }
         }
 
         if (width != newWidth || height != newHeight) {
             Image tmp = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
-            BufferedImage resized = new BufferedImage(newWidth, newHeight,  BufferedImage.TYPE_INT_RGB);
+            BufferedImage resized = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_RGB);
             Graphics2D g2d = resized.createGraphics();
+            //drawImage - resource intensive, replaced with AffineTransform
             //g2d.drawImage(tmp, 0, 0, null);
-            AffineTransform at = AffineTransform.getScaleInstance((double) newWidth / width, (double) newHeight / height);
+            AffineTransform at = AffineTransform
+                    .getScaleInstance((double) newWidth / width, (double) newHeight / height);
             g2d.drawRenderedImage(image, at);
             g2d.dispose();
             return resized;
