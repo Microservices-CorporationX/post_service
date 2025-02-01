@@ -28,7 +28,7 @@ public class CommentService {
 
     @Transactional
     public CommentReadDto addComment(long postId, CommentCreateDto commentCreateDto) {
-        userService.getUser(commentCreateDto.getAuthorId());
+        validateUserExists(commentCreateDto.getAuthorId());
 
         Post post = postService.findById(postId);
         Comment comment = commentMapper.toEntity(commentCreateDto);
@@ -66,5 +66,13 @@ public class CommentService {
 
     private boolean isCommentBelongsToPost(long postId, Comment comment) {
         return comment.getPost().getId().equals(postId);
+    }
+
+    private void validateUserExists(long authorId) {
+        try {
+            userService.getUser(authorId);
+        } catch (EntityNotFoundException ex) {
+            throw new BusinessException("Невозможно создать комментарий, т.к пользователя не существует");
+        }
     }
 }
