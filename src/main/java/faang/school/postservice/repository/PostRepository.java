@@ -1,5 +1,6 @@
 package faang.school.postservice.repository;
 
+import faang.school.postservice.dto.post.PostRedisEntity;
 import faang.school.postservice.model.Post;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -12,6 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface PostRepository extends CrudRepository<Post, Long> {
+    Post getById(Long id);
 
     List<Post> findByAuthorId(long authorId);
 
@@ -31,4 +33,10 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.verified = FALSE")
     Optional<List<Post>> findNotVerifiedPots();
+
+    @Query("""
+            SELECT new faang.school.postservice.dto.post.PostRedisEntity(p.id, p.authorId, p.createdAt)
+            FROM Post p WHERE p.id = :postId
+            """)
+    Optional<PostRedisEntity> findPostAsRedisEntityById(@Param("postId") Long postId);
 }

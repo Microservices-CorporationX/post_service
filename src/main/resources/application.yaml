@@ -30,10 +30,16 @@ spring:
           name: ban_user
         comment_channel:
           name: comment_channel
+      collections:
+        posts:
+          number-of-comments: 3
+      transaction-executor:
+        retries: 5
 
     kafka:
       bootstrap-servers: localhost:9093
       group-id: news_feed_consumer_group
+      consumer-threads-count: 3
       topics:
         comments:
           name: comments

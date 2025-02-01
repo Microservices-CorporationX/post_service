@@ -25,7 +25,8 @@ public class KafkaCommentProducer {
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send(topicName, json);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException("Error converting object to json.", e);
+            log.error("Error converting object to json. Comment event: {}", event, e);
+            throw new RuntimeException(e);
         }
     }
 }

@@ -11,7 +11,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -46,7 +45,6 @@ class KafkaCommentProducerTest {
         CommentEvent event = new CommentEvent();
         when(objectMapper.writeValueAsString(event)).thenThrow(mock(JsonProcessingException.class));
 
-        RuntimeException thrown = assertThrows(RuntimeException.class, () -> commentProducer.sendMessage(event));
-        assertEquals("Error converting object to json.", thrown.getMessage());
+        assertThrows(RuntimeException.class, () -> commentProducer.sendMessage(event));
     }
 }
