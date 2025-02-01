@@ -14,7 +14,7 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import faang.school.postservice.service.cache.AuthorCacheService;
 import faang.school.postservice.service.cache.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;
@@ -233,7 +233,7 @@ public class PostService {
         if (!post.isPublished()) {
             return 0L;
         }
-        post.incrementViews();
+        post.setViews(post.getViews() + 1);
         return postRepository.save(post).getViews();
     }
 

@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface PostCacheMapper {
     @Mapping(source = "id", target = "postId")
-    @Mapping(target = "countViews", constant = "0")
+    @Mapping(target = "countViews", ignore = true)
     @Mapping(target = "lastThreeComments", ignore = true)
     PostCache toCache(PostResponseDto postResponseDto);
 

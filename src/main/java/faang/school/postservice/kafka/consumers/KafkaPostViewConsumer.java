@@ -1,6 +1,5 @@
 package faang.school.postservice.kafka.consumers;
 
-import faang.school.postservice.cache_entities.PostCache;
 import faang.school.postservice.kafka.kafka_events_dtos.PostViewKafkaEventDto;
 import faang.school.postservice.service.cache.PostCacheService;
 import faang.school.postservice.service.post.PostService;

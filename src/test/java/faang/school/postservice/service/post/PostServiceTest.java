@@ -8,7 +8,7 @@ import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import faang.school.postservice.service.cache.AuthorCacheService;
 import faang.school.postservice.service.cache.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;

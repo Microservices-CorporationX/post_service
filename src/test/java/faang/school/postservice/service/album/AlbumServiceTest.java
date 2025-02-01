@@ -8,7 +8,7 @@ import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.mapper.album.AlbumMapperImpl;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.AlbumRepository;
+import faang.school.postservice.repository.db_repository.AlbumRepository;
 import faang.school.postservice.service.album.album_filter.AlbumFilter;
 import faang.school.postservice.validator.album.AlbumValidator;
 import org.junit.jupiter.api.BeforeEach;

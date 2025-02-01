@@ -2,7 +2,7 @@ package faang.school.postservice.service.resource;
 
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.repository.ResourceRepository;
+import faang.school.postservice.repository.db_repository.ResourceRepository;
 import faang.school.postservice.service.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,8 +1,6 @@
-package faang.school.postservice.repository;
+package faang.school.postservice.repository.db_repository;
 
 import faang.school.postservice.model.Like;
-import feign.Param;
-import org.springframework.data.jdbc.repository.query.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 

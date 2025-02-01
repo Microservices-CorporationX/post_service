@@ -6,7 +6,7 @@ import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.exception.post.PostException;
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import jakarta.persistence.EntityExistsException;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

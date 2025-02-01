@@ -2,7 +2,7 @@ package faang.school.postservice.validator.like;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.model.Like;
-import faang.school.postservice.repository.LikeRepository;
+import faang.school.postservice.repository.db_repository.LikeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

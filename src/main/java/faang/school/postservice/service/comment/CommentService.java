@@ -9,8 +9,8 @@ import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
-import faang.school.postservice.repository.CommentRepository;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.CommentRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.comment.CommentValidator;
 import lombok.RequiredArgsConstructor;
@@ -18,13 +18,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

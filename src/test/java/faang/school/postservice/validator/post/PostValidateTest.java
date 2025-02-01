@@ -6,7 +6,7 @@ import faang.school.postservice.dto.post.PostRequestDto;
 
 import faang.school.postservice.exception.post.PostException;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

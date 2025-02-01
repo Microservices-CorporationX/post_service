@@ -1,9 +1,11 @@
 package faang.school.postservice.service.cache;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
+import faang.school.postservice.kafka.kafka_events_dtos.PostViewKafkaEventDto;
+import faang.school.postservice.kafka.publishers.KafkaPostViewEventPublisher;
 import faang.school.postservice.mapper.post.PostCacheMapper;
 import faang.school.postservice.mapper.user.AuthorCacheMapper;
 import faang.school.postservice.service.post.PostService;
@@ -31,6 +33,7 @@ public class NewsFeedService {
     private final AuthorCacheMapper authorCacheMapper;
     private final PostCacheMapper postCacheMapper;
     private final PostCacheService postCacheService;
+    private final KafkaPostViewEventPublisher kafkaPostEventViewPublisher;
     @Value(value = "${cache.news_feed.max_posts_amount:500}")
     private int maxPostsAmountInCacheFeed;
     @Value("${cache.news_feed.prefix_name}")
@@ -76,8 +79,8 @@ public class NewsFeedService {
 
     private void handlePostViews(List<PostResponseDto> readyToViewFeed) {
         readyToViewFeed.stream()
-                .map(post -> new PostViewEventDto(post.getId()))
-                .forEach(postViewEventProducer::handleNewPostView);
+                .map(post -> new PostViewKafkaEventDto(post.getId()))
+                .forEach(kafkaPostEventViewPublisher::sendPostViewEvent);
     }
 
     private List<PostResponseDto> getFullPostsBatch(Long userId, Set<String> postIds) {
