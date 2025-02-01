@@ -228,6 +228,16 @@ public class PostService {
     }
 
     @Transactional
+    public Long incrementPostViews(Long postId) {
+        Post post = postRepository.getPostById(postId);
+        if (!post.isPublished()) {
+            return 0L;
+        }
+        post.incrementViews();
+        return postRepository.save(post).getViews();
+    }
+
+    @Transactional
     public void checkSpelling() {
         List<Post> posts = postRepository.findByPublishedFalse();
         int sizeOfRequests = getSizeOfRequest(posts.size());
