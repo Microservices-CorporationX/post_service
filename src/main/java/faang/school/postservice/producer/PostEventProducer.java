@@ -29,9 +29,11 @@ public class PostEventProducer {
     log.info("Sending New Post Event with Followers to Kafka");
 
     List<PostEventDto> batches = splitIntoBatches(postEvent);
+    String topic = kafkaProperties.getPostsTopic();
 
     List<CompletableFuture<Void>> futures = batches.stream()
-            .map(event -> CompletableFuture.runAsync(() -> kafkaTemplate.send(kafkaProperties.getPostsTopic(), event), cachedThreadPool))
+        .map(event -> CompletableFuture.runAsync(
+            () -> kafkaTemplate.send(topic, event), cachedThreadPool))
         .toList();
 
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))

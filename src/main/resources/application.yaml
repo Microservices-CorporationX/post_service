@@ -91,7 +91,7 @@ payment-service:
 
 newsfeed:
   subscribers:
-    batch-size: 1
+    batch-size: 3
 
 executor-service:
   core-pool-size: 5

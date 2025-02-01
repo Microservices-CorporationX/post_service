@@ -19,5 +19,6 @@ public class PostCache implements Serializable {
   private String content;
   private Long authorId;
   private LocalDateTime updatedAt;
+  private String authorName;
 
 }
