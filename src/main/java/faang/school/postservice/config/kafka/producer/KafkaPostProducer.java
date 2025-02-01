@@ -1,0 +1,30 @@
+package faang.school.postservice.config.kafka.producer;
+
+import faang.school.postservice.model.cache.PostCache;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.kafka.config.TopicBuilder;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+public class KafkaPostProducer extends KafkaAbstractProducer<PostCache> {
+
+    public KafkaPostProducer(KafkaTemplate<String, Object> kafkaTemplate) {
+        super(kafkaTemplate);
+    }
+
+    @Value("${spring.data.kafka.topics.post_topic}")
+    private String postTopic;
+
+    @Bean
+    public NewTopic postTopic() {
+        return TopicBuilder.name(postTopic).build();
+    }
+
+
+    public void send(PostCache post) {
+        super.sendMessage(postTopic, post);
+    }
+}

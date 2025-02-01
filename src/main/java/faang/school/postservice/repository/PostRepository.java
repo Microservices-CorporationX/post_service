@@ -1,9 +1,11 @@
 package faang.school.postservice.repository;
 
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.model.Post;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -26,6 +28,13 @@ public interface PostRepository extends CrudRepository<Post, Long> {
 
     @Query("SELECT p FROM Post p WHERE p.published = false")
     List<Post> findByPublishedFalse();
+
+    @Query(value = "SELECT s.follower_id " +
+                   "FROM post p " +
+                   "JOIN users u ON p.author_id = u.id " +
+                   "JOIN subscription s ON s.followee_id = u.id " +
+                   "WHERE p.author_id = :authorId", nativeQuery = true)
+    List<Long> findFollowersByAuthorId(Long authorId);
 
     default Post getPostById(Long id) {
         return findById(id).orElseThrow(() -> new EntityNotFoundException("Post with id " + id + " not found"));

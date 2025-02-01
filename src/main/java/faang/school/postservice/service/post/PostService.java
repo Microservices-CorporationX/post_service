@@ -1,5 +1,6 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.config.kafka.producer.KafkaLikeProducer;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.dto.post.PostRequestDto;
@@ -10,6 +11,7 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.model.cache.LikeCache;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.util.ModerationDictionary;
@@ -60,7 +62,7 @@ public class PostService {
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
 
-    public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
+    public PostResponseDto create(PostRequestDto requestDto) {
         postValidator.validateCreate(requestDto);
         Post post = postMapper.toEntity(requestDto);
 
@@ -71,13 +73,7 @@ public class PostService {
         post.setResources(new ArrayList<>());
         post.setHashtags(new ArrayList<>());
 
-        post = postRepository.save(post);
-
-        uploadResourcesToPost(images, "image", post);
-        uploadResourcesToPost(audio, "audio", post);
-
-        log.info("Post with id {} created", post.getId());
-        post = postRepository.save(post);
+        postRepository.save(post);
 
         PostResponseDto responseDto = postMapper.toDto(post);
         populateResourceUrls(responseDto, post);
@@ -159,7 +155,10 @@ public class PostService {
         post.setPublished(true);
         post.setDeleted(false);
 
-        return postMapper.toDto(postRepository.save(post));
+        postRepository.save(post);
+        log.debug("Post added to database");
+
+        return postMapper.toDto(post);
     }
 
     public void deletePost(Long id) {

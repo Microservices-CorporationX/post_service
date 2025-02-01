@@ -23,15 +23,23 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
   data:
+    kafka:
+      bootstrap-server: localhost:9092
+      topics:
+        post_topic: posts
+        like_topic: likes
+        view_post: post_views
+
     redis:
       port: 6379
       host: localhost
+      cache:
+        ttl: 86400
       channels:
         comment-notification-channel: comment-topic
         ad-bought-channel: ad-bought-topic
         comment-channel: comment-topic
         ban-channel: user-ban
-
 
 server:
   port: 8081
@@ -63,7 +71,7 @@ services:
 
 user-service:
   host: localhost
-  port: 8080
+  port: 8099
 project-service:
   host: localhost
   port: 8082
