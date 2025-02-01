@@ -19,5 +19,5 @@ public class CommentEvent implements Serializable {
     private Long authorId;
     private Long postId;
     private String content;
-    private LocalDateTime updateAt;
+    private LocalDateTime updatedAt;
 }

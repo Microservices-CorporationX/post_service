@@ -34,18 +34,6 @@ public class KafkaConfig {
                 environment.getProperty("spring.data.kafka.producer.bootstrap-servers"));
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-//        configProps.put(ProducerConfig.ACKS_CONFIG, environment.getRequiredProperty("spring.data.kafka.producer.acks"));
-//        configProps.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG,
-//                environment.getProperty("spring.data.kafka.producer.properties.delivery-timeout-ms"));
-//        configProps.put(ProducerConfig.LINGER_MS_CONFIG,
-//                environment.getProperty("spring.data.kafka.producer.properties.linger-ms"));
-//        configProps.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG,
-//                environment.getProperty("spring.data.kafka.producer.properties.request-timeout-ms"));
-//        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG,
-//                environment.getProperty("spring.data.kafka.producer.properties.enable-idempotence"));
-//        configProps.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION,
-//                environment.getProperty("spring.data.kafka.producer.properties.max-in-flight-requests-per-connection"));
-
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -63,13 +51,13 @@ public class KafkaConfig {
     }
 
     @Bean
-    @Qualifier(value ="postsTopic")
+    @Qualifier(value = "postsTopic")
     public NewTopic postsTopic() {
         return newTopicBuilder(environment.getRequiredProperty("spring.data.kafka.topics.post-channel.name"));
     }
 
     @Bean
-    @Qualifier(value ="commentsTopic")
+    @Qualifier(value = "commentsTopic")
     public NewTopic commentsTopic() {
         return newTopicBuilder(environment.getRequiredProperty("spring.data.kafka.topics.comment-channel.name"));
     }
@@ -78,11 +66,6 @@ public class KafkaConfig {
     private NewTopic newTopicBuilder(String topicName) {
         return TopicBuilder
                 .name(topicName)
-//                .partitions(Integer.parseInt(environment.getRequiredProperty("spring.data.kafka.topics.partitions")))
-//                .replicas(Integer.parseInt(environment.getRequiredProperty("spring.data.kafka.topics.replicasCount")))
-//                .configs(Map.of(
-//                        "min.insync.replicas",
-//                        environment.getRequiredProperty("spring.data.kafka.topics.min-insync-replicas")))
                 .build();
     }
 }

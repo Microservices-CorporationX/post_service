@@ -1,6 +1,7 @@
 package faang.school.postservice.mapper.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.event.CommentEvent;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
@@ -172,21 +173,67 @@ public class CommentMapperTest {
         assertThat(comment.getLikes()).isNull();
     }
 
+    @Test
+    public void toCommentEventSuccessTest() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Comment comment = Comment.builder()
+                .id(commentId)
+                .content(content)
+                .authorId(authorId)
+                .post(getPost())
+                .likes(List.of())
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+
+        CommentEvent commentEvent = commentMapper.toCommentEvent(comment);
+
+        assertThat(commentEvent).isNotNull();
+        assertThat(commentEvent.getId()).isEqualTo(comment.getId());
+        assertThat(commentEvent.getAuthorId()).isEqualTo(comment.getAuthorId());
+        assertThat(commentEvent.getPostId()).isEqualTo(comment.getPost().getId());
+        assertThat(commentEvent.getContent()).isEqualTo(comment.getContent());
+        assertThat(commentEvent.getUpdatedAt()).isEqualTo(comment.getUpdatedAt());
+    }
+
+    @Test
+    public void toCommentEventWithNullFailTest() {
+        CommentEvent commentDto = commentMapper.toCommentEvent(null);
+        assertThat(commentDto).isNull();
+    }
+
+    @Test
+    public void toCommentEventWithoutCommentIdFailTest() {
+        Comment comment = Comment.builder().build();
+        CommentEvent commentEvent = commentMapper.toCommentEvent(comment);
+
+        assertThat(commentEvent).isNotNull();
+        assertThat(commentEvent.getId()).isEqualTo(0L);
+    }
+
+    @Test
+    public void toCommentEventWithoutPostOnlyFailTest() {
+        Post post = getPost();
+
+        Comment comment = Comment.builder()
+                .id(commentId)
+                .post(post)
+                .build();
+
+        CommentEvent commentEvent = commentMapper.toCommentEvent(comment);
+
+        assertThat(commentEvent).isNotNull();
+        assertThat(commentEvent.getPostId()).isEqualTo(comment.getPost().getId());
+        assertThat(commentEvent.getAuthorId()).isEqualTo(0L);
+        assertThat(commentEvent.getContent()).isNull();
+        assertThat(commentEvent.getUpdatedAt()).isNull();
+    }
+
+
     private Post getPost() {
         return Post.builder()
                 .id(postId)
-                .build();
-    }
-
-    private Like getLikeFirst() {
-        return Like.builder()
-                .id(likeFirstId)
-                .build();
-    }
-
-    private Like getLikeSecond() {
-        return Like.builder()
-                .id(likeSecondId)
                 .build();
     }
 }

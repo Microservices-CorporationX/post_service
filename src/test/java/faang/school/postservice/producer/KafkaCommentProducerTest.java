@@ -64,7 +64,7 @@ class KafkaCommentProducerTest {
                 .authorId(123L)
                 .postId(456L)
                 .content("Test comment content")
-                .updateAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
                 .build();
     }
 }
