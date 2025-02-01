@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -129,6 +130,99 @@ public class PostServiceTest {
         postResponseDto = new PostResponseDto();
         postResponseDto.setId(1L);
         postResponseDto.setAuthorId(1L);
+    }
+
+    @Test
+    void getFeedForUser_WhenPostPointerIdIsPresent_ShouldFetchBatchAfterPointer() {
+        Long userId = 1L;
+        int batchSize = 5;
+        Long postPointerId = 100L;
+        Optional<Long> postPointer = Optional.of(postPointerId);
+
+        List<Long> userSubscriptions = List.of(2L, 3L, 4L);
+        List<Post> mockPosts = List.of(new Post(), new Post());
+        List<PostResponseDto> expectedDtos = List.of(new PostResponseDto(), new PostResponseDto());
+
+        when(userServiceClient.getFollowersIds(userId)).thenReturn(userSubscriptions);
+        when(postRepository.getFeedForUser(userSubscriptions, postPointerId, batchSize)).thenReturn(mockPosts);
+        when(postMapper.toListPostDto(mockPosts)).thenReturn(expectedDtos);
+
+        List<PostResponseDto> result = postService.getFeedForUser(userId, batchSize, postPointer);
+
+        assertNotNull(result);
+        assertEquals(expectedDtos, result);
+
+        verify(userServiceClient).getFollowersIds(userId);
+        verify(postRepository).getFeedForUser(userSubscriptions, postPointerId, batchSize);
+        verify(postMapper).toListPostDto(mockPosts);
+    }
+
+    @Test
+    void getFeedForUser_WhenPostPointerIdIsEmpty_ShouldFetchFirstBatch() {
+        Long userId = 1L;
+        int batchSize = 5;
+        Optional<Long> postPointer = Optional.empty();
+
+        List<Long> userSubscriptions = List.of(2L, 3L, 4L);
+        List<Post> mockPosts = List.of(new Post(), new Post(), new Post());
+        List<PostResponseDto> expectedDtos = List.of(new PostResponseDto(), new PostResponseDto(), new PostResponseDto());
+
+        when(userServiceClient.getFollowersIds(userId)).thenReturn(userSubscriptions);
+        when(postRepository.getFeedForUser(userSubscriptions, batchSize)).thenReturn(mockPosts);
+        when(postMapper.toListPostDto(mockPosts)).thenReturn(expectedDtos);
+
+        List<PostResponseDto> result = postService.getFeedForUser(userId, batchSize, postPointer);
+
+        assertNotNull(result);
+        assertEquals(expectedDtos, result);
+
+        verify(userServiceClient).getFollowersIds(userId);
+        verify(postRepository).getFeedForUser(userSubscriptions, batchSize);
+        verify(postMapper).toListPostDto(mockPosts);
+    }
+
+    @Test
+    void incrementPostViews_WhenPostIsPublished_ShouldIncrementViews() {
+        Long postId = 1L;
+        Post post = new Post();
+        post.setId(postId);
+        post.setPublished(true);
+        post.setViews(10L);
+
+        Post updatedPost = new Post();
+        updatedPost.setId(postId);
+        updatedPost.setPublished(true);
+        updatedPost.setViews(11L);
+
+        when(postRepository.getPostById(postId)).thenReturn(post);
+        when(postRepository.save(any(Post.class))).thenReturn(updatedPost);
+
+        Long updatedViews = postService.incrementPostViews(postId);
+
+        assertNotNull(updatedViews);
+        assertEquals(11L, updatedViews);
+
+        verify(postRepository).getPostById(postId);
+        verify(postRepository).save(post);
+    }
+
+    @Test
+    void incrementPostViews_WhenPostIsUnpublished_ShouldReturnZero() {
+        Long postId = 2L;
+        Post post = new Post();
+        post.setId(postId);
+        post.setPublished(false);
+        post.setViews(5L);
+
+        when(postRepository.getPostById(postId)).thenReturn(post);
+
+        Long updatedViews = postService.incrementPostViews(postId);
+
+        assertNotNull(updatedViews);
+        assertEquals(0L, updatedViews);
+
+        verify(postRepository).getPostById(postId);
+        verify(postRepository, never()).save(any(Post.class));
     }
 
     @Test

@@ -1,6 +1,9 @@
 package faang.school.postservice.dto.news_feed_models;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
 
@@ -10,6 +13,9 @@ import java.time.LocalDateTime;
 
 @RedisHash("Post")
 @Data
+@NoArgsConstructor
+@Builder
+@AllArgsConstructor
 public class NewsFeedPost implements Serializable {
 
     @Serial

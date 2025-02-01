@@ -7,12 +7,14 @@ import faang.school.postservice.kafka.publishers.KafkaPostViewEventPublisher;
 import faang.school.postservice.mapper.post.NewsFeedPostMapper;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -22,6 +24,7 @@ import java.util.Set;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Setter
 public class NewsFeedService {
 
     private final PostService postService;
@@ -55,9 +58,11 @@ public class NewsFeedService {
         String redisKey = newsFeedPrefix + userId;
         Set<String> postIds;
         if (lastViewedPostId == null) {
-            postIds = redisTemplate.opsForZSet().reverseRange(redisKey, 0, pageSize - 1);
+            postIds = Optional.ofNullable(redisTemplate.opsForZSet().reverseRange(redisKey, 0, pageSize - 1))
+                    .orElse(Collections.emptySet());
         } else {
-            postIds = getPostsAfterLastViewed(redisKey, lastViewedPostId);
+            postIds = Optional.ofNullable(getPostsAfterLastViewed(redisKey, lastViewedPostId))
+                    .orElse(Collections.emptySet());
         }
         List<NewsFeedPost> fullPostsBatch = getFullPostsBatch(userId, postIds);
 
