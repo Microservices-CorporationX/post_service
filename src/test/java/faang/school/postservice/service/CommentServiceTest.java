@@ -3,7 +3,6 @@ package faang.school.postservice.service;
 import faang.school.postservice.dto.comment.CommentCreateDto;
 import faang.school.postservice.dto.comment.CommentReadDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
-import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.BusinessException;
 import faang.school.postservice.mapper.CommentMapperImpl;
 import faang.school.postservice.model.Comment;
@@ -48,7 +47,6 @@ class CommentServiceTest {
     private static final long USER_ID = 1L;
     private static final long COMMENT_ID = 2L;
     private static final long POST_ID = 3L;
-    private final UserDto userDto = UserDto.builder().id(USER_ID).build();
     private final Post post = Post.builder().id(POST_ID).authorId(USER_ID).build();
     private final CommentCreateDto commentCreateDto = CommentCreateDto.builder()
             .authorId(USER_ID)
@@ -57,7 +55,7 @@ class CommentServiceTest {
 
     @Test
     void testAddCommentIfUserExist() {
-        when(userService.getUser(anyLong())).thenReturn(userDto);
+        when(userService.isUserExists(anyLong())).thenReturn(true);
         when(postService.findById(anyLong())).thenReturn(post);
 
         Comment comment = commentMapper.toEntity(commentCreateDto);
@@ -76,7 +74,7 @@ class CommentServiceTest {
 
     @Test
     void testAddCommentThrowExceptionIfUserNotExists() {
-        when(userService.getUser(anyLong())).thenThrow(EntityNotFoundException.class);
+        when(userService.isUserExists(anyLong())).thenReturn(false);
 
         assertThrows(BusinessException.class, () -> commentService.addComment(anyLong(), commentCreateDto));
     }

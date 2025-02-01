@@ -20,4 +20,13 @@ public class UserService {
             throw new EntityNotFoundException(String.format("Пользователь с id=%d не найден", userId));
         }
     }
+
+    public boolean isUserExists(long userId) {
+        try {
+            userServiceClient.getUser(userId);
+            return true;
+        } catch (FeignException.FeignClientException ex) {
+            return false;
+        }
+    }
 }

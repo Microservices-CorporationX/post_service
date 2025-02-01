@@ -69,9 +69,7 @@ public class CommentService {
     }
 
     private void validateUserExists(long authorId) {
-        try {
-            userService.getUser(authorId);
-        } catch (EntityNotFoundException ex) {
+        if (!userService.isUserExists(authorId)) {
             throw new BusinessException("Невозможно создать комментарий, т.к пользователя не существует");
         }
     }
