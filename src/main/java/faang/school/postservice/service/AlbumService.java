@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class AlbumService {
     private final UserServiceClient userServiceClient;
-    private final UserContext userContext;
     private final AlbumRepository albumRepository;
     private final AlbumMapper albumMapper;
     private final PostService postService;
@@ -124,7 +123,6 @@ public class AlbumService {
     }
 
     private void validateUserId(long userId) {
-        userContext.setUserId(userId);
         if (userServiceClient.getUser(userId) == null) {
             throw new EntityNotFoundException("Пользователь не найден");
         }
