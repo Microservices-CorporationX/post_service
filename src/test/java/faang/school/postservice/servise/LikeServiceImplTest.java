@@ -1,6 +1,8 @@
 package faang.school.postservice.servise;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.likes.LikeDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
@@ -16,7 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +39,8 @@ public class LikeServiceImplTest {
     private LikeRepository likeRepository;
     @Mock
     private LikeMapper likeMapper;
+    @Mock
+    private UserServiceClient userServiceClient;
 
     private static final long USER_ID = 1L;
     private static final long POST_ID = 1L;
@@ -91,7 +99,6 @@ public class LikeServiceImplTest {
         verify(likeRepository, times(1)).save(like);
     }
 
-
     @Test
     public void deleteCommentLike_shouldDeleteLike() {
         Like like = new Like();
@@ -101,5 +108,61 @@ public class LikeServiceImplTest {
         likeService.deleteCommentLike(USER_ID, COMMENT_ID);
 
         verify(likeRepository).delete(like);
+    }
+
+    @Test
+    void testUsersByPostId() {
+        List<Like> likes = Arrays.asList(new Like(), new Like());
+        List<UserDto> userDtos = Arrays.asList(
+                new UserDto(1L, "test", "test"),
+                new UserDto(2L, "test2", "test2"));
+
+        when(likeRepository.findLikesByPostId(POST_ID)).thenReturn(likes);
+        when(userServiceClient.getUsersByIds(anyList())).thenReturn(userDtos);
+
+        List<UserDto> result = likeService.usersByPostId(POST_ID);
+
+        assertEquals(2, result.size());
+        verify(likeRepository, times(1)).findLikesByPostId(POST_ID);
+        verify(userServiceClient, times(1)).getUsersByIds(anyList());
+    }
+
+    @Test
+    void testUsersByPostId_EmptyLikes() {
+        when(likeRepository.findLikesByPostId(POST_ID)).thenReturn(Collections.emptyList());
+
+        List<UserDto> result = likeService.usersByPostId(POST_ID);
+
+        assertTrue(result.isEmpty());
+        verify(likeRepository, times(1)).findLikesByPostId(POST_ID);
+        verify(userServiceClient, never()).getUsersByIds(anyList());
+    }
+
+    @Test
+    void testUsersByCommentId() {
+        List<Like> likes = Arrays.asList(new Like(), new Like());
+        List<UserDto> userDtos = Arrays.asList(
+                new UserDto(1L, "User1", "test1"),
+                new UserDto(2L, "User2", "test2"));
+
+        when(likeRepository.findLikesByCommentId(COMMENT_ID)).thenReturn(likes);
+        when(userServiceClient.getUsersByIds(anyList())).thenReturn(userDtos);
+
+        List<UserDto> result = likeService.usersByCommentId(COMMENT_ID);
+
+        assertEquals(2, result.size());
+        verify(likeRepository, times(1)).findLikesByCommentId(COMMENT_ID);
+        verify(userServiceClient, times(1)).getUsersByIds(anyList());
+    }
+
+    @Test
+    void testUsersByCommentId_EmptyLikes() {
+        when(likeRepository.findLikesByCommentId(COMMENT_ID)).thenReturn(Collections.emptyList());
+
+        List<UserDto> result = likeService.usersByCommentId(COMMENT_ID);
+
+        assertTrue(result.isEmpty());
+        verify(likeRepository, times(1)).findLikesByCommentId(COMMENT_ID);
+        verify(userServiceClient, never()).getUsersByIds(anyList());
     }
 }

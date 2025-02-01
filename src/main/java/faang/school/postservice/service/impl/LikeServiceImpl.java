@@ -1,6 +1,8 @@
 package faang.school.postservice.service.impl;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.likes.LikeDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.CheckException;
 import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
@@ -15,6 +17,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @RequiredArgsConstructor
 public class LikeServiceImpl implements LikeService {
@@ -23,6 +30,7 @@ public class LikeServiceImpl implements LikeService {
     private final CommentRepositoryAdapter commentRepositoryAdapter;
     private final LikeRepository likeRepository;
     private final LikeMapper likeMapper;
+    private final UserServiceClient userServiceClient;
 
     @Transactional
     @Override
@@ -70,5 +78,42 @@ public class LikeServiceImpl implements LikeService {
             throw new CheckException("Лайк не найден!");
         }
         likeRepository.delete(like);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDto> usersByPostId(long postId) {
+        postRepositoryAdapter.findById(postId);
+        List<Like> likes = likeRepository.findLikesByPostId(postId);
+        if (!likes.isEmpty()) {
+            return getUsersByUserIds(likes);
+        }
+        return Collections.emptyList();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<UserDto> usersByCommentId(long commentId) {
+        commentRepositoryAdapter.findById(commentId);
+        List<Like> likes = likeRepository.findLikesByCommentId(commentId);
+        if (!likes.isEmpty()) {
+            return getUsersByUserIds(likes);
+        }
+        return Collections.emptyList();
+    }
+
+    private List<UserDto> getUsersByUserIds(List<Like> likes) {
+        List<Long> ids = likes.stream().map(Like::getUserId).collect(Collectors.toList());
+        List<UserDto> users = new ArrayList<>();
+        int batchSize = 100;
+        while (ids.size() > batchSize) {
+            List<Long> batch = ids.stream().limit(batchSize).toList();
+            users.addAll(userServiceClient.getUsersByIds(batch));
+            ids.removeAll(batch);
+        }
+        if (!ids.isEmpty()) {
+            users.addAll(userServiceClient.getUsersByIds(ids));
+        }
+        return users;
     }
 }

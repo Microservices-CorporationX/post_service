@@ -1,6 +1,7 @@
 package faang.school.postservice.controller;
 
 import faang.school.postservice.dto.likes.LikeDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.service.LikeService;
 import faang.school.postservice.validator.LikeValidator;
@@ -8,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,6 +26,9 @@ public class LikeController {
     private static final String USER_ID_PATH = "/{userId}";
     private static final String DELETE_POST_LIKE_PATH = POSTS_PATH + USER_ID_PATH + POST_ID_PATH;
     private static final String DELETE_COMMENT_LIKE_PATH = COMMENTS_PATH + USER_ID_PATH + COMMENT_ID_PATH;
+
+    private static final String USERS_BY_POST_ID = "/users" + POST_ID_PATH;
+    private static final String USERS_BY_COMMENT_ID = "/users" + COMMENT_ID_PATH;
 
     @PostMapping(POSTS_PATH)
     public ResponseEntity<LikeDto> likePost(@RequestParam Long userId, @RequestParam Long postId) {
@@ -52,5 +58,15 @@ public class LikeController {
     public ResponseEntity<String> deleteCommentLike(@PathVariable long userId, @PathVariable long commentId) {
         likeService.deleteCommentLike(userId, commentId);
         return ResponseEntity.ok("Лайк успешно удален!");
+    }
+
+    @GetMapping(USERS_BY_POST_ID)
+    public ResponseEntity<List<UserDto>> usersByPostId(@PathVariable long postId) {
+        return ResponseEntity.ok(likeService.usersByPostId(postId));
+    }
+
+    @GetMapping(USERS_BY_COMMENT_ID)
+    public ResponseEntity<List<UserDto>> usersByCommentId(@PathVariable long commentId) {
+        return ResponseEntity.ok(likeService.usersByCommentId(commentId));
     }
 }
