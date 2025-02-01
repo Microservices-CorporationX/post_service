@@ -1,34 +1,51 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostAuthorFilterDto;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.post.event.PublishPostEvent;
+import faang.school.postservice.dto.post.event.ViewPostEvent;
 import faang.school.postservice.dto.resource.ResourceDto;
 import faang.school.postservice.dto.resource.ResourceInfoDto;
 import faang.school.postservice.dto.user.BanUsersDto;
+import faang.school.postservice.dto.user.ShortUserDto;
+import faang.school.postservice.dto.user.ShortUserWithAvatarDto;
+import faang.school.postservice.dto.user.UserFilterDto;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.helper.UserCacheWriter;
 import faang.school.postservice.mapper.PostViewEventMapper;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.PostCache;
+import faang.school.postservice.model.user.ShortUserWithAvatar;
+import faang.school.postservice.publisher.postpublish.PublishPostEventPublisher;
+import faang.school.postservice.publisher.postview.KafkaViewPostEventPublisher;
 import faang.school.postservice.publisher.postview.PostViewEventPublisher;
 import faang.school.postservice.publisher.user.UserBanPublisher;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.user.UserCacheRepository;
 import faang.school.postservice.service.image.ImageResizeService;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.validator.post.ContentValidator;
 import faang.school.postservice.validator.post.PostValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
@@ -40,6 +57,8 @@ public class PostService {
     private int maxImageHeight;
     @Value("${banner.minimum-size-of-unverified-posts}")
     private int minimumSizeOfUnverifiedPosts;
+    @Value("${events.partitioning-batch}")
+    private int eventPartitioningBatchSize;
 
     private final PostValidator postValidator;
     private final PostRepository postRepository;
@@ -51,6 +70,19 @@ public class PostService {
     private final ImageResizeService imageResizeService;
     private final UserBanPublisher userBanPublisher;
     private final ContentValidator contentValidator;
+    private final UserServiceClient userServiceClient;
+    private final KafkaViewPostEventPublisher kafkaViewPostEventPublisher;
+    private final PublishPostEventPublisher publishPostEventPublisher;
+    private final UserCacheWriter userCacheWriter;
+    private final PostCacheRepository postCacheRepository;
+
+    @Autowired
+    @Qualifier("writeToCacheThreadPool")
+    private ExecutorService writeToCacheThreadPool;
+
+    @Autowired
+    @Qualifier("sendEventsThreadPool")
+    private ExecutorService sendEventsThreadPool;
 
     public Post findEntityById(long id) {
         return postRepository.findById(id)
@@ -72,13 +104,17 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
+    @Transactional
     public PostDto publish(long postId) {
         Post post = findEntityById(postId);
 
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         post.setUpdatedAt(LocalDateTime.now());
-        return postMapper.toDto(postRepository.save(post));
+        CompletableFuture.runAsync(() -> userCacheWriter.cacheUser(post.getAuthorId()), writeToCacheThreadPool);
+        CompletableFuture.runAsync(() -> sendPublishPostEvent(post), sendEventsThreadPool);
+        CompletableFuture.runAsync(() -> cachePost(post), writeToCacheThreadPool);
+        return postMapper.toDto(post);
     }
 
     public PostDto update(PostDto postDto) {
@@ -117,7 +153,6 @@ public class PostService {
     }
 
     public List<PostDto> getAllNonPublishedByAuthorId(long id) {
-        postValidator.validateUser(id);
         return filterNonPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
     }
 
@@ -127,26 +162,22 @@ public class PostService {
     }
 
     public List<PostDto> getAllPublishedByAuthorId(long id) {
-        postValidator.validateUser(id);
-        List<PostDto> postDtos = filterPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
-        publishPostViewEvent(postDtos);
-        return postDtos;
+        return filterPublishedPostsByTimeToDto(postRepository.findByAuthorIdWithLikes(id));
     }
 
     public List<PostDto> getAllPublishedByProjectId(long id) {
-        postValidator.validateProject(id);
-        List<PostDto> postDtos = filterPublishedPostsByTimeToDto(postRepository.findByProjectIdWithLikes(id));
-        publishPostViewEvent(postDtos);
-        return postDtos;
+        return filterPublishedPostsByTimeToDto(postRepository.findByProjectIdWithLikes(id));
     }
 
-
     private List<PostDto> filterPublishedPostsByTimeToDto(List<Post> posts) {
-        return posts.stream()
+        List<PostDto> postDtos = posts.stream()
                 .filter(post -> !post.isDeleted() && post.isPublished())
                 .sorted(Comparator.comparing(Post::getCreatedAt).reversed())
                 .map(postMapper::toDto)
                 .toList();
+        publishPostViewEvent(postDtos);
+        publishViewPostEventToKafka(postDtos);
+        return postDtos;
     }
 
     private List<PostDto> filterNonPublishedPostsByTimeToDto(List<Post> posts) {
@@ -179,10 +210,31 @@ public class PostService {
 
     private void publishPostViewEvent(List<PostDto> postDtos) {
         long actorId = userContext.getUserId();
-        postValidator.validateUser(actorId);
         postDtos.stream()
                 .map(postDto -> postViewEventMapper.toAnalyticsEventDto(postDto, actorId))
                 .forEach(postViewEventPublisher::publish);
+    }
+
+    private void publishViewPostEventToKafka(List<PostDto> postDtoList) {
+        List<List<PostDto>> batches = ListUtils.partition(postDtoList, eventPartitioningBatchSize);
+        log.info("User with id {} viewed posts, publishing view post events to kafka", userContext.getUserId());
+        long userId = userContext.getUserId();
+        batches.forEach(batch -> CompletableFuture.runAsync(
+                () -> publishViewPostEventBatchToKafka(batch, userId),
+                sendEventsThreadPool)
+        );
+    }
+
+    private void publishViewPostEventBatchToKafka(List<PostDto> postDtoList, long userId) {
+        log.info("Publishing post view event batch to kafka");
+        List<ViewPostEvent> events
+                = postDtoList.stream().map(postDto -> ViewPostEvent
+                        .builder()
+                        .userId(userId)
+                        .postId(postDto.getId())
+                        .build())
+                .toList();
+        events.forEach(kafkaViewPostEventPublisher::publish);
     }
 
     public void banUsers() {
@@ -219,5 +271,47 @@ public class PostService {
         List<Post> nonPublishedPosts = postRepository.findReadyToPublish();
         nonPublishedPosts.forEach(contentValidator::processPost);
         postRepository.saveAll(nonPublishedPosts);
+    }
+
+    @Retryable(maxAttemptsExpression = "${retry.maxAttempts}",
+            backoff = @Backoff(delayExpression = "${retry.maxDelay}"))
+    private List<Long> getUserFollowers(long userId) {
+        UserFilterDto userFilterDto = new UserFilterDto();
+        try {
+            return userServiceClient.getFollowers(userId, userFilterDto).stream()
+                    .map(ShortUserDto::getId).toList();
+        } catch (Exception e) {
+            log.error("Error when getting followers from UserService", e);
+            throw e;
+        }
+    }
+
+    private void sendPublishPostEvent(Post post) {
+        userContext.setUserId(1L);
+        List<Long> followerIds = getUserFollowers(post.getAuthorId());
+        log.info("Sending PublishPostEvent to kafka");
+        publishPostEventPublisher.publish(PublishPostEvent
+                .builder()
+                .postId(post.getId())
+                .followers(followerIds)
+                .publishedAt(post.getPublishedAt())
+                .build()
+        );
+    }
+
+    private void cachePost(Post post) {
+        long likes = 0;
+        long views = 0;
+        PostCache postCache
+                = new PostCache(
+                post.getId(),
+                post.getContent(),
+                post.getAuthorId(),
+                post.getProjectId(),
+                likes,
+                views,
+                post.getPublishedAt()
+        );
+        postCacheRepository.save(postCache);
     }
 }

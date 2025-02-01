@@ -1,10 +1,12 @@
 package faang.school.postservice.service.like;
 
 import faang.school.postservice.dto.like.LikeDto;
+import faang.school.postservice.dto.like.event.LikePostEvent;
 import faang.school.postservice.mapper.like.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.publisher.like.LikePostEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
@@ -13,8 +15,13 @@ import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.like.LikeValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 @Slf4j
 @Service
@@ -27,6 +34,11 @@ public class LikeService {
     private final CommentService commentService;
     private final PostRepository postRepository;
     private final PostService postService;
+    private final LikePostEventPublisher likePostEventPublisher;
+
+    @Autowired
+    @Qualifier("sendEventsThreadPool")
+    private ExecutorService sendEventsThreadPool;
 
     public LikeDto likeComment(Long commentId, LikeDto likeDto) {
         likeValidator.validateUser(likeDto.getUserId());
@@ -40,12 +52,10 @@ public class LikeService {
         comment.getLikes().add(like);
 
         likeRepository.save(like);
-
         return likeMapper.toDto(like);
     }
 
     public LikeDto likePost(Long postId, LikeDto likeDto) {
-        likeValidator.validateUser(likeDto.getUserId());
         likeValidator.validatePost(postId, likeDto);
         likeValidator.validateWhereIsLikePlaced(likeDto);
 
@@ -56,7 +66,7 @@ public class LikeService {
         post.getLikes().add(like);
 
         likeRepository.save(like);
-
+        CompletableFuture.runAsync(() -> likePostEventPublisher.publish(new LikePostEvent(like.getUserId(), postId)));
         return likeMapper.toDto(like);
     }
 

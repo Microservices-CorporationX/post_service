@@ -73,6 +73,7 @@ public class LikeValidator {
         try {
             userServiceClient.getUser(userId);
         } catch (FeignException e) {
+            log.error("Error when getting user from UserService", e);
             log.error("User with ID {} does not exist", userId);
             throw new DataValidationException("User does not exist");
         }

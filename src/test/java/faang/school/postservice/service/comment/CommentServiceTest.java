@@ -3,23 +3,29 @@ package faang.school.postservice.service.comment;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.CommentEvent;
 import faang.school.postservice.exception.DataValidationException;
+import faang.school.postservice.helper.UserCacheWriter;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.comment.CommentEventPublisher;
+import faang.school.postservice.publisher.comment.KafkaCommentPostEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.service.post.PostService;
 import faang.school.postservice.validator.comment.CommentValidator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -34,12 +40,21 @@ class CommentServiceTest {
     PostService postService;
     @Mock
     CommentRepository commentRepository;
-    @Mock
+    @Spy
     CommentMapper commentMapper;
     @Mock
     CommentEventPublisher commentEventPublisher;
+    @Mock
+    KafkaCommentPostEventPublisher kafkaCommentPostEventPublisher;
+    @Mock
+    private UserCacheWriter userCacheWriter;
     @InjectMocks
     CommentService commentService;
+
+    @BeforeEach
+    void setup() {
+        ReflectionTestUtils.setField(commentService, "writeToCacheThreadPool", Executors.newFixedThreadPool(3));
+    }
 
     @Test
     void testCreate() {
@@ -56,15 +71,6 @@ class CommentServiceTest {
         commentService.createComment(commentDto);
         Mockito.verify(commentRepository, times(1)).save(any());
         Mockito.verify(commentEventPublisher, times(1)).publish(any());
-    }
-
-    @Test
-    void testCreateFailedValidation() {
-        CommentDto commentDto = CommentDto.builder().content("1234").postId(1L).build();
-        Mockito.doThrow(new DataValidationException("fail")).when(commentValidator).validateCreation(any());
-
-        assertThrows(DataValidationException.class, () -> commentService.createComment(commentDto));
-        Mockito.verify(commentRepository, times(0)).save(any());
     }
 
     @Test

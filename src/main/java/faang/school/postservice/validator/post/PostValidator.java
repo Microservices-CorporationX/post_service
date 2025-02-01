@@ -9,12 +9,14 @@ import faang.school.postservice.model.Post;
 import feign.FeignException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Objects;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class PostValidator {
@@ -51,6 +53,7 @@ public class PostValidator {
         try {
             projectServiceClient.getProject(projectId);
         } catch (FeignException e) {
+            log.error("Error when getting project from ProjectService", e);
             throw new DataValidationException("Project id is not exist");
         }
     }
