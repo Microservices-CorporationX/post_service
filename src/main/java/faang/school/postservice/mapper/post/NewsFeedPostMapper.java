@@ -7,7 +7,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
-public interface PostCacheMapper {
+public interface NewsFeedPostMapper {
     @Mapping(source = "id", target = "postId")
     @Mapping(target = "countViews", ignore = true)
     NewsFeedPost toCache(PostResponseDto postResponseDto);

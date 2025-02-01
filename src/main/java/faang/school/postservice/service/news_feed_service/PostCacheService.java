@@ -2,7 +2,7 @@ package faang.school.postservice.service.news_feed_service;
 
 import faang.school.postservice.dto.news_feed_models.NewsFeedPost;
 import faang.school.postservice.dto.post.PostResponseDto;
-import faang.school.postservice.mapper.post.PostCacheMapper;
+import faang.school.postservice.mapper.post.NewsFeedPostMapper;
 import faang.school.postservice.repository.cache_repository.PostCacheRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +13,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PostCacheService {
     private final PostCacheRepository postCacheRepository;
-    private final PostCacheMapper postCacheMapper;
+    private final NewsFeedPostMapper newsFeedPostMapper;
 
     public void savePostCache(PostResponseDto postResponseDto) {
-        NewsFeedPost newsFeedPost = postCacheMapper.toCache(postResponseDto);
+        NewsFeedPost newsFeedPost = newsFeedPostMapper.toCache(postResponseDto);
         postCacheRepository.save(newsFeedPost);
         log.info("Post cache with id: {} saved to cache ", postResponseDto.getId());
     }

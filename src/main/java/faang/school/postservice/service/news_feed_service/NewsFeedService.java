@@ -4,7 +4,7 @@ import faang.school.postservice.dto.news_feed_models.NewsFeedPost;
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.kafka.kafka_events_dtos.PostViewKafkaEventDto;
 import faang.school.postservice.kafka.publishers.KafkaPostViewEventPublisher;
-import faang.school.postservice.mapper.post.PostCacheMapper;
+import faang.school.postservice.mapper.post.NewsFeedPostMapper;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ public class NewsFeedService {
 
     private final PostService postService;
     private final PostCacheService postCacheService;
-    private final PostCacheMapper postCacheMapper;
+    private final NewsFeedPostMapper newsFeedPostMapper;
     private final KafkaPostViewEventPublisher kafkaPostEventViewPublisher;
     private final RedisTemplate<String, String> redisTemplate;
 
@@ -89,7 +89,7 @@ public class NewsFeedService {
                     : Optional.of(fullPostsBatch.get(fullPostsBatch.size() - 1).getPostId());
             List<NewsFeedPost> mappedPosts = postService.getFeedForUser(userId, feedLack, postPointerId)
                     .stream()
-                    .map(postCacheMapper::toCache)
+                    .map(newsFeedPostMapper::toCache)
                     .toList();
             fullPostsBatch.addAll(mappedPosts);
         }
@@ -99,7 +99,7 @@ public class NewsFeedService {
 
     private NewsFeedPost getNewsFeedPost(Long postId) {
         return Optional.of(postCacheService.getPostCacheByPostId(postId))
-                .orElseGet(() -> postCacheMapper.toCache(postService.getPost(postId)));
+                .orElseGet(() -> newsFeedPostMapper.toCache(postService.getPost(postId)));
     }
 
     private void handlePostViews(List<NewsFeedPost> readyToViewFeed) {
