@@ -26,6 +26,14 @@ public class PostCacheService {
         return postCacheRepository.findById(postId).orElse(null);
     }
 
+    public void updateCountViews(Long postId, Long count) {
+        PostCache postCache = postCacheRepository.findById(postId).orElse(null);
+        if(postCache != null) {
+            postCache.setCountViews(count);
+            postCacheRepository.save(postCache);
+        }
+    }
+
     public void deletePostCacheByPostId(Long postId) {
         postCacheRepository.deleteById(postId);
     }

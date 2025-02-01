@@ -1,6 +1,6 @@
 package faang.school.postservice.config.kafka;
 
-import faang.school.postservice.dto.kafka_events.AbstractKafkaEventDto;
+import faang.school.postservice.kafka.kafka_events_dtos.AbstractKafkaEventDto;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;

@@ -3,13 +3,13 @@ package faang.school.postservice.service.post;
 import faang.school.postservice.cache_entities.AuthorCache;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.api.SpellingConfig;
-import faang.school.postservice.dto.kafka_events.PostKafkaEventDto;
+import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.resource.ResourceResponseDto;
-import faang.school.postservice.kafka_publishers.KafkaPostPublisher;
+import faang.school.postservice.kafka.publishers.KafkaPostEventPublisher;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
@@ -70,7 +70,7 @@ public class PostService {
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
     private final UserServiceClient userServiceClient;
-    private final KafkaPostPublisher kafkaPostPublisher;
+    private final KafkaPostEventPublisher kafkaPostEventPublisher;
 
     @Transactional
     public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
@@ -193,7 +193,7 @@ public class PostService {
                 .authorId(post.getAuthorId())
                 .build();
 
-        kafkaPostPublisher.sendPostEvent(postEvent);
+        kafkaPostEventPublisher.sendPostEvent(postEvent);
         return postResponseDto;
     }
 

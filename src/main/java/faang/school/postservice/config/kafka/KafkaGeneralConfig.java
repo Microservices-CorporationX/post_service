@@ -17,8 +17,15 @@ public class KafkaGeneralConfig {
     private String port;
     @Value(value = "${spring.kafka.host}")
     private String host;
-    @Value(value = "${spring.kafka.topics_names}")
+    @Value(value = "${spring.kafka.topics_names.post_topic}")
     private String postsTopicName;
+    @Value(value = "${spring.kafka.topics_names.post_view_topic}")
+    private String postsViewTopicName;
+    @Value(value = "${spring.kafka.topics_names.comment_topic}")
+    private String commentTopicName;
+    @Value(value = "${spring.kafka.topics_names.like_topic}")
+    private String likeTopicName;
+    @Value(value = "${spring.kafka.topics_names.feed_heat_topic}")
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -30,5 +37,20 @@ public class KafkaGeneralConfig {
     @Bean
     public NewTopic postTopic() {
         return new NewTopic(postsTopicName, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic postViewKafkaTopic() {
+        return new NewTopic(postsViewTopicName, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic commentTopic() {
+        return new NewTopic(commentTopicName, 1, (short) 1);
+    }
+
+    @Bean
+    public NewTopic likeTopic() {
+        return new NewTopic(likeTopicName, 1, (short) 1);
     }
 }

@@ -1,6 +1,6 @@
-package faang.school.postservice.kafka_consumers;
+package faang.school.postservice.kafka.consumers;
 
-import faang.school.postservice.dto.kafka_events.PostKafkaEventDto;
+import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.service.cache.NewsFeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ public class KafkaPostConsumer {
     private final NewsFeedService newsFeedService;
 
     @KafkaListener(
-            topics = "${spring.kafka.topics_names}",
+            topics = "${spring.kafka.topics_names.post_topic}",
             groupId = "${spring.kafka.group_id}",
             containerFactory = "kafkaListenerContainerFactory"
     )

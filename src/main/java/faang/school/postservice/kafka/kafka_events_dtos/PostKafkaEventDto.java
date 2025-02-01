@@ -1,4 +1,4 @@
-package faang.school.postservice.dto.kafka_events;
+package faang.school.postservice.kafka.kafka_events_dtos;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -18,4 +18,9 @@ public class PostKafkaEventDto extends AbstractKafkaEventDto {
     private List<Long> authorFollowersIds;
     @NotNull
     private Long authorId;
+
+    @Override
+    public String getEventId() {
+        return "Event_For_Post: " + postId;
+    }
 }

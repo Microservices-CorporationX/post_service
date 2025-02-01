@@ -1,7 +1,7 @@
 package faang.school.postservice.service.cache;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.kafka_events.PostKafkaEventDto;
+import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.post.PostCacheMapper;
