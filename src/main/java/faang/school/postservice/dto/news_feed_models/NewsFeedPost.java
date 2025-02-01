@@ -1,6 +1,5 @@
-package faang.school.postservice.cache_entities;
+package faang.school.postservice.dto.news_feed_models;
 
-import faang.school.postservice.dto.comment.CommentResponseDto;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
@@ -8,11 +7,10 @@ import org.springframework.data.redis.core.RedisHash;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RedisHash("Post")
 @Data
-public class PostCache implements Serializable {
+public class NewsFeedPost implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
@@ -22,8 +20,6 @@ public class PostCache implements Serializable {
     private String content;
     private Long authorId;
     private String authorName;
-    private Long countLikes;
     private Long countViews;
-    private List<CommentResponseDto> lastThreeComments;
     private LocalDateTime publishedAt;
 }

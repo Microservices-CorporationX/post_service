@@ -1,4 +1,4 @@
-package faang.school.postservice.cache_entities;
+package faang.school.postservice.dto.news_feed_models;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 @RedisHash(value = "Author")
 @Data
-public class AuthorCache implements Serializable {
+public class NewsFeedAuthor implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 

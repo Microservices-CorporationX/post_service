@@ -1,13 +1,10 @@
-package faang.school.postservice.service.cache;
+package faang.school.postservice.service.news_feed_service;
 
-import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.post.PostResponseDto;
-import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.dto.news_feed_models.NewsFeedPost;
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.kafka.kafka_events_dtos.PostViewKafkaEventDto;
 import faang.school.postservice.kafka.publishers.KafkaPostViewEventPublisher;
 import faang.school.postservice.mapper.post.PostCacheMapper;
-import faang.school.postservice.mapper.user.AuthorCacheMapper;
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,20 +24,19 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class NewsFeedService {
 
-    private final AuthorCacheService authorCacheService;
     private final PostService postService;
-    private final UserServiceClient userServiceClient;
-    private final AuthorCacheMapper authorCacheMapper;
-    private final PostCacheMapper postCacheMapper;
     private final PostCacheService postCacheService;
+    private final PostCacheMapper postCacheMapper;
     private final KafkaPostViewEventPublisher kafkaPostEventViewPublisher;
+    private final RedisTemplate<String, String> redisTemplate;
+
     @Value(value = "${cache.news_feed.max_posts_amount:500}")
     private int maxPostsAmountInCacheFeed;
     @Value("${cache.news_feed.prefix_name}")
     private String newsFeedPrefix;
     @Value(value = "${cache.news_feed.page_size:20}")
     private int pageSize;
-    private final RedisTemplate<String, String> redisTemplate;
+
 
     public void addPostToNewsFeed(PostKafkaEventDto postEventDto, Long followerId) {
         String redisKey = newsFeedPrefix + followerId;
@@ -55,7 +51,7 @@ public class NewsFeedService {
         }
     }
 
-    public List<PostResponseDto> getFeed(Long userId, Long lastViewedPostId) {
+    public List<NewsFeedPost> getFeed(Long userId, Long lastViewedPostId) {
         String redisKey = newsFeedPrefix + userId;
         Set<String> postIds;
         if (lastViewedPostId == null) {
@@ -63,32 +59,26 @@ public class NewsFeedService {
         } else {
             postIds = getPostsAfterLastViewed(redisKey, lastViewedPostId);
         }
-        List<PostResponseDto> fullPostsBatch = getFullPostsBatch(userId, postIds);
+        List<NewsFeedPost> fullPostsBatch = getFullPostsBatch(userId, postIds);
 
         handlePostViews(fullPostsBatch);
         return fullPostsBatch;
     }
 
     private Set<String> getPostsAfterLastViewed(String redisKey, Long lastViewedPostId) {
-        Long rank = redisTemplate.opsForZSet().rank(redisKey, lastViewedPostId.toString());
-        if (rank == null) {
+        Long lastViedPostPosition = redisTemplate.opsForZSet().rank(redisKey, lastViewedPostId.toString());
+        if (lastViedPostPosition == null) {
             return new HashSet<>();
         }
-        return redisTemplate.opsForZSet().reverseRange(redisKey, 0, rank - 1);
+        return redisTemplate.opsForZSet().reverseRange(redisKey, 0, lastViedPostPosition - 1);
     }
 
-    private void handlePostViews(List<PostResponseDto> readyToViewFeed) {
-        readyToViewFeed.stream()
-                .map(post -> new PostViewKafkaEventDto(post.getId()))
-                .forEach(kafkaPostEventViewPublisher::sendPostViewEvent);
-    }
-
-    private List<PostResponseDto> getFullPostsBatch(Long userId, Set<String> postIds) {
+    private List<NewsFeedPost> getFullPostsBatch(Long userId, Set<String> postIds) {
         List<Long> postIdList = postIds.stream().map(Long::parseLong).toList();
 
-        List<PostResponseDto> fullPostsBatch = new ArrayList<>(
+        List<NewsFeedPost> fullPostsBatch = new ArrayList<>(
                 postIdList.stream()
-                        .map(this::getPostDto)
+                        .map(this::getNewsFeedPost)
                         .toList()
         );
 
@@ -96,19 +86,25 @@ public class NewsFeedService {
         if (feedLack > 0) {
             Optional<Long> postPointerId = fullPostsBatch.isEmpty()
                     ? Optional.empty()
-                    : Optional.of(fullPostsBatch.get(fullPostsBatch.size() - 1).getId());
-            fullPostsBatch.addAll(postService.getFeedForUser(userId, feedLack, postPointerId));
+                    : Optional.of(fullPostsBatch.get(fullPostsBatch.size() - 1).getPostId());
+            List<NewsFeedPost> mappedPosts = postService.getFeedForUser(userId, feedLack, postPointerId)
+                    .stream()
+                    .map(postCacheMapper::toCache)
+                    .toList();
+            fullPostsBatch.addAll(mappedPosts);
         }
+
         return fullPostsBatch;
     }
 
-    private UserDto getUserDto(Long userId) {
-        return Optional.of(authorCacheMapper.toUserDto(authorCacheService.getAuthorCacheById(userId)))
-                .orElseGet(() -> userServiceClient.getUser(userId));
+    private NewsFeedPost getNewsFeedPost(Long postId) {
+        return Optional.of(postCacheService.getPostCacheByPostId(postId))
+                .orElseGet(() -> postCacheMapper.toCache(postService.getPost(postId)));
     }
 
-    private PostResponseDto getPostDto(Long postId) {
-        return Optional.of(postCacheMapper.toResponseDto(postCacheService.getPostCacheByPostId(postId)))
-                .orElseGet(() -> postService.getPost(postId));
+    private void handlePostViews(List<NewsFeedPost> readyToViewFeed) {
+        readyToViewFeed.stream()
+                .map(post -> new PostViewKafkaEventDto(post.getPostId()))
+                .forEach(kafkaPostEventViewPublisher::sendPostViewEvent);
     }
 }

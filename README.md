@@ -79,7 +79,7 @@ RESTful приложения калькулятор с единственным 
 * Написан [GlobalExceptionHandler](src/main/java/faang/school/postservice/controller/GlobalExceptionHandler.java)
   который умеет возвращать ошибки в формате `{"code":"CODE", "message": "message"}`
 * Используется TTL кэширование вычислений
-  в [CalculationTtlCacheService](src/main/java/faang/school/postservice/service/cache/CalculationTtlCacheService.java)
+  в [CalculationTtlCacheService](src/main/java/faang/school/postservice/service/news_feed_service/CalculationTtlCacheService.java)
 * Реализован простой Messaging через [Redis pub/sub](https://redis.io/docs/manual/pubsub/)
   * [Конфигурация](src/main/java/faang/school/postservice/config/RedisConfig.java) –
     сетапится [RedisTemplate](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisTemplate.html) –

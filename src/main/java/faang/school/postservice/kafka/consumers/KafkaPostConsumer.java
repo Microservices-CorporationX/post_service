@@ -1,7 +1,7 @@
 package faang.school.postservice.kafka.consumers;
 
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
-import faang.school.postservice.service.cache.NewsFeedService;
+import faang.school.postservice.service.news_feed_service.NewsFeedService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

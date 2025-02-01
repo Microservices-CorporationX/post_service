@@ -1,6 +1,6 @@
 package faang.school.postservice.mapper.user;
 
-import faang.school.postservice.cache_entities.AuthorCache;
+import faang.school.postservice.dto.news_feed_models.NewsFeedAuthor;
 import faang.school.postservice.dto.user.UserDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -11,7 +11,7 @@ import org.mapstruct.ReportingPolicy;
         unmappedSourcePolicy = ReportingPolicy.IGNORE)
 public interface AuthorCacheMapper {
     @Mapping(source = "id", target = "userId")
-    AuthorCache toAuthorCache(UserDto userDto);
+    NewsFeedAuthor toAuthorCache(UserDto userDto);
     @Mapping(source = "userId", target = "id")
-    UserDto toUserDto(AuthorCache authorCache);
+    UserDto toUserDto(NewsFeedAuthor newsFeedAuthor);
 }

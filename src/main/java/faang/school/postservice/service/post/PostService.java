@@ -1,6 +1,6 @@
 package faang.school.postservice.service.post;
 
-import faang.school.postservice.cache_entities.AuthorCache;
+import faang.school.postservice.dto.news_feed_models.NewsFeedAuthor;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
@@ -15,8 +15,8 @@ import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
 import faang.school.postservice.repository.db_repository.PostRepository;
-import faang.school.postservice.service.cache.AuthorCacheService;
-import faang.school.postservice.service.cache.PostCacheService;
+import faang.school.postservice.service.news_feed_service.AuthorCacheService;
+import faang.school.postservice.service.news_feed_service.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.s3.S3Service;
@@ -170,11 +170,13 @@ public class PostService {
     }
 
     private String getAuthorName(Long authorId) {
-        AuthorCache authorCache = authorCacheService.getAuthorCacheById(authorId);
-        if (authorCache != null) {
-            return authorCache.getUsername();
+        NewsFeedAuthor newsFeedAuthor = authorCacheService.getAuthorCacheById(authorId);
+        if (newsFeedAuthor != null) {
+            log.info("Author found in cache: {}", newsFeedAuthor.getUsername());
+            return newsFeedAuthor.getUsername();
         }
         log.info("Fetching user {} from UserService", authorId);
+        log.warn("Author [{}] not found in cache. Fetching from UserService...", authorId);
         return userServiceClient.getUser(authorId).getUsername();
     }
 
@@ -183,8 +185,10 @@ public class PostService {
         postValidator.validatePublish(post);
         post.setPublished(true);
         post.setDeleted(false);
+        post.setPublishedAt(LocalDateTime.now());
         post = postRepository.save(post);
         PostResponseDto postResponseDto = postMapper.toDto(post);
+        postResponseDto.setAuthorName(getAuthorName(post.getAuthorId()));
         authorCacheService.saveAuthorCache(post.getAuthorId());
         postCacheService.savePostCache(postResponseDto);
         log.info("Post with id {} published ", post.getId());
@@ -206,6 +210,7 @@ public class PostService {
         post.setPublished(false);
         post.setDeleted(true);
         postRepository.save(post);
+        postCacheService.deletePostCacheByPostId(id);
     }
 
     public PostResponseDto getPostById(Long id) {
