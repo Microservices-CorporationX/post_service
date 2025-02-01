@@ -53,6 +53,7 @@ spring:
           name: post_view_channel
   kafka:
     bootstrapAddress: localhost:29092
+    topicName: post-created
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
