@@ -26,7 +26,10 @@ spring:
         comment: comment_channel
         calculations_channel:
           name: calculations_channel
-
+  kafka:
+    bootstrap-servers: localhost:29092
+    topics:
+      name: likes
 server:
   port: 8081
 
