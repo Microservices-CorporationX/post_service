@@ -3,8 +3,11 @@ package faang.school.postservice.service;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.UserFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostViewEvent;
+import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.kafka.KafkaPostProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.PostViewEventPublisher;
@@ -22,11 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -46,6 +45,7 @@ public class PostService {
     private final UserContext userContext;
     private final OrthographyService orthographyService;
     private final PostViewEventPublisher postViewEventPublisher;
+    private final KafkaPostProducer kafkaPostProducer;
 
     private final ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -63,6 +63,9 @@ public class PostService {
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
         postRepository.save(post);
+        List<Long> followerList = userServiceClient.getFollowingUsers(post.getAuthorId(), new UserFilterDto()).stream().map(UserDto::id).toList();
+        // System.out.println(followerList);
+        kafkaPostProducer.sendPostCreatedEvent(postId, post.getAuthorId(), followerList);
         return postMapper.toDto(post);
     }
 
