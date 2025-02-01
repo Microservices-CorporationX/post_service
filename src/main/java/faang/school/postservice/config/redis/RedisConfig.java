@@ -21,7 +21,6 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @RequiredArgsConstructor
 public class RedisConfig {
     private final RedisProperties redisProperties;
-    private final ObjectMapper objectMapper;
 
     @Bean
     public Jackson2JsonRedisSerializer<Object> jsonRedisSerializer() {

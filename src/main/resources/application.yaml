@@ -46,6 +46,7 @@ spring:
       prefix-posts: posts
       prefix-feeds: feeds
       max-feeds: 500
+      batch-posts: 20
       ttl-users: 1
       ttl-posts: 1
       ttl-feeds: 1

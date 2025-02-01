@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 
 @Slf4j
@@ -25,24 +28,24 @@ import java.util.Collections;
 public class RedisCacheServiceImpl implements RedisCacheService {
 
     private final Environment environment;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, Object> redisLettuceTemplate;
     private final ObjectMapper objectMapper;
 
     private static final RedisScript<Long> POST_INCREMENT_VIEWS_SCRIPT = RedisScript.of(
             """
                     local key = KEYS[1]
                     local ttl = tonumber(ARGV[1])
-                                
+                    
                     local post = redis.call('GET', key)
                     if not post then
                         return 0
                     end
-                                
+                  
                     local postObj = cjson.decode(post)
                     postObj.views = postObj.views + 1
                     redis.call('SET', key, cjson.encode(postObj))
                     redis.call('EXPIRE', key, ttl)
-                                
+                    
                     return 1
                     """,
             Long.class
@@ -52,17 +55,17 @@ public class RedisCacheServiceImpl implements RedisCacheService {
             """
                     local key = KEYS[1]
                     local ttl = tonumber(ARGV[1])
-                                
+                
                     local post = redis.call('GET', key)
                     if not post then
                         return 0
                     end
-                                
+                 
                     local postObj = cjson.decode(post)
                     postObj.likes = postObj.likes + 1
                     redis.call('SET', key, cjson.encode(postObj))
                     redis.call('EXPIRE', key, ttl)
-                                
+                   
                     return 1
                     """,
             Long.class
@@ -71,21 +74,23 @@ public class RedisCacheServiceImpl implements RedisCacheService {
     private static final RedisScript<Long> POST_ADD_COMMENT_SCRIPT = RedisScript.of(
             """
                     local key = KEYS[1]
-                    local commentJson = ARGV[1]
-                                        
+                    local ttl = tonumber(ARGV[1])
+                    local commentJson = ARGV[2]
+                   
                     local post = redis.call('GET', key)
                     if not post then
                         return 0
                     end
-                                        
+                    
                     local postObj = cjson.decode(post)
                     local comment = cjson.decode(commentJson)
                     if not postObj.comments then
                         postObj.comments = {}
                     end
                     table.insert(postObj.comments, comment)
-                                        
+                    
                     redis.call('SET', key, cjson.encode(postObj))
+                    redis.call('EXPIRE', key, ttl)
                     
                     return 1
                     """,
@@ -94,7 +99,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
 
     @Override
     public void savePost(PostRedis post) {
-        redisTemplate.opsForValue().set(
+        redisLettuceTemplate.opsForValue().set(
                 environment.getRequiredProperty("spring.data.redis.prefix-posts") + post.getId(),
                 post,
                 Duration.ofDays(Long.parseLong(environment.getRequiredProperty("spring.data.redis.ttl-posts")))
@@ -103,7 +108,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
 
     @Override
     public void saveUser(UserNFDto user) {
-        redisTemplate.opsForValue().set(
+        redisLettuceTemplate.opsForValue().set(
                 environment.getRequiredProperty("spring.data.redis.prefix-users") + user.getId(),
                 user,
                 Duration.ofDays(Long.parseLong(environment.getRequiredProperty("spring.data.redis.ttl-users")))
@@ -121,7 +126,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
         String key = environment.getRequiredProperty("spring.data.redis.prefix-posts") + postId;
         int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
         try {
-            Long updatedViews = redisTemplate.execute(
+            Long updatedViews = redisLettuceTemplate.execute(
                     POST_INCREMENT_VIEWS_SCRIPT,
                     Collections.singletonList(key),
                     ttl
@@ -148,7 +153,7 @@ public class RedisCacheServiceImpl implements RedisCacheService {
         String key = environment.getRequiredProperty("spring.data.redis.prefix-posts") + postId;
         int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
         try {
-            Long updatedLikes = redisTemplate.execute(
+            Long updatedLikes = redisLettuceTemplate.execute(
                     POST_INCREMENT_LIKES_SCRIPT,
                     Collections.singletonList(key),
                     ttl
@@ -173,11 +178,13 @@ public class RedisCacheServiceImpl implements RedisCacheService {
     @Override
     public void addCommentForPost(PostCommentEvent event) {
         String key = environment.getRequiredProperty("spring.data.redis.prefix-posts") + event.getPostId();
+        int ttl = Integer.parseInt(environment.getRequiredProperty("spring.data.redis.ttl-posts")) * 86400;
         try {
             String commentJson = objectMapper.writeValueAsString(event);
-            Long updatedComments = redisTemplate.execute(
+            Long updatedComments = redisLettuceTemplate.execute(
                     POST_ADD_COMMENT_SCRIPT,
                     Collections.singletonList(key),
+                    ttl,
                     commentJson
             );
             if (updatedComments == null || updatedComments == 0) {
@@ -192,5 +199,15 @@ public class RedisCacheServiceImpl implements RedisCacheService {
             log.error("Redis transaction failed", e);
             throw e;
         }
+    }
+
+    @Override
+    public UserNFDto findUserById(long userId) {
+        return null;
+    }
+
+    @Override
+    public List<PostRedis> findFeedByUserID(long userId, int countPosts) {
+        return List.of();
     }
 }

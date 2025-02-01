@@ -2,6 +2,7 @@ package faang.school.postservice.service.kafka;
 
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
+import faang.school.postservice.dto.comment.CommentRedis;
 import faang.school.postservice.event.PostCommentEvent;
 import faang.school.postservice.event.PostLikeEvent;
 import faang.school.postservice.event.PostPublishedEvent;
@@ -62,8 +63,8 @@ public class KafkaServiceImpl implements KafkaService {
     @Async("executorKafkaSend")
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     @Override
-    public void sendCommentEvent(PostCommentEvent postCommentEvent) {
-        kafkaPostCommentProducer.publish(postCommentEvent);
+    public void sendCommentEvent(PostCommentEvent event) {
+        kafkaPostCommentProducer.publish(event);
     }
 
 }

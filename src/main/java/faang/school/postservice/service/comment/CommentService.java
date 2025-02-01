@@ -7,6 +7,7 @@ import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.dto.comment.ResponseCommentDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserNFDto;
+import faang.school.postservice.dto.comment.CommentRedis;
 import faang.school.postservice.event.PostCommentEvent;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
@@ -55,12 +56,15 @@ public class CommentService {
         comment = commentRepository.save(comment);
         UserNFDto userNFDto = userServiceClient.getUserNF(comment.getAuthorId());
         redisCacheService.saveUser(userNFDto);
-        PostCommentEvent event = PostCommentEvent.builder()
+        CommentRedis commentRedis = CommentRedis.builder()
                 .id(comment.getId())
                 .authorId(commentDto.getAuthorId())
-                .postId(postId)
                 .content(comment.getContent())
                 .createdAt(comment.getCreatedAt())
+                .build();
+        PostCommentEvent event = PostCommentEvent.builder()
+                .postId(postId)
+                .comment(commentRedis)
                 .build();
         kafkaService.sendCommentEvent(event);
         return commentMapper.toResponseDto(comment);

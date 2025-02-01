@@ -1,5 +1,6 @@
 package faang.school.postservice.producer;
 
+import faang.school.postservice.dto.comment.CommentRedis;
 import faang.school.postservice.event.PostCommentEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

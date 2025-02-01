@@ -1,5 +1,6 @@
 package faang.school.postservice.service.kafka;
 
+import faang.school.postservice.dto.comment.CommentRedis;
 import faang.school.postservice.event.PostCommentEvent;
 import faang.school.postservice.model.Post;
 
