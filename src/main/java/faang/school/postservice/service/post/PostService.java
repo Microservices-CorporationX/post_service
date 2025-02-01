@@ -6,6 +6,9 @@ import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.event.PostEventDto;
 import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.mapper.user.UserMapper;
+import faang.school.postservice.model.redis.PostCache;
+import faang.school.postservice.model.redis.UserCache;
 import faang.school.postservice.producer.PostEventProducer;
 import faang.school.postservice.publisher.MessageSenderForUserBanImpl;
 import faang.school.postservice.dto.post.*;
@@ -13,6 +16,8 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.entity.Post;
 import faang.school.postservice.model.entity.Resource;
 import faang.school.postservice.repository.entity.PostRepository;
+import faang.school.postservice.repository.redis.PostCacheRepository;
+import faang.school.postservice.repository.redis.UserCacheRepository;
 import faang.school.postservice.service.album.AlbumService;
 import faang.school.postservice.service.amazons3.Amazons3ServiceImpl;
 import faang.school.postservice.service.amazons3.processing.KeyKeeper;
@@ -68,6 +73,9 @@ public class PostService {
   private final MessageSenderForUserBanImpl messageSenderForUserBan;
   private final ObjectMapper objectMapper;
   private final PostEventProducer postEventProducer;
+  private final PostCacheRepository postCacheRepository;
+  private final UserCacheRepository userCacheRepository;
+  private final UserMapper userMapper;
 
   @Value("${size.not-verified-posts-for-users}")
   private int sizeNotVerifiedPostsForUsers;
@@ -112,6 +120,27 @@ public class PostService {
 
     Post publishedPost = postRepository.save(post);
 
+    UserDto userDto = userService.getUser(post.getAuthorId());
+
+    saveAuthorToCache(userDto);
+    savePostToCache(publishedPost, userDto);
+    sendPostToMessageBroker(publishedPost);
+
+    return postMapper.toDtoFromPost(publishedPost);
+  }
+
+  private void saveAuthorToCache(UserDto userDto) {
+    UserCache userCache = userMapper.toUserCache(userDto);
+    userCacheRepository.save(userCache);
+  }
+
+  private void savePostToCache(Post post, UserDto userDto) {
+    PostCache postCache = postMapper.toPostChache(post);
+    postCache.setAuthorName(userDto.getUsername());
+    postCacheRepository.save(postCache);
+  }
+
+  private void sendPostToMessageBroker(Post publishedPost) {
     List<Long> followers = userService.getUserSubscribers(publishedPost.getAuthorId()).stream()
         .map(UserDto::getId).toList();
 
@@ -121,8 +150,6 @@ public class PostService {
         .build();
 
     postEventProducer.sendEvent(postEvent);
-
-    return postMapper.toDtoFromPost(postRepository.save(post));
   }
 
   public PostResponseDto updatePost(@Positive long postId, @NotNull @Valid PostUpdateDto dto) {
@@ -309,8 +336,19 @@ public class PostService {
   protected void asyncPublishPosts(List<Post> posts) {
     CompletableFuture.runAsync(() -> {
       posts.forEach(post -> {
+
         post.setPublished(true);
         post.setPublishedAt(LocalDateTime.now());
+
+        /* задать вопрос с асинх или сущностью Post, вылетает исключение
+        Unable to evaluate the expression Method threw 'org.hibernate.LazyInitializationException' exception.
+        а так вообще мне не нравится этот метод, посмотреть, кто его писал и спросить
+        Long userId = post.getAuthorId();
+        UserDto userDto = userService.getUser(userId);
+        saveAuthorToCache(userDto);
+        savePostToCache(post, userDto);
+        sendPostToMessageBroker(post);
+        */
       });
       postRepository.saveAll(posts);
       log.info("Published {} posts", posts.size());

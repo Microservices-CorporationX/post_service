@@ -6,9 +6,11 @@ import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.redis.core.RedisHash;
 
 @Builder
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @RedisHash(value = "Posts", timeToLive = 90_000)

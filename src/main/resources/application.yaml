@@ -61,7 +61,7 @@ spring:
         treads-count: 10
     post:
       publisher:
-        cron: 1/5 * * * * *
+        cron: 0 * * * * *
         partition-size: 1000
         threads-count: 10
 

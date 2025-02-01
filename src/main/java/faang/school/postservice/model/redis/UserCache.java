@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.RedisHash;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@RedisHash(value = "Users", timeToLive = 24L)
+@RedisHash(value = "Users", timeToLive = 90_000)
 public class UserCache implements Serializable {
   @Id
   private Long id;
