@@ -81,7 +81,7 @@ services:
 
 user-service:
   host: localhost
-  port: 8088
+  port: 8080
 project-service:
   host: localhost
   port: 8082
@@ -89,3 +89,11 @@ payment-service:
   host: localhost
   port: 9080
 
+newsfeed:
+  subscribers:
+    batch-size: 1
+
+executor-service:
+  core-pool-size: 5
+  threads:
+    number: 100
