@@ -1,20 +1,26 @@
 package faang.school.postservice.service.post;
 
-import faang.school.postservice.dto.post.PostFilterDto;
+import faang.school.postservice.dto.news_feed_models.NewsFeedAuthor;
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.api.SpellingConfig;
+import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
+import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.resource.ResourceResponseDto;
+import faang.school.postservice.kafka.publishers.KafkaPostEventPublisher;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
+import faang.school.postservice.service.news_feed_service.AuthorCacheService;
+import faang.school.postservice.service.news_feed_service.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;
-import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.service.s3.S3Service;
+import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.post.PostValidator;
 import faang.school.postservice.validator.resource.ResourceValidator;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,13 +34,15 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +57,8 @@ public class PostService {
     ExecutorService execute = Executors.newFixedThreadPool(10);
 
     private final ResourceService resourceService;
+    private final AuthorCacheService authorCacheService;
+    private final PostCacheService postCacheService;
     private final S3Service s3Service;
     private final PostRepository postRepository;
     private final PostMapper postMapper;
@@ -59,7 +69,10 @@ public class PostService {
     private final PostValidator postValidator;
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
+    private final UserServiceClient userServiceClient;
+    private final KafkaPostEventPublisher kafkaPostEventPublisher;
 
+    @Transactional
     public PostResponseDto create(PostRequestDto requestDto, List<MultipartFile> images, List<MultipartFile> audio) {
         postValidator.validateCreate(requestDto);
         Post post = postMapper.toEntity(requestDto);
@@ -80,10 +93,12 @@ public class PostService {
         post = postRepository.save(post);
 
         PostResponseDto responseDto = postMapper.toDto(post);
+        responseDto.setAuthorName(getAuthorName(post.getAuthorId()));
         populateResourceUrls(responseDto, post);
         return responseDto;
     }
 
+    @Transactional
     public PostResponseDto updatePost(Long postId, PostUpdateDto updateDto, List<MultipartFile> images, List<MultipartFile> audio) {
         Post post = postRepository.getPostById(postId);
 
@@ -108,6 +123,7 @@ public class PostService {
         return responseDto;
     }
 
+    @Transactional(readOnly = true)
     public PostResponseDto getPost(Long postId) {
         Post post = postRepository.getPostById(postId);
         PostResponseDto responseDto = postMapper.toDto(post);
@@ -153,13 +169,36 @@ public class PostService {
         }
     }
 
+    private String getAuthorName(Long authorId) {
+        NewsFeedAuthor newsFeedAuthor = authorCacheService.getAuthorCacheById(authorId);
+        if (newsFeedAuthor != null) {
+            log.info("Author found in cache: {}", newsFeedAuthor.getUsername());
+            return newsFeedAuthor.getUsername();
+        }
+        log.info("Fetching user {} from UserService", authorId);
+        log.warn("Author [{}] not found in cache. Fetching from UserService...", authorId);
+        return userServiceClient.getUser(authorId).getUsername();
+    }
+
     public PostResponseDto publishPost(Long id) {
         Post post = postValidator.validateAndGetPostById(id);
         postValidator.validatePublish(post);
         post.setPublished(true);
         post.setDeleted(false);
+        post.setPublishedAt(LocalDateTime.now());
+        post = postRepository.save(post);
+        PostResponseDto postResponseDto = postMapper.toDto(post);
+        postResponseDto.setAuthorName(getAuthorName(post.getAuthorId()));
+        authorCacheService.saveAuthorCache(post.getAuthorId());
+        postCacheService.savePostCache(postResponseDto);
+        log.info("Post with id {} published ", post.getId());
+        PostKafkaEventDto postEvent = PostKafkaEventDto.builder()
+                .postId(post.getId())
+                .authorId(post.getAuthorId())
+                .build();
 
-        return postMapper.toDto(postRepository.save(post));
+        kafkaPostEventPublisher.sendPostEvent(postEvent);
+        return postResponseDto;
     }
 
     public void deletePost(Long id) {
@@ -171,6 +210,7 @@ public class PostService {
         post.setPublished(false);
         post.setDeleted(true);
         postRepository.save(post);
+        postCacheService.deletePostCacheByPostId(id);
     }
 
     public PostResponseDto getPostById(Long id) {
@@ -179,6 +219,30 @@ public class PostService {
                 .orElseThrow(EntityNotFoundException::new);
     }
 
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getFeedForUser(Long userId, int batchSize, Optional<Long> postPointerId) {
+        List<Long> userSubscriptions = userServiceClient.getFollowersIds(userId);
+
+        final List<Post> postsBatch = new ArrayList<>();
+        postPointerId.ifPresentOrElse(
+                pointer -> postsBatch.addAll(postRepository.getFeedForUser(userSubscriptions, pointer, batchSize)),
+                () -> postsBatch.addAll(postRepository.getFeedForUser(userSubscriptions, batchSize))
+        );
+
+        return postMapper.toListPostDto(postsBatch);
+    }
+
+    @Transactional
+    public Long incrementPostViews(Long postId) {
+        Post post = postRepository.getPostById(postId);
+        if (!post.isPublished()) {
+            return 0L;
+        }
+        post.setViews(post.getViews() + 1);
+        return postRepository.save(post).getViews();
+    }
+
+    @Transactional
     public void checkSpelling() {
         List<Post> posts = postRepository.findByPublishedFalse();
         int sizeOfRequests = getSizeOfRequest(posts.size());

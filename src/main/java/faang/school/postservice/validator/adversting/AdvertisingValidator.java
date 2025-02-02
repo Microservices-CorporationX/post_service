@@ -2,7 +2,7 @@ package faang.school.postservice.validator.adversting;
 
 import faang.school.postservice.dto.adversting.AdvertisingRequestDto;
 import faang.school.postservice.model.ad.Ad;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import faang.school.postservice.repository.ad.AdRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package faang.school.postservice.scheduled;
+package faang.school.postservice.repository.db_repository.scheduled;
 
 import faang.school.postservice.service.post.PostService;
 import lombok.RequiredArgsConstructor;

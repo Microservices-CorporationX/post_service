@@ -1,12 +1,9 @@
-package faang.school.postservice.repository;
+package faang.school.postservice.repository.db_repository;
 
 import faang.school.postservice.model.Comment;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

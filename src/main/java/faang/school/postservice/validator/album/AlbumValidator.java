@@ -1,14 +1,12 @@
 package faang.school.postservice.validator.album;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.album.AlbumRequestDto;
-import faang.school.postservice.dto.album.AlbumRequestUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.DataValidationException;
 import faang.school.postservice.model.Album;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.AlbumRepository;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.AlbumRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

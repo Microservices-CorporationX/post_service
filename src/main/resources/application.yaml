@@ -9,6 +9,18 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: user
     password: password
+  kafka:
+    port: 9092
+    host: localhost
+    group_id: news_feed
+    topics_names:
+      post_topic: "posts"
+      post_view_topic: "post_views"
+      feed_heat_topic: "feed_heat"
+    keys:
+      post_topic: "post"
+      post_view_topic: "post_view"
+      feed_heat_topic: "feed_heat"
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -60,6 +72,17 @@ services:
     accessKey: user
     secretKey: password
     bucketName: post-bucket
+
+cache:
+  author:
+    ttl: 24
+  post:
+    ttl: 24
+  news_feed:
+    prefix_name: News_Feed
+    max_posts_amount: 500
+    page_size: 20
+  heater_batch_size: 50
 
 user-service:
   host: localhost

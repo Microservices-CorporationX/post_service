@@ -1,4 +1,4 @@
-package faang.school.postservice.repository;
+package faang.school.postservice.repository.db_repository;
 
 import faang.school.postservice.model.Hashtag;
 import faang.school.postservice.model.Post;

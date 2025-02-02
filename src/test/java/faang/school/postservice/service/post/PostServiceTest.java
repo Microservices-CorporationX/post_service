@@ -1,28 +1,32 @@
 package faang.school.postservice.service.post;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
+import faang.school.postservice.dto.user.UserDto;
+import faang.school.postservice.kafka.publishers.KafkaPostEventPublisher;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.db_repository.PostRepository;
+import faang.school.postservice.service.news_feed_service.AuthorCacheService;
+import faang.school.postservice.service.news_feed_service.PostCacheService;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.service.resource.ResourceService;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.post.PostValidator;
-
-import org.junit.jupiter.api.BeforeEach;
 import faang.school.postservice.validator.resource.ResourceValidator;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
@@ -33,13 +37,15 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -54,7 +60,8 @@ public class PostServiceTest {
     private PostValidator postValidator;
     @Mock
     private RestTemplate restTemplate;
-
+    @Mock
+    private UserServiceClient userServiceClient;
     @Mock
     private SpellingConfig api;
     @Mock
@@ -62,9 +69,15 @@ public class PostServiceTest {
     @Mock
     private ResourceService resourceService;
     @Mock
+    private AuthorCacheService authorCacheService;
+    @Mock
+    private PostCacheService postCacheService;
+    @Mock
     private List<PostFilters> postFilters;
     @Mock
     private ModerationDictionary moderationDictionary;
+    @Mock
+    private KafkaPostEventPublisher kafkaPostEventPublisher;
     @InjectMocks
     private PostService postService;
 
@@ -120,6 +133,99 @@ public class PostServiceTest {
     }
 
     @Test
+    void getFeedForUser_WhenPostPointerIdIsPresent_ShouldFetchBatchAfterPointer() {
+        Long userId = 1L;
+        int batchSize = 5;
+        Long postPointerId = 100L;
+        Optional<Long> postPointer = Optional.of(postPointerId);
+
+        List<Long> userSubscriptions = List.of(2L, 3L, 4L);
+        List<Post> mockPosts = List.of(new Post(), new Post());
+        List<PostResponseDto> expectedDtos = List.of(new PostResponseDto(), new PostResponseDto());
+
+        when(userServiceClient.getFollowersIds(userId)).thenReturn(userSubscriptions);
+        when(postRepository.getFeedForUser(userSubscriptions, postPointerId, batchSize)).thenReturn(mockPosts);
+        when(postMapper.toListPostDto(mockPosts)).thenReturn(expectedDtos);
+
+        List<PostResponseDto> result = postService.getFeedForUser(userId, batchSize, postPointer);
+
+        assertNotNull(result);
+        assertEquals(expectedDtos, result);
+
+        verify(userServiceClient).getFollowersIds(userId);
+        verify(postRepository).getFeedForUser(userSubscriptions, postPointerId, batchSize);
+        verify(postMapper).toListPostDto(mockPosts);
+    }
+
+    @Test
+    void getFeedForUser_WhenPostPointerIdIsEmpty_ShouldFetchFirstBatch() {
+        Long userId = 1L;
+        int batchSize = 5;
+        Optional<Long> postPointer = Optional.empty();
+
+        List<Long> userSubscriptions = List.of(2L, 3L, 4L);
+        List<Post> mockPosts = List.of(new Post(), new Post(), new Post());
+        List<PostResponseDto> expectedDtos = List.of(new PostResponseDto(), new PostResponseDto(), new PostResponseDto());
+
+        when(userServiceClient.getFollowersIds(userId)).thenReturn(userSubscriptions);
+        when(postRepository.getFeedForUser(userSubscriptions, batchSize)).thenReturn(mockPosts);
+        when(postMapper.toListPostDto(mockPosts)).thenReturn(expectedDtos);
+
+        List<PostResponseDto> result = postService.getFeedForUser(userId, batchSize, postPointer);
+
+        assertNotNull(result);
+        assertEquals(expectedDtos, result);
+
+        verify(userServiceClient).getFollowersIds(userId);
+        verify(postRepository).getFeedForUser(userSubscriptions, batchSize);
+        verify(postMapper).toListPostDto(mockPosts);
+    }
+
+    @Test
+    void incrementPostViews_WhenPostIsPublished_ShouldIncrementViews() {
+        Long postId = 1L;
+        Post post = new Post();
+        post.setId(postId);
+        post.setPublished(true);
+        post.setViews(10L);
+
+        Post updatedPost = new Post();
+        updatedPost.setId(postId);
+        updatedPost.setPublished(true);
+        updatedPost.setViews(11L);
+
+        when(postRepository.getPostById(postId)).thenReturn(post);
+        when(postRepository.save(any(Post.class))).thenReturn(updatedPost);
+
+        Long updatedViews = postService.incrementPostViews(postId);
+
+        assertNotNull(updatedViews);
+        assertEquals(11L, updatedViews);
+
+        verify(postRepository).getPostById(postId);
+        verify(postRepository).save(post);
+    }
+
+    @Test
+    void incrementPostViews_WhenPostIsUnpublished_ShouldReturnZero() {
+        Long postId = 2L;
+        Post post = new Post();
+        post.setId(postId);
+        post.setPublished(false);
+        post.setViews(5L);
+
+        when(postRepository.getPostById(postId)).thenReturn(post);
+
+        Long updatedViews = postService.incrementPostViews(postId);
+
+        assertNotNull(updatedViews);
+        assertEquals(0L, updatedViews);
+
+        verify(postRepository).getPostById(postId);
+        verify(postRepository, never()).save(any(Post.class));
+    }
+
+    @Test
     void testCheckSpellingSuccess() throws InterruptedException {
         String prepareDate = "{\"elements\":[{\"id\":0,\"errors\":[{\"suggestions\":" +
                 "[\"error\",\"Rorer\",\"eerier\",\"arrear\",\"rower\",\"Euro\",\"rehear\",\"err\",\"ROR\",\"Orr\"]" +
@@ -153,6 +259,7 @@ public class PostServiceTest {
 
         Post post = new Post();
         post.setId(1L);
+        post.setAuthorId(1L);
         post.setResources(new ArrayList<>());
 
         Post mappedPost = new Post();
@@ -166,17 +273,21 @@ public class PostServiceTest {
                 .id(1L)
                 .content("Sample Content")
                 .authorId(1L)
+                .authorName("John Doe")
                 .projectId(2L)
                 .build();
 
         when(postMapper.toEntity(requestDto)).thenReturn(mappedPost);
         when(postRepository.save(any(Post.class))).thenReturn(post);
         when(postMapper.toDto(any(Post.class))).thenReturn(responseDto);
+        when(userServiceClient.getUser(1L)).thenReturn(new UserDto
+                (1L, "John Doe", "john@example.com", "1234567890", 10));
 
         PostResponseDto actualResponse = postService.create(requestDto, images, audio);
 
         assertEquals(1L, actualResponse.getId());
         assertEquals("Sample Content", actualResponse.getContent());
+        assertEquals("John Doe", actualResponse.getAuthorName());
 
         verify(postValidator, times(1)).validateCreate(requestDto);
         verify(resourceService, times(2)).uploadResources(anyList(), anyString(), eq(post));
@@ -186,21 +297,31 @@ public class PostServiceTest {
     @Test
     public void shouldPublishPost() {
         Long postId = 1L;
+        Long authorId = 10L;
+
         Post post = new Post();
         post.setId(postId);
         post.setPublished(false);
+        post.setAuthorId(authorId);
 
         Post updatedPost = new Post();
         updatedPost.setId(postId);
         updatedPost.setPublished(true);
+        updatedPost.setDeleted(false);
+        updatedPost.setPublishedAt(LocalDateTime.now());
+        updatedPost.setAuthorId(authorId);
 
-        PostResponseDto postDto = new PostResponseDto();
-        postDto.setId(postId);
+        PostResponseDto postDto = PostResponseDto.builder()
+                .id(postId)
+                .authorId(authorId)
+                .authorName("John Doe")
+                .publishedAt(updatedPost.getPublishedAt())
+                .build();
 
         when(postValidator.validateAndGetPostById(postId)).thenReturn(post);
         when(postRepository.save(post)).thenReturn(updatedPost);
         when(postMapper.toDto(updatedPost)).thenReturn(postDto);
-
+        when(userServiceClient.getUser(authorId)).thenReturn(new UserDto(authorId, "John Doe", "john@example.com", "1234567890", 10));
 
         PostResponseDto result = postService.publishPost(postId);
 
@@ -208,7 +329,12 @@ public class PostServiceTest {
         verify(postRepository).save(post);
         verify(postMapper).toDto(updatedPost);
 
+        verify(authorCacheService).saveAuthorCache(authorId);
+        verify(postCacheService).savePostCache(postDto);
+
         assertEquals(result.getId(), postId);
+        assertEquals(result.getAuthorName(), "John Doe");
+        assertNotNull(result.getPublishedAt());
     }
 
     @Test
