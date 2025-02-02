@@ -33,13 +33,13 @@ public class KafkaConfig {
 
   public KafkaAdmin kafkaAdmin() {
     Map<String, Object> configs = new HashMap<>();
-    configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapAddress());
+    configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.bootstrapAddress());
     return new KafkaAdmin(configs);
   }
 
   @Bean
   NewTopic postsTopic() {
-    return TopicBuilder.name(kafkaProperties.getPostsTopic())
+    return TopicBuilder.name(kafkaProperties.postTopic())
         .partitions(5)
         .build();
   }
@@ -47,7 +47,7 @@ public class KafkaConfig {
   @Bean
   public ProducerFactory<String, Object> producerFactory() {
     Map<String, Object> props = new HashMap<>();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapAddress());
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.bootstrapAddress());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
     return new DefaultKafkaProducerFactory<>(props);
@@ -61,7 +61,7 @@ public class KafkaConfig {
   @Bean
   public ConsumerFactory<String, Object> consumerFactory() {
     Map<String, Object> props = new HashMap<>();
-    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.getBootstrapAddress());
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaProperties.bootstrapAddress());
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "feed-group-id");

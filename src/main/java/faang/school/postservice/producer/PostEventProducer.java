@@ -20,16 +20,24 @@ public class PostEventProducer {
   @Value("${newsfeed.subscribers.batch-size:10000}")
   private int batchSize;
 
-  private final KafkaTemplate<String, Object> kafkaTemplate;
   private final KafkaProperties kafkaProperties;
+
+  private final KafkaTemplate<String, Object> kafkaTemplate;
 
   private final ExecutorService cachedThreadPool;
 
   public void sendEvent(PostEventDto postEvent) {
+
+    if (postEvent.getFollowers().isEmpty()) {
+      log.info("author of the post with id = {} has no subscriber, nothing to send ",
+          postEvent.getPosId());
+      return;
+    }
+
     log.info("Sending New Post Event with Followers to Kafka");
 
     List<PostEventDto> batches = splitIntoBatches(postEvent);
-    String topic = kafkaProperties.getPostsTopic();
+    String topic = kafkaProperties.postTopic();
 
     List<CompletableFuture<Void>> futures = batches.stream()
         .map(event -> CompletableFuture.runAsync(

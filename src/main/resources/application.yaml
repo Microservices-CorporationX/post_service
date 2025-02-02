@@ -40,9 +40,9 @@ spring:
           name: ad_bought_channel
 
     kafka:
-      bootstrap-servers: "localhost:9092"
-      topic:
-        posts: "post_topic"
+      properties:
+        bootstrapAddress: "localhost:9092"
+        postTopic: "post_topic"
 
   task:
     execution:

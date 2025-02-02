@@ -17,6 +17,7 @@ public class Listener {
   public void handle(PostEventDto dto, Acknowledgment acknowledgment) {
 
     logger.info("MESSAGE SUCCESSFULLY RECEIVED BY CONSUMER. BUT NOT PROCESSED YET");
+    logger.info("message received {}", dto.getFollowers());
 
     acknowledgment.acknowledge();
   }

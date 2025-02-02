@@ -24,4 +24,3 @@ public class UserCache implements Serializable {
   private String email;
 
 }
-

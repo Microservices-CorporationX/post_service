@@ -1,17 +1,11 @@
 package faang.school.postservice.config.kafka;
 
-import lombok.Getter;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-@Getter
-@Component
-public class KafkaProperties {
-
-  @Value("${spring.data.kafka.bootstrap-servers}")
-  private String bootstrapAddress;
-
-  @Value("${spring.data.kafka.topic.posts}")
-  private String postsTopic;
+@ConfigurationProperties(prefix = "spring.data.kafka.properties")
+public record KafkaProperties(
+    String bootstrapAddress,
+    String postTopic
+) {
 
 }
