@@ -18,8 +18,8 @@ import org.mapstruct.ReportingPolicy;
 public interface PostMapper {
     Post toEntity(PostCreateDto dto);
 
-    @Mapping(target = "likeCount",
-            expression = "java(entity.getLikes() != null ? entity.getLikes().size() : 0)")
+    @Mapping(target = "likesCount",
+            expression = "java(entity.getLikes().size())")
     PostReadDto toDto(Post entity);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

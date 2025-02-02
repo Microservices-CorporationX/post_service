@@ -19,7 +19,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/v1/like")
+@RequestMapping("/v1/likes")
 public class LikeController {
 
     private final LikeService likeService;

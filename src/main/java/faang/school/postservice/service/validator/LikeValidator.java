@@ -44,16 +44,14 @@ public class LikeValidator {
         }
     }
 
-    @Transactional
-    public void verifyPostLikeExists(LikeDto dto) {
+    private void verifyPostLikeExists(LikeDto dto) {
         Like like = likeRepository.findLikeByPostIdAndUserId(dto.postId(), dto.userId()).orElse(null);
         if (like != null) {
             throw new BusinessException("Нельзя повторно ставить лайк на пост с ID " + dto.postId());
         }
     }
 
-    @Transactional
-    public void verifyCommentLikeExists(LikeDto dto) {
+    private void verifyCommentLikeExists(LikeDto dto) {
         Like like = likeRepository.findLikeByCommentIdAndUserId(dto.commentId(), dto.userId()).orElse(null);
         if (like != null) {
             throw new BusinessException("Нельзя повторно ставить лайк на комментарий с ID " + dto.commentId());
