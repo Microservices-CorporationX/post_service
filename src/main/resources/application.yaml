@@ -26,10 +26,32 @@ spring:
         comment: comment_channel
         calculations_channel:
           name: calculations_channel
+
+    kafka:
+      topics:
+        comments:
+          name: comment-created-events-topic
+          partitions: 3
+          replicas: 3
+          configs:
+            min.insync.replicas: 2
+
   kafka:
-    bootstrap-servers: localhost:29092
-    topics:
-      name: likes
+    producer:
+      bootstrap-servers: localhost:9091,localhost:9092,localhost:9093
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        delivery.timeout.ms: 20000
+        linger.ms: 0
+        request.timeout.ms: 10000
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+    admin:
+      properties:
+        retries: 5
+
 server:
   port: 8081
 
