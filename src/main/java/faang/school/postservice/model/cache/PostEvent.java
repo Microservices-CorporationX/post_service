@@ -2,6 +2,7 @@ package faang.school.postservice.model.cache;
 
 
 import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
-import java.io.Serializable;
 import java.util.List;
 
 @RedisHash(value = "post")
@@ -18,14 +18,16 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 @Setter
-public class PostCache {
-
+public class PostEvent {
     @Id
     private Long id;
     private String content;
     private Long authorId;
     private List<Long> followersId;
     private int countOfLikes;
+
+    @Version
+    private Long version;
 
     @TimeToLive
     @Value("${spring.data.redis.cache.ttl}")

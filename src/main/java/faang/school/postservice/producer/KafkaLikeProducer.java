@@ -1,6 +1,6 @@
 package faang.school.postservice.producer;
 
-import faang.school.postservice.model.cache.LikeCache;
+import faang.school.postservice.model.cache.LikeEvent;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -9,7 +9,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class KafkaLikeProducer extends KafkaAbstractProducer<LikeCache> {
+public class KafkaLikeProducer extends KafkaAbstractProducer<LikeEvent> {
 
     public KafkaLikeProducer(KafkaTemplate<String, Object> kafkaTemplate) {
         super(kafkaTemplate);
@@ -23,8 +23,7 @@ public class KafkaLikeProducer extends KafkaAbstractProducer<LikeCache> {
         return TopicBuilder.name(likeTopic).build();
     }
 
-
-    public void send(LikeCache like) {
+    public void send(LikeEvent like) {
         super.sendMessage(likeTopic, like);
     }
 }

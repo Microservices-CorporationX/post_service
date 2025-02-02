@@ -6,12 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
-import java.io.Serializable;
-
 @RequiredArgsConstructor
 @RedisHash(value = "user")
-public class UserCache {
-
+public class UserEvent {
     @Id
     private final Long id;
     private final String username;

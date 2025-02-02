@@ -1,12 +1,12 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.model.cache.PostEvent;
 import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.mapper.post.PostCacheMapper;
+import faang.school.postservice.mapper.post.PostEventMapper;
 import faang.school.postservice.model.Post;
-import faang.school.postservice.model.cache.PostCache;
-import faang.school.postservice.model.cache.UserCache;
+import faang.school.postservice.model.cache.UserEvent;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.repository.redis.RedisPostRepository;
 import faang.school.postservice.repository.redis.RedisUserRepository;
@@ -25,10 +25,10 @@ public class PostServiceCache {
     private final UserServiceClient userServiceClient;
     private final KafkaPostProducer kafkaPostProducer;
     private final PostRepository postRepository;
-    private final PostCacheMapper mapper;
+    private final PostEventMapper mapper;
 
     public void savePost(Post post) {
-        PostCache postCache = mapper.toCache(post);
+        PostEvent postCache = mapper.toEvent(post);
         redisPostRepository.save(postCache);
         log.debug("Post added to Redis cache");
 
@@ -36,7 +36,7 @@ public class PostServiceCache {
         postCache.setFollowersId(followersId);
         UserDto author = userServiceClient.getUser(post.getAuthorId());
 
-        redisUserRepository.save(new UserCache(author.getId(), author.getUsername()));
+        redisUserRepository.save(new UserEvent(author.getId(), author.getUsername()));
         log.debug("Author with id {} of the post added to Redis cache", author.getId());
 
         kafkaPostProducer.send(postCache);

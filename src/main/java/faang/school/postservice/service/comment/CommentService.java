@@ -9,7 +9,7 @@ import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserForBanEventDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
-import faang.school.postservice.model.cache.UserCache;
+import faang.school.postservice.model.cache.UserEvent;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
@@ -32,7 +32,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 public class CommentService {
-
     private final CommentRepository commentRepository;
     private final CommentValidator commentValidator;
     private final CommentMapper commentMapper;
@@ -40,9 +39,7 @@ public class CommentService {
     private final UserBanEventPublisher banPublisher;
     private final PostRepository postRepository;
     private final ModerationDictionary moderationDictionary;
-    private final RedisUserRepository redisUserRepository;
-    private final UserServiceClient userServiceClient;
-
+    private final CommentEventSender commentEventSender;
 
     public CommentResponseDto createComment(CommentRequestDto commentRequestDto) {
         commentValidator.validateAuthorExists(commentRequestDto.getAuthorId());
@@ -63,9 +60,7 @@ public class CommentService {
         commentEventPublisher.publish(commentEventDto);
         log.info("Notification about new comment sent to notification service {}", commentEventDto);
 
-        UserDto user = userServiceClient.getUser(comment.getAuthorId());
-        redisUserRepository.save(new UserCache(user.getId(), user.getUsername()));
-        log.info("Comment author added to Redis cache");
+        commentEventSender.sendEvent(comment);
 
         return commentResponseDto;
     }

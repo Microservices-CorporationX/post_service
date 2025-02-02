@@ -1,8 +1,8 @@
 package faang.school.postservice.consumer;
 
 
-import faang.school.postservice.model.cache.FeedCache;
-import faang.school.postservice.model.cache.PostCache;
+import faang.school.postservice.model.cache.FeedEvent;
+import faang.school.postservice.model.cache.PostEvent;
 import faang.school.postservice.repository.redis.RedisFeedRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,26 +25,26 @@ public class KafkaPostConsumer {
     private int maxPostSizeInFeed;
 
     @KafkaListener(topics = "${spring.data.kafka.topics.post_topic}", groupId = "${spring.data.kafka.group-id}")
-    public void listen(PostCache postCache, Acknowledgment acknowledgment) {
-        log.debug("Post event received. Author id {}", postCache.getAuthorId());
-        postCache.getFollowersId().forEach(followerId -> {
+    public void listen(PostEvent postEvent, Acknowledgment acknowledgment) {
+        log.debug("Post event received. Author id {}", postEvent.getAuthorId());
+        postEvent.getFollowersId().forEach(followerId -> {
             TreeSet<Long> postIds = new TreeSet<>(Comparator.reverseOrder());
-            Optional<FeedCache> feed = redisFeedRepository.findById(followerId);
+            Optional<FeedEvent> feed = redisFeedRepository.findById(followerId);
             if (feed.isPresent()) {
-                addNewPostIdInFeed(feed.get(), postIds, postCache, followerId);
+                addNewPostIdInFeed(feed.get(), postIds, postEvent, followerId);
             } else {
-                FeedCache newFeed = new FeedCache();
+                FeedEvent newFeed = new FeedEvent();
                 newFeed.setId(followerId);
                 newFeed.setPostsId(postIds);
-                addNewPostIdInFeed(newFeed, postIds, postCache, followerId);
+                addNewPostIdInFeed(newFeed, postIds, postEvent, followerId);
             }
         });
         acknowledgment.acknowledge();
     }
 
-    private void addNewPostIdInFeed(FeedCache feed, TreeSet<Long> postIds, PostCache postCache, Long userId) {
-        postIds.add(postCache.getId());
-        log.debug("Post {} successfully added in feed {} on user {}", postCache.getId(), feed.getId(), userId);
+    private void addNewPostIdInFeed(FeedEvent feed, TreeSet<Long> postIds, PostEvent postEvent, Long userId) {
+        postIds.add(postEvent.getId());
+        log.debug("Post {} successfully added in feed {} on user {}", postEvent.getId(), feed.getId(), userId);
         if (postIds.size() >= maxPostSizeInFeed) {
             postIds.remove(postIds.last());
         }

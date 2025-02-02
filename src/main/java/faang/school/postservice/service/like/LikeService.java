@@ -36,7 +36,7 @@ public class LikeService {
     private final LikeValidator validator;
     private final UserServiceClient userServiceClient;
     private final CommentValidator commentValidator;
-    private final LikeServiceCache likeServiceCache;
+    private final LikeEventSender likeEventSender;
 
     private static final int BATCH_SIZE = 100;
 
@@ -56,7 +56,7 @@ public class LikeService {
         postRepository.save(post);
         log.info("The post {} was successfully saved in DB", post.getId());
 
-        likeServiceCache.sendEvent(like);
+        likeEventSender.sendEvent(like);
 
         return likeMapper.toResponseLikeDto(like);
     }

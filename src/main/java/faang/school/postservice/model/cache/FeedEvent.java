@@ -14,7 +14,7 @@ import java.util.TreeSet;
 @AllArgsConstructor
 @NoArgsConstructor
 @RedisHash(value = "feed")
-public class FeedCache {
+public class FeedEvent {
     @Id
     private Long id;
     private TreeSet<Long> postsId;
