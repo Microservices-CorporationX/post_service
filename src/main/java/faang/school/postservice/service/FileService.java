@@ -49,15 +49,15 @@ public class FileService {
     }
 
     public void deleteFiles(List<String> fileIds) {
-        for (String fileId : fileIds) {
-            s3Service.deleteFileAsync(awsS3ApiConfig.getBucket(), fileId).join();
-        }
-
         List<Post> postsToUpdate = postService.findPostsByResourceKeys(fileIds);
         for (Post post : postsToUpdate) {
-            List<Resource> resources = post.getResources();
+            List<Resource> resources = new ArrayList<>(post.getResources());
             resources.removeIf(resource -> fileIds.contains(resource.getKey()));
+            post.setResources(resources);
             postService.update(post);
+        }
+        for (String fileId : fileIds) {
+            s3Service.deleteFileAsync(awsS3ApiConfig.getBucket(), fileId).join();
         }
     }
 
