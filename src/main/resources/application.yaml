@@ -35,7 +35,12 @@ spring:
           replicas: 3
           configs:
             min.insync.replicas: 2
-
+        likes:
+          name: likes-events-topic
+          partitions: 2
+          replicas: 2
+          configs:
+            min.insync.replicas: 2
   kafka:
     producer:
       bootstrap-servers: localhost:9091,localhost:9092,localhost:9093
@@ -51,6 +56,8 @@ spring:
     admin:
       properties:
         retries: 5
+        retry.backoff.ms: 500
+        metadata.fetch.timeout.ms: 15000
 
 server:
   port: 8081

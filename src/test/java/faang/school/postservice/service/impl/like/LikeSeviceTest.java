@@ -1,7 +1,6 @@
 package faang.school.postservice.service.impl.like;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.kafka.KafkaLikeProducer;
 import faang.school.postservice.dto.LikeDto;
 import faang.school.postservice.dto.LikeEvent;
 import faang.school.postservice.dto.UserDto;
@@ -10,6 +9,7 @@ import faang.school.postservice.mapper.LikeMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.producers.KafkaLikesProducer;
 import faang.school.postservice.publisher.LikeEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
@@ -43,7 +43,7 @@ public class LikeSeviceTest {
     PostRepository postRepository = Mockito.mock(PostRepository.class);
     LikeMapper likeMapper = Mockito.mock(LikeMapper.class);
     LikeEventPublisher likeEventPublisher = Mockito.mock(LikeEventPublisher.class);
-    KafkaLikeProducer kafkaLikeProducer= Mockito.mock(KafkaLikeProducer.class);
+    KafkaLikesProducer kafkaLikeProducer= Mockito.mock(KafkaLikesProducer.class);
 
     long id;
     LikeDto likeDto;

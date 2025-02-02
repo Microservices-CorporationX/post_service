@@ -1,10 +1,9 @@
-package faang.school.postservice.config.kafka;
+package faang.school.postservice.producers;
 
 import faang.school.postservice.dto.LikeEvent;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -25,21 +24,17 @@ import java.util.concurrent.CompletableFuture;
 public class KafkaLikeProducerTest {
 
     @InjectMocks
-    private KafkaLikeProducer kafkaLikeProducer;
+    private KafkaLikesProducer kafkaLikesProducer;
 
     @Mock
     private KafkaTemplate<String, Object> kafkaTemplate;
 
-    @BeforeEach
-    void setup() {
-        kafkaLikeProducer.setNameTopic("likes");
-    }
 
     @Test
-    void testsendMessage() {
+    void testsendEvent() {
         LikeEvent event = new LikeEvent(1L, 2L, 3L, LocalDateTime.now());
         RecordMetadata recordMetadata = new RecordMetadata(
-                new TopicPartition("likes", 0),
+                new TopicPartition("likes", 1),
                 0L,
                 0L,
                 0L,
@@ -47,12 +42,12 @@ public class KafkaLikeProducerTest {
                 0,
                 0
         );
-        ProducerRecord<String, Object> producerRecord = new ProducerRecord<>("likes", event);
-        CompletableFuture<SendResult<String, Object>> completableFuture = new CompletableFuture<>();
-        CompletableFuture.completedFuture(new SendResult<>(producerRecord, recordMetadata));
+        CompletableFuture<SendResult<String, Object>> future = CompletableFuture.completedFuture(
+                new SendResult<>(new ProducerRecord<>("likes", event), recordMetadata)
+        );
         when(kafkaTemplate.send(eq("likes"), eq(event)))
-                .thenReturn(completableFuture);
-        kafkaLikeProducer.sendMessage(event);
+                .thenReturn(future);
+        kafkaLikesProducer.sendEvent(event,"likes");
         verify(kafkaTemplate).send(eq("likes"), eq(event));
     }
 }
