@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -48,23 +47,22 @@ public class HashtagServiceImpl implements HashtagService {
 
     @Transactional
     @Override
-    public void addHashtag(HashtagRequestDto dto) {
+    public void addHashtagToPost(HashtagRequestDto dto) {
         log.info("Start add hashtag");
         Post post = postRepository.findById(dto.getPostId()).orElseThrow(
                 () -> new EntityNotFoundException(String.format("Post not found with id: %d", dto.getPostId())));
         Hashtag hashtag = hashtagRepository.findByName(dto.getHashtag())
-                .orElseGet(() -> buildHashtag(dto.getHashtag(), post));
+                .orElseGet(() -> buildHashtag(dto.getHashtag()));
         if (!post.getHashtags().contains(hashtag)) {
-            hashtagRepository.addHashtag(post.getId(), hashtag.getId());
+            hashtagRepository.save(hashtag);
+            hashtagRepository.addHashtagToPost(post.getId(), hashtag.getId());
             log.info("Hashtag added");
         }
     }
 
-    private Hashtag buildHashtag(String hashtag, Post post) {
+    private Hashtag buildHashtag(String hashtag) {
         return Hashtag.builder()
-                .id(UUID.randomUUID())
                 .name(hashtag)
-                .posts(List.of(post))
                 .build();
     }
 }

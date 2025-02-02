@@ -15,8 +15,8 @@ import java.util.List;
 public class PostController {
     private final PostService postService;
 
-    @GetMapping
-    public ResponseEntity<List<PostResponseDto>> getPostsByHashtag(@RequestParam("hashtag") String hashtag) {
+    @GetMapping("{hashtag}")
+    public ResponseEntity<List<PostResponseDto>> getPostsByHashtag(@PathVariable("hashtag") String hashtag) {
         List<PostResponseDto> postsByHashtag = postService.getPostsByHashtag(hashtag);
         return new ResponseEntity<>(postsByHashtag, HttpStatus.OK);
     }

@@ -6,13 +6,12 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.Optional;
-import java.util.UUID;
 
-public interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
+public interface HashtagRepository extends JpaRepository<Hashtag, Long> {
 
-    @Query(nativeQuery = true, value = "INSERT INTO post_hashtag (post_id, hashtag_id) VALUES (:postId, :hashtagId)")
+    @Query(nativeQuery = true, value = "INSERT INTO post_hashtag (post_id, hashtag_id) VALUES (:postId, :hashtag_id)")
     @Modifying
-    void addHashtag(long postId, UUID hashtagId);
+    void addHashtagToPost(long postId, long hashtag_id);
 
     Optional<Hashtag> findByName(String name);
 }

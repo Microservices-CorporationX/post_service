@@ -52,7 +52,7 @@ class HashtagControllerTest {
     @Test
     public void testAddHashtagToPost() throws Exception {
         HashtagRequestDto hashtag = HashtagRequestDto.builder().postId(1L).hashtag("hashtag").build();
-        doNothing().when(service).addHashtag(hashtag);
+        doNothing().when(service).addHashtagToPost(hashtag);
 
         mockMvc.perform(post("/api/v1/hashtag"))
                 .andExpect(status().isOk());

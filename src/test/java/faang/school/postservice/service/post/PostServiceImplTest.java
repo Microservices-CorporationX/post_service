@@ -13,7 +13,6 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -34,31 +33,30 @@ class PostServiceImplTest {
 
     @Test
     public void testGetPostsByHashtag() {
-        UUID uuid = UUID.randomUUID();
-        when(postRepository.findByHashtag(eq("hashtag"))).thenReturn(List.of(getPost(uuid)));
+        when(postRepository.findByHashtag(eq("hashtag"))).thenReturn(List.of(getPost()));
 
         List<PostResponseDto> actualResult = postService.getPostsByHashtag("hashtag");
 
-        assertEquals(getExpectedResult(uuid), actualResult);
+        assertEquals(getExpectedResult(), actualResult);
     }
 
-    private List<PostResponseDto> getExpectedResult(UUID uuid) {
-        return Stream.of(getPost(uuid))
+    private List<PostResponseDto> getExpectedResult() {
+        return Stream.of(getPost())
                 .map(postMapper::toDto)
                 .toList();
     }
 
-    private Post getPost(UUID uuid) {
+    private Post getPost() {
         return Post.builder()
                 .id(1L)
-                .hashtags(List.of(getHashtag(uuid)))
+                .hashtags(List.of(getHashtag()))
                 .build();
     }
 
-    private Hashtag getHashtag(UUID uuid) {
+    private Hashtag getHashtag() {
         return Hashtag
                 .builder()
-                .id(uuid)
+                .id(1L)
                 .name("hashtag")
                 .build();
     }

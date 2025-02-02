@@ -14,12 +14,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 import static faang.school.postservice.util.HashtagPrepareData.buildNewHashtag;
 import static faang.school.postservice.util.HashtagPrepareData.buildNewHashtagRequestDto;
 import static faang.school.postservice.util.HashtagPrepareData.getPost;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
@@ -61,17 +61,17 @@ class HashtagServiceImplTest {
     }
 
     @Test
-    public void testAddHashtag() {
-        UUID uuid = UUID.randomUUID();
-        when(postRepository.findById(eq(1L))).thenReturn(Optional.ofNullable(getPost(uuid)));
-        when(hashtagRepository.findByName(eq("new"))).thenReturn(Optional.ofNullable(buildNewHashtag(uuid)));
-        doNothing().when(hashtagRepository).addHashtag(eq(1L), eq(uuid));
+    public void testAddHashtagToPost() {
+        when(postRepository.findById(eq(1L))).thenReturn(Optional.ofNullable(getPost()));
+        when(hashtagRepository.findByName(eq("new"))).thenReturn(Optional.ofNullable(buildNewHashtag()));
+        when(hashtagRepository.save(any())).thenReturn(buildNewHashtag());
+        doNothing().when(hashtagRepository).addHashtagToPost(eq(1L), eq(1L));
 
-        hashtagService.addHashtag(buildNewHashtagRequestDto());
+        hashtagService.addHashtagToPost(buildNewHashtagRequestDto());
 
         verify(postRepository).findById(eq(1L));
         verify(hashtagRepository).findByName(eq("new"));
-        verify(hashtagRepository).addHashtag(eq(1L), eq(uuid));
+        verify(hashtagRepository).addHashtagToPost(eq(1L), eq(1L));
     }
 
     private List<HashtagResponseDto> getExpectedResult(List<Hashtag> hashtags) {

@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("${domain.path}/hashtag")
+@RequestMapping("${domain.path}/hashtags")
 public class HashtagController {
     private final HashtagService hashtagService;
 
@@ -31,7 +31,7 @@ public class HashtagController {
 
     @PostMapping
     public ResponseEntity<Void> addHashtagToPost(@RequestBody @Valid HashtagRequestDto hashtagRequestDto) {
-        hashtagService.addHashtag(hashtagRequestDto);
+        hashtagService.addHashtagToPost(hashtagRequestDto);
         return ResponseEntity.ok().build();
     }
 }

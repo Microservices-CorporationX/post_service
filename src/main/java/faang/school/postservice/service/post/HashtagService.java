@@ -11,6 +11,6 @@ public interface HashtagService {
 
     List<HashtagResponseDto> getTopHashtags();
 
-    void addHashtag(HashtagRequestDto dto);
+    void addHashtagToPost(HashtagRequestDto dto);
 
 }
