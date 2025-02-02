@@ -15,6 +15,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Optional;
 
 import static org.mockito.Mockito.when;
@@ -46,25 +48,40 @@ public class LikeValidatorTest {
     }
 
     @Test
-    public void testVerifyPostLikeExistsThrows() {
+    public void testVerifyPostLikeExistsThrows() throws NoSuchMethodException {
         when(likeRepository.findLikeByPostIdAndUserId(likeDto.postId(),
                 likeDto.userId())).thenReturn(Optional.of(new Like()));
 
+        Method method = LikeValidator.class.getDeclaredMethod("verifyPostLikeExists", LikeDto.class);
+        method.setAccessible(true);
+
         BusinessException businessException = Assertions.assertThrows(BusinessException.class, () -> {
-            likeValidator.verifyPostLikeExists(likeDto);
+            try {
+                method.invoke(likeValidator, likeDto);
+            } catch (InvocationTargetException e) {
+                throw (BusinessException) e.getCause(); // Извлекаем фактическое исключение
+            }
         });
+
 
         Assertions.assertEquals(businessException.getMessage(),
                 "Нельзя повторно ставить лайк на пост с ID " + likeDto.postId());
     }
 
     @Test
-    public void testVerifyCommentLikeExistsThrows() {
+    public void testVerifyCommentLikeExistsThrows() throws NoSuchMethodException {
         when(likeRepository.findLikeByCommentIdAndUserId(likeDto.commentId(),
                 likeDto.userId())).thenReturn(Optional.of(new Like()));
 
+        Method method = LikeValidator.class.getDeclaredMethod("verifyCommentLikeExists", LikeDto.class);
+        method.setAccessible(true);
+
         BusinessException businessException = Assertions.assertThrows(BusinessException.class, () -> {
-            likeValidator.verifyCommentLikeExists(likeDto);
+            try {
+                method.invoke(likeValidator, likeDto);
+            } catch (InvocationTargetException e) {
+                throw (BusinessException) e.getCause(); // Извлекаем фактическое исключение
+            }
         });
 
         Assertions.assertEquals(businessException.getMessage(),
