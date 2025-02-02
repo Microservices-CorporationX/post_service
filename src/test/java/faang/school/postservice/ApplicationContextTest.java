@@ -21,7 +21,6 @@ public class ApplicationContextTest {
     }
 
     @Test
-    @Disabled
     void contextLoads() {
 
     }
