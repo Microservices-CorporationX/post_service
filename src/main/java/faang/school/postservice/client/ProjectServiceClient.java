@@ -3,6 +3,7 @@ package faang.school.postservice.client;
 import faang.school.postservice.dto.project.ProjectDto;
 import faang.school.postservice.handler.CustomErrorDecoder;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,8 +15,8 @@ import java.util.List;
         configuration = {FeignConfig.class, CustomErrorDecoder.class})
 public interface ProjectServiceClient {
     @GetMapping("/project/{projectId}")
-    ProjectDto getProject(@PathVariable long projectId);
+    ResponseEntity<ProjectDto> getProject(@PathVariable long projectId);
 
     @PostMapping("/projects")
-    List<ProjectDto> getProjectsByIds(@RequestBody List<Long> ids);
+    ResponseEntity<List<ProjectDto>> getProjectsByIds(@RequestBody List<Long> ids);
 }

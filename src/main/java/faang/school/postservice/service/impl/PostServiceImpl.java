@@ -3,15 +3,18 @@ package faang.school.postservice.service.impl;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.dto.project.ProjectDto;
+import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.exception.ExternalServiceValidationException;
 import faang.school.postservice.exception.PostNotFoundException;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.PostService;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -25,7 +28,6 @@ import static java.util.Comparator.nullsLast;
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
-    public static final String EXTERNAL_ERROR_MESSAGE = "Error occurred from external service: ";
     public static final String POST_WITH_ID_NOT_FOUND = "Post with id %s not found";
     public static final String POST_WITH_ID_ALREADY_PUBLISHED = "Post with ID %s is already published";
     public static final String POSTS_BY_USER_ID_NOT_FOUND = "Posts by user ID: %s not found";
@@ -163,26 +165,25 @@ public class PostServiceImpl implements PostService {
     }
 
     private void getUserWithValidation(Long userId) {
-        try {
-            userServiceClient.getUser(userId);
-        } catch (FeignException exception) {
-            handleFeignException(exception, String.format(USER_WITH_ID_NOT_FOUND, userId));
+        ResponseEntity<UserDto> response = userServiceClient.getUser(userId);
+        if (response.getBody() == null) {
+            throw new ExternalServiceValidationException("Empty response from UserService for ID: " + userId);
         }
+        throwExceptionIfNotFound(USER_WITH_ID_NOT_FOUND, userId, response.getStatusCode());
     }
 
     private void getProjectWithValidation(Long projectId) {
-        try {
-            projectServiceClient.getProject(projectId);
-        } catch (FeignException exception) {
-            handleFeignException(exception, String.format(PROJECT_WITH_ID_NOT_FOUND, projectId));
+        ResponseEntity<ProjectDto> response = projectServiceClient.getProject(projectId);
+        if (response.getBody() == null) {
+            throw new ExternalServiceValidationException("Empty response from ProjectService for ID: " + projectId);
         }
+        throwExceptionIfNotFound(PROJECT_WITH_ID_NOT_FOUND, projectId, response.getStatusCode());
     }
 
-    private void handleFeignException(FeignException exception, String notFoundMessage) {
-        if (exception.status() == HttpStatus.NOT_FOUND.value()) {
-            throw new PostNotFoundException(notFoundMessage);
+    private static void throwExceptionIfNotFound(String message, Long targetId, HttpStatusCode httpStatusCode) {
+        if (httpStatusCode == HttpStatus.NOT_FOUND) {
+            throw new PostNotFoundException(String.format(message, targetId));
         }
-        throw new ExternalServiceValidationException(EXTERNAL_ERROR_MESSAGE + exception.getMessage());
     }
 
     private PostDto savePostAndMapToDto(Post post) {
