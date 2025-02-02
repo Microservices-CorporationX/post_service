@@ -5,6 +5,7 @@ import faang.school.postservice.kafka.kafka_events_dtos.AbstractKafkaEventDto;
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.retry.annotation.Backoff;
@@ -25,7 +26,7 @@ public class KafkaPostEventPublisher extends AbstractEventPublisher{
 
     public KafkaPostEventPublisher(
             KafkaTemplate<String, AbstractKafkaEventDto> kafkaTemplate,
-            NewTopic postTopic,
+            @Qualifier("postTopic")NewTopic postTopic,
             UserServiceClient userServiceClient
     ){
         super(kafkaTemplate, postTopic);

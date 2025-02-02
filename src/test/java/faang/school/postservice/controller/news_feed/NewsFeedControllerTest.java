@@ -15,9 +15,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -81,5 +83,13 @@ class NewsFeedControllerTest {
 
         verify(userContext).getUserId();
         verify(newsFeedService).getFeed(userId, null);
+    }
+
+    @Test
+    void heatFeed_ShouldCallServiceAndReturnNoContent() throws Exception {
+        mockMvc.perform(post("/api/v1/news_feed/heat"))
+                .andExpect(status().isNoContent());
+
+        verify(newsFeedService, times(1)).heatFeed();
     }
 }

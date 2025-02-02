@@ -16,13 +16,16 @@ public class PostCacheService {
     private final NewsFeedPostMapper newsFeedPostMapper;
 
     public void savePostCache(PostResponseDto postResponseDto) {
+        log.info("Saving post {} to cache", postResponseDto.getId());
         NewsFeedPost newsFeedPost = newsFeedPostMapper.toCache(postResponseDto);
         postCacheRepository.save(newsFeedPost);
         log.info("Post cache with id: {} saved to cache ", postResponseDto.getId());
     }
 
     public NewsFeedPost getPostCacheByPostId(Long postId) {
-        return postCacheRepository.findById(postId).orElse(null);
+        NewsFeedPost cachedPost = postCacheRepository.findById(postId).orElse(null);
+        log.info("Fetching from cache: {} -> {}", postId, cachedPost);
+        return cachedPost;
     }
 
     public void updateCountViews(Long postId, Long count) {

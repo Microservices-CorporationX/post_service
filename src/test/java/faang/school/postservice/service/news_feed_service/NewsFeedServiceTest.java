@@ -1,10 +1,14 @@
 package faang.school.postservice.service.news_feed_service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.news_feed_models.NewsFeedPost;
+import faang.school.postservice.kafka.kafka_events_dtos.FeedHeatKafkaEventDto;
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
+import faang.school.postservice.kafka.publishers.KafkaFeedHeatEventPublisher;
 import faang.school.postservice.kafka.publishers.KafkaPostViewEventPublisher;
 import faang.school.postservice.mapper.post.NewsFeedPostMapper;
 import faang.school.postservice.service.post.PostService;
+import faang.school.postservice.util.ListSplitter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,9 +27,13 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +59,15 @@ class NewsFeedServiceTest {
     @Mock
     private ZSetOperations<String, String> zSetOperations;
 
+    @Mock
+    private UserServiceClient userServiceClient;
+
+    @Mock
+    private ListSplitter listSplitter;
+
+    @Mock
+    private KafkaFeedHeatEventPublisher kafkaFeedHeatEventPublisher;
+
     @InjectMocks
     private NewsFeedService newsFeedService;
 
@@ -59,10 +76,41 @@ class NewsFeedServiceTest {
 
     @BeforeEach
     void setup() {
+        newsFeedService.setHeaterBatchSize(5);
         newsFeedService.setNewsFeedPrefix("newsFeed_");
         newsFeedService.setPageSize(PAGE_SIZE);
         newsFeedService.setMaxPostsAmountInCacheFeed(MAX_POSTS_IN_FEED);
-        when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
+        lenient().when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
+    }
+
+    @Test
+    void heatFeed_ShouldFetchUsersAndSendBatchEvents() {
+        List<Long> userIds = List.of(1L, 2L, 3L, 4L, 5L, 6L, 7L, 8L, 9L, 10L);
+        List<List<Long>> batchedUserIds = List.of(
+                List.of(1L, 2L, 3L, 4L, 5L),
+                List.of(6L, 7L, 8L, 9L, 10L)
+        );
+
+        when(userServiceClient.getAllUserIds()).thenReturn(userIds);
+        when(listSplitter.split(userIds, 5)).thenReturn(batchedUserIds);
+
+        newsFeedService.heatFeed();
+
+        verify(userServiceClient, times(1)).getAllUserIds();
+        verify(listSplitter, times(1)).split(userIds, 5);
+        verify(kafkaFeedHeatEventPublisher, times(2)).sendFeedHeatingEvent(any(FeedHeatKafkaEventDto.class));
+    }
+
+    @Test
+    void heatFeed_ShouldHandleEmptyUserList() {
+        List<Long> emptyUserIds = List.of();
+        when(userServiceClient.getAllUserIds()).thenReturn(emptyUserIds);
+
+        newsFeedService.heatFeed();
+
+        verify(userServiceClient, times(1)).getAllUserIds();
+        verify(listSplitter, never()).split(any(), anyInt());
+        verify(kafkaFeedHeatEventPublisher, never()).sendFeedHeatingEvent(any(FeedHeatKafkaEventDto.class));
     }
 
     @Test

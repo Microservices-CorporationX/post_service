@@ -16,14 +16,10 @@ spring:
     topics_names:
       post_topic: "posts"
       post_view_topic: "post_views"
-      like_topic: "likes"
-      comment_topic: "comments"
       feed_heat_topic: "feed_heat"
     keys:
       post_topic: "post"
       post_view_topic: "post_view"
-      like_topic: "likey"
-      comment_topic: "comment"
       feed_heat_topic: "feed_heat"
 
   jpa:
@@ -86,6 +82,7 @@ cache:
     prefix_name: News_Feed
     max_posts_amount: 500
     page_size: 20
+  heater_batch_size: 50
 
 user-service:
   host: localhost

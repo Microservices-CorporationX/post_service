@@ -21,6 +21,8 @@ public class KafkaGeneralConfig {
     private String postsTopicName;
     @Value(value = "${spring.kafka.topics_names.post_view_topic}")
     private String postsViewTopicName;
+    @Value(value = "${spring.kafka.topics_names.feed_heat_topic}")
+    private String feedHeatTopicName;
 
     @Bean
     public KafkaAdmin kafkaAdmin() {
@@ -39,4 +41,8 @@ public class KafkaGeneralConfig {
         return new NewTopic(postsViewTopicName, 1, (short) 1);
     }
 
+    @Bean
+    public NewTopic feedHeatKafkaTopic() {
+        return new NewTopic(feedHeatTopicName, 1, (short) 1);
+    }
 }

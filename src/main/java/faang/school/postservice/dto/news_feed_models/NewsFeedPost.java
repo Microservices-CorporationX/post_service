@@ -11,7 +11,7 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-@RedisHash("Post")
+@RedisHash(value = "Post")
 @Data
 @NoArgsConstructor
 @Builder

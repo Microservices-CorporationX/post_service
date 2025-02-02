@@ -1,11 +1,15 @@
 package faang.school.postservice.service.news_feed_service;
 
+import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.dto.news_feed_models.NewsFeedPost;
+import faang.school.postservice.kafka.kafka_events_dtos.FeedHeatKafkaEventDto;
 import faang.school.postservice.kafka.kafka_events_dtos.PostKafkaEventDto;
 import faang.school.postservice.kafka.kafka_events_dtos.PostViewKafkaEventDto;
+import faang.school.postservice.kafka.publishers.KafkaFeedHeatEventPublisher;
 import faang.school.postservice.kafka.publishers.KafkaPostViewEventPublisher;
 import faang.school.postservice.mapper.post.NewsFeedPostMapper;
 import faang.school.postservice.service.post.PostService;
+import faang.school.postservice.util.ListSplitter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +35,10 @@ public class NewsFeedService {
     private final PostCacheService postCacheService;
     private final NewsFeedPostMapper newsFeedPostMapper;
     private final KafkaPostViewEventPublisher kafkaPostEventViewPublisher;
+    private final KafkaFeedHeatEventPublisher kafkaFeedHeatEventPublisher;
     private final RedisTemplate<String, String> redisTemplate;
+    private final UserServiceClient userServiceClient;
+    private final ListSplitter listSplitter;
 
     @Value(value = "${cache.news_feed.max_posts_amount:500}")
     private int maxPostsAmountInCacheFeed;
@@ -39,7 +46,20 @@ public class NewsFeedService {
     private String newsFeedPrefix;
     @Value(value = "${cache.news_feed.page_size:20}")
     private int pageSize;
+    @Value(value = "${cache.heater_batch_size}")
+    private int heaterBatchSize;
 
+    public void heatFeed() {
+        List<Long> userIds = userServiceClient.getAllUserIds();
+        if (userIds.isEmpty()) {
+            log.warn("No users found for heating news feed. Skipping batch processing.");
+            return;
+        }
+        List<List<Long>> batchedUserIds = listSplitter.split(userIds, heaterBatchSize);
+        batchedUserIds.stream()
+                .map(FeedHeatKafkaEventDto::new)
+                .forEach(kafkaFeedHeatEventPublisher::sendFeedHeatingEvent);
+    }
 
     public void addPostToNewsFeed(PostKafkaEventDto postEventDto, Long followerId) {
         String redisKey = newsFeedPrefix + followerId;
@@ -103,7 +123,7 @@ public class NewsFeedService {
     }
 
     private NewsFeedPost getNewsFeedPost(Long postId) {
-        return Optional.of(postCacheService.getPostCacheByPostId(postId))
+        return Optional.ofNullable(postCacheService.getPostCacheByPostId(postId))
                 .orElseGet(() -> newsFeedPostMapper.toCache(postService.getPost(postId)));
     }
 
