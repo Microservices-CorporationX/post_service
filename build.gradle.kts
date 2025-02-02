@@ -70,6 +70,9 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("com.redis.testcontainers:testcontainers-redis-junit-jupiter:1.4.6")
+    testImplementation("org.testcontainers:kafka")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.wiremock:wiremock-standalone:3.6.0")
 
     /**
      * Tests
@@ -83,6 +86,11 @@ dependencies {
      */
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.7.0")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.7.0")
+    /**
+     * Kafka
+     */
+    implementation ("org.springframework.kafka:spring-kafka")
+
 }
 
 tasks.test {

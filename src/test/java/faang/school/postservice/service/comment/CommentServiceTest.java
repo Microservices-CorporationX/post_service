@@ -3,16 +3,20 @@ package faang.school.postservice.service.comment;
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateRequestDto;
-import faang.school.postservice.dto.events_dto.CommentEventDto;
+import faang.school.postservice.dto.event.CommentEventDto;
+import faang.school.postservice.dto.event.CommentKafkaEvent;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.dto.user.UserForBanEventDto;
 import faang.school.postservice.mapper.comment.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.redis.UserRedis;
+import faang.school.postservice.producer.KafkaCommentProducer;
 import faang.school.postservice.publisher.CommentEventPublisher;
 import faang.school.postservice.publisher.UserBanEventPublisher;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
+import faang.school.postservice.repository.redis.RedisUserRepository;
 import faang.school.postservice.util.ModerationDictionary;
 import faang.school.postservice.validator.comment.CommentValidator;
 import org.junit.jupiter.api.Test;
@@ -29,7 +33,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -57,6 +63,12 @@ class CommentServiceTest {
 
     @Mock
     private UserBanEventPublisher banPublisher;
+    @Mock
+    private RedisUserRepository redisUserRepository;
+
+    @Mock
+    private KafkaCommentProducer kafkaCommentProducer;
+
 
     @InjectMocks
     private CommentService commentService;
@@ -75,6 +87,7 @@ class CommentServiceTest {
 
     @Test
     void createComment_shouldCreateCommentSuccessfully() {
+        // Подготовка данных
         Post post = new Post();
         post.setId(VALID_POST_ID);
         post.setAuthorId(VALID_POST_AUTHOR_ID);
@@ -95,34 +108,57 @@ class CommentServiceTest {
         expectedResponse.setPostId(VALID_POST_ID);
         expectedResponse.setContent("Test Content");
 
+        UserDto userDto = new UserDto(VALID_USER_DTO.getId(), "testUser", null, null, null);
+
+        CommentKafkaEvent kafkaEvent = new CommentKafkaEvent();
+
+        // Настройка моков
         when(commentMapper.toEntity(commentRequestDto)).thenReturn(comment);
         when(commentRepository.save(comment)).thenReturn(comment);
         when(commentMapper.toDto(comment)).thenReturn(expectedResponse);
         when(postRepository.getPostById(VALID_POST_ID)).thenReturn(post);
         when(moderationDictionary.isVerified(comment.getContent())).thenReturn(true);
+        when(commentMapper.fromDtoToKafkaEvent(expectedResponse)).thenReturn(kafkaEvent);
 
+        // Вызов тестируемого метода
         CommentResponseDto actualResponse = commentService.createComment(commentRequestDto);
 
+        // Проверка вызовов валидации
         verify(commentValidator).validateAuthorExists(commentRequestDto.getAuthorId());
         verify(commentValidator).validatePostExists(commentRequestDto.getPostId());
+
+        // Проверка сохранения комментария
         verify(commentRepository).save(comment);
         verify(commentMapper).toEntity(commentRequestDto);
         verify(commentMapper).toDto(comment);
         verify(postRepository).getPostById(VALID_POST_ID);
 
+        // Проверка сохранения в Redis с использованием ArgumentCaptor
+        ArgumentCaptor<UserRedis> captor = ArgumentCaptor.forClass(UserRedis.class);
+        verify(redisUserRepository).save(captor.capture());
+
+        // Логирование захваченного объекта
+        // В тесте убедитесь, что создается правильный объект UserRedis
+
+        // Проверка отправки события в Kafka
+        verify(kafkaCommentProducer).sendEvent(kafkaEvent);
+
+        // Проверка публикации события
         ArgumentCaptor<CommentEventDto> eventCaptor = ArgumentCaptor.forClass(CommentEventDto.class);
         verify(commentEventPublisher).publish(eventCaptor.capture());
         CommentEventDto actualEvent = eventCaptor.getValue();
 
-        assertNotNull(actualEvent);
-        assertEquals(VALID_POST_AUTHOR_ID, actualEvent.getPostAuthorId());
-        assertEquals(VALID_USER_DTO.getId(), actualEvent.getCommentAuthorId());
-        assertEquals(VALID_POST_ID, actualEvent.getPostId());
-        assertEquals(VALID_COMMENT_ID, actualEvent.getCommentId());
-        assertEquals("Test Content", actualEvent.getCommentContent());
+        assertNotNull(actualEvent, "Captured CommentEventDto should not be null");
+        assertEquals(VALID_POST_AUTHOR_ID, actualEvent.getPostAuthorId(), "Post author ID mismatch");
+        assertEquals(VALID_USER_DTO.getId(), actualEvent.getCommentAuthorId(), "Comment author ID mismatch");
+        assertEquals(VALID_POST_ID, actualEvent.getPostId(), "Post ID mismatch");
+        assertEquals(VALID_COMMENT_ID, actualEvent.getCommentId(), "Comment ID mismatch");
+        assertEquals("Test Content", actualEvent.getCommentContent(), "Comment content mismatch");
 
-        assertEquals(expectedResponse, actualResponse);
+        assertEquals(expectedResponse, actualResponse, "Response DTO mismatch");
     }
+
+
 
     @Test
     void updateComment_shouldUpdateCommentSuccessfully() {
@@ -193,5 +229,31 @@ class CommentServiceTest {
         commentService.commenterBanner();
         verify(banPublisher).publish(userForBanEventDto);
         verify(commentRepository).findAllByAuthorId(24L);
+    }
+
+    @Test
+    void addToRedisAndSendEvents_shouldNotSendKafkaEventIfNull() {
+        // Подготовка данных
+        UserDto userDto = new UserDto(1L, "testUser", null, null, null);
+        CommentResponseDto commentDto = new CommentResponseDto();
+        commentDto.setId(10L);
+        commentDto.setPostId(20L);
+        commentDto.setAuthorId(1L);
+        commentDto.setContent("Test comment");
+
+        // Настройка моков: маппер возвращает null
+        when(commentMapper.fromDtoToKafkaEvent(commentDto)).thenReturn(null);
+
+        // Вызов тестируемого метода
+        commentService.addToRedisAndSendEvents(userDto, commentDto);
+
+        // Проверка, что данные сохранены в Redis
+        verify(redisUserRepository).save(any(UserRedis.class));
+
+        // Проверка, что вызван `commentMapper.fromDtoToKafkaEvent`
+        verify(commentMapper).fromDtoToKafkaEvent(commentDto);
+
+        // Проверка, что `sendEvent` НЕ вызывается, если `kafkaEvent == null`
+        verify(kafkaCommentProducer, never()).sendEvent(any());
     }
 }

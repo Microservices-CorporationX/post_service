@@ -13,4 +13,5 @@ public class CommentRequestDto {
     private String content;
     private Long authorId;
     private Long postId;
+    private String userName;
 }

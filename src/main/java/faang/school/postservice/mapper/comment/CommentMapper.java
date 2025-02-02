@@ -2,8 +2,10 @@ package faang.school.postservice.mapper.comment;
 
 import faang.school.postservice.dto.comment.CommentRequestDto;
 import faang.school.postservice.dto.comment.CommentResponseDto;
+import faang.school.postservice.dto.event.CommentKafkaEvent;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
+import faang.school.postservice.model.redis.CommentRedis;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -36,4 +38,9 @@ public interface CommentMapper {
                 .map(Like::getId)
                 .toList();
     }
+
+    CommentRedis fromKafkaEventToRedis(CommentKafkaEvent commentKafkaEvent);
+
+    CommentKafkaEvent fromDtoToKafkaEvent(CommentResponseDto commentResponseDto);
+
 }
