@@ -7,7 +7,7 @@ import faang.school.postservice.dto.UserFilterDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostViewEvent;
 import faang.school.postservice.dto.user.UserDto;
-import faang.school.postservice.kafka.KafkaPostProducer;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.PostViewEventPublisher;
@@ -64,7 +64,6 @@ public class PostService {
         post.setPublishedAt(LocalDateTime.now());
         postRepository.save(post);
         List<Long> followerList = userServiceClient.getFollowingUsers(post.getAuthorId(), new UserFilterDto()).stream().map(UserDto::id).toList();
-        // System.out.println(followerList);
         kafkaPostProducer.sendPostCreatedEvent(postId, post.getAuthorId(), followerList);
         return postMapper.toDto(post);
     }

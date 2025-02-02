@@ -51,12 +51,16 @@ spring:
           name: user_ban_channel
         postViewChannel:
           name: post_view_channel
-  kafka:
-    bootstrapAddress: localhost:29092
-    topicName: post-created
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    kafka:
+      producer:
+        bootstrap-servers: localhost:29092
+      topics:
+        comment-channel:
+          name: comments_topic
+        post-channel:
+          name: posts_topic
+
 server:
   port: 8089
 
