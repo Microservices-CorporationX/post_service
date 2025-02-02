@@ -1,10 +1,8 @@
 package faang.school.postservice.handler;
 
 import faang.school.postservice.dto.CommentEvent;
-import faang.school.postservice.dto.PostDto;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.mapper.CommentMapper;
-import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.mapper.PostRedisMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
@@ -15,18 +13,18 @@ import faang.school.postservice.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisOperations;
-import org.springframework.data.redis.core.SessionCallback;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.integration.support.locks.ExpirableLockRegistry;
 import org.springframework.kafka.annotation.KafkaHandler;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.lang.NonNull;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Queue;
+import java.util.concurrent.locks.Lock;
 
 @Slf4j
 @Component
@@ -42,70 +40,64 @@ public class KafkaCommentEventHandler {
     private final PostRepository postRepository;
     private final CommentMapper commentMapper;
     private final PostRedisMapper postRedisMapper;
-    private final PostMapper postMapper;
-    private final StringRedisTemplate redisTemplate;
+    private final ExpirableLockRegistry redisLockRegistry;
 
     @Value("${spring.data.redis.comment-max-size}")
     private int commentsMaxSize;
 
-    @Transactional
+    @Transactional(readOnly = true)
     @KafkaHandler
-    public void handle(CommentEvent commentEvent) {
+    public void handle(CommentEvent commentEvent, Acknowledgment acknowledgment) {
         Long commentId = commentEvent.getCommentId();
         Long postId = commentEvent.getPostId();
         log.info("Received event CommentHandlerResponse: {} {}", commentId, commentEvent);
 
-        Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new NoSuchElementException("Comment with id {" + commentId + "} not found"));
-        CommentDto commentDto = commentMapper.toDto(comment);
+        String lockKey = "post:" + postId;
+        Lock lock = redisLockRegistry.obtain(lockKey);
 
-        String redisKey = "post:" + postId;
+        if (!lock.tryLock()) {
+            log.warn("Failed to obtain lock for post {}. Skipping update.", postId);
+            return;
+        }
 
-        boolean success = redisTemplate.execute(new SessionCallback<Boolean>() {
-            @Override
-            public Boolean execute(@NonNull RedisOperations operations) {
-                operations.watch(redisKey);
+        try {
+            Comment comment = commentRepository.findById(commentId)
+                    .orElseThrow(() -> new NoSuchElementException("Comment with id {" + commentId + "} not found"));
+            CommentDto commentDto = commentMapper.toDto(comment);
 
-                PostRedis postRedis = postRedisRepository.findById(postId).orElse(null);
-                if (postRedis == null) {
-                    Post post = postRepository.findById(postId)
-                            .orElseThrow(() -> new NoSuchElementException("Post with id {" + postId + "} not found"));
-                    PostDto postDto = postMapper.toPostDto(post);
-                    postRedis = postRedisMapper.toPostCache(postDto);
-                    postRedisRepository.save(postRedis);
-                }
-                addComment(postRedis, commentDto);
-                log.info("Comment with id:{} is successfully added to post.", commentId);
-
-                operations.multi();
-                postRedisRepository.save(postRedis);
-
-                List<Object> results = operations.exec();
-
-                return results != null;
+            PostRedis postRedis = postRedisRepository.findById(postId).orElse(null);
+            if (postRedis == null) {
+                Post post = postRepository.findById(postId)
+                        .orElseThrow(() -> new NoSuchElementException("Post with id {" + postId + "} not found"));
+                postRedis = postRedisMapper.toPostCache(post);
             }
-        });
 
-        if (success) {
+            addComment(postRedis, commentDto);
+            log.info("Comment with id:{} is successfully added to post.", commentId);
+
+            postRedisRepository.save(postRedis);
+            acknowledgment.acknowledge();
+
             log.info("Comment {} successfully added to post {}", commentId, postId);
-        } else {
-            log.warn("Failed to update post {} due to concurrent modification, retrying...", postId);
-            handle(commentEvent);
+        } catch (Exception e) {
+            log.error("Error processing event for post {}: {}", postId, e.getMessage());
+        } finally {
+            lock.unlock();
         }
     }
 
     public void addComment(PostRedis postRedis, CommentDto commentDto) {
-        List<Long> comments = postRedis.getCommentsIds();
+        Queue<Long> comments = postRedis.getCommentsIds() != null
+                ? new ArrayDeque<>(postRedis.getCommentsIds())
+                : new ArrayDeque<>();
 
-        if (comments == null) {
-            comments = new ArrayList<>();
-            postRedis.setCommentsIds(comments);
-        }
-        if (comments.size() == commentsMaxSize) {
-            comments.remove(comments.size() - 1);
+        if (comments.size() >= commentsMaxSize) {
+            comments.poll();
         }
 
-        comments.add(0, commentDto.getId());
+        comments.offer(commentDto.getId());
+
+        postRedis.setCommentsIds(new ArrayList<>(comments));
     }
 }
 

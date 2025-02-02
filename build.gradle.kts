@@ -25,6 +25,8 @@ dependencies {
     implementation("org.springframework.retry:spring-retry:2.0.10")
     implementation("org.springframework.kafka:spring-kafka")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    implementation("org.springframework.integration:spring-integration-core:6.1.2")
+    implementation("org.springframework.integration:spring-integration-redis:6.1.2")
 
     /**
      * Database
