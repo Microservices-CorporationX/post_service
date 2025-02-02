@@ -22,7 +22,6 @@ import java.util.concurrent.locks.ReentrantLock;
 public class KafkaCommentConsumer {
     private final RedisPostRepository repository;
     private final ReentrantLock lock = new ReentrantLock();
-
     @Value("${spring.data.redis.max-comment}")
     private int maxComments;
 
@@ -62,5 +61,4 @@ public class KafkaCommentConsumer {
     private CommentRedis parseComment(String message) {
         return new CommentRedis();
     }
-
 }

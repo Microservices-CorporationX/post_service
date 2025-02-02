@@ -123,7 +123,7 @@ public class CommentService {
         });
     }
 
-    private void addToRedisAndSendEvents(UserDto userDto, CommentResponseDto commentDto) {
+    void addToRedisAndSendEvents(UserDto userDto, CommentResponseDto commentDto) {
         log.info("Save user with ID: {} to Redis", userDto.getId());
         redisUserRepository.save(new UserRedis(userDto.getId(), userDto.getUsername()));
 

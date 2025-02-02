@@ -23,16 +23,6 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
   data:
-    kafka:
-      consumer:
-        group-id: post-1
-      bootstrap-servers: localhost:29090
-      topics:
-        comments:
-          name: comments
-        post:
-          name: posts
-
     redis:
       max-comment: 3
       port: 6379
@@ -43,7 +33,22 @@ spring:
         comment-channel: comment-topic
         ban-channel: user-ban
 
-
+    kafka:
+      bootstrap-servers: localhost:29092
+      consumer:
+        group-id: 1
+      topics:
+        posts:
+          name: posts
+        comments:
+          name: comments
+        likes:
+          name: likes
+        post_views:
+          name: post_views
+      backoff:
+        interval: 2000
+        max_failure: 10
 server:
   port: 8081
 
