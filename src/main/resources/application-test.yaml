@@ -1,9 +1,0 @@
-spring:
-  datasource:
-    username: test
-    password: test
-  liquibase:
-    enabled: true
-
-user-service:
-  port: 9080
