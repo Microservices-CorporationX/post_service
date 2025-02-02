@@ -53,6 +53,15 @@ spring:
         postViewChannel:
           name: post_view_channel
 
+    kafka:
+      producer:
+        bootstrap-servers: localhost:29092
+      topics:
+        comment-channel:
+          name: comments
+        post-channel:
+          name: posts_topic
+
 server:
   port: 8081
 
@@ -72,7 +81,7 @@ post:
 
 user-service:
   host: localhost
-  port: 8085
+  port: 8080
 project-service:
   host: localhost
   port: 8082

@@ -24,6 +24,7 @@ dependencies {
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.0.2")
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.springframework.retry:spring-retry:1.3.1")
+    implementation("org.springframework.kafka:spring-kafka:3.3.0")
 
     /**
      * Database
@@ -55,6 +56,8 @@ dependencies {
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("com.redis.testcontainers:testcontainers-redis-junit-jupiter:1.4.6")
+    testImplementation("org.testcontainers:kafka")
+    testImplementation("org.springframework.kafka:spring-kafka-test:3.3.0")
 
     /**
      * Tests
