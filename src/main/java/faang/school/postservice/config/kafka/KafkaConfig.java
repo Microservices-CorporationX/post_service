@@ -62,9 +62,9 @@ public class KafkaConfig {
         return newTopicBuilder(environment.getRequiredProperty("spring.data.kafka.topics.comment-channel.name"));
     }
 
+
     private NewTopic newTopicBuilder(String topicName) {
         return TopicBuilder
                 .name(topicName)
                 .build();
     }
-}

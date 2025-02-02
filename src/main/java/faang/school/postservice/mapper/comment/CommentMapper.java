@@ -1,6 +1,7 @@
 package faang.school.postservice.mapper.comment;
 
 import faang.school.postservice.dto.comment.CommentDto;
+import faang.school.postservice.event.CommentEvent;
 import faang.school.postservice.mapper.like.LikeListMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
@@ -28,12 +29,15 @@ public interface CommentMapper {
     @Mapping(target = "likes", expression = "java(mapLikeIds(commentDto.getLikeIds()))")
     Comment toEntity(CommentDto commentDto);
 
+    @Mapping(source = "post.id", target = "postId")
+    CommentEvent toCommentEvent(Comment comment);
+
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "authorId", ignore = true)
     @Mapping(target = "likes", ignore = true)
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true )
+    @Mapping(target = "updatedAt", ignore = true)
     void update(CommentDto commentDto, @MappingTarget Comment comment);
 
     @Named("mapToLikeId")
@@ -57,7 +61,7 @@ public interface CommentMapper {
             return new ArrayList<>();
         }
         return likeIds.stream()
-                .map( likeId -> Like.builder().id(likeId).build())
+                .map(likeId -> Like.builder().id(likeId).build())
                 .toList();
     }
 }

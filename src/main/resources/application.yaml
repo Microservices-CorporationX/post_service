@@ -57,9 +57,9 @@ spring:
         bootstrap-servers: localhost:29092
       topics:
         comment-channel:
-          name: comments_topic
+          name: comments
         post-channel:
-          name: posts_topic
+          name: posts
 
 server:
   port: 8089
@@ -80,7 +80,7 @@ post:
 
 user-service:
   host: localhost
-  port: 8082
+  port: 8080
 project-service:
   host: localhost
   port: 8082
