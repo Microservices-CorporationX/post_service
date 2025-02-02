@@ -1,4 +1,4 @@
-package faang.school.postservice.config.kafka.producer;
+package faang.school.postservice.producer;
 
 import faang.school.postservice.model.cache.LikeCache;
 import org.apache.kafka.clients.admin.NewTopic;

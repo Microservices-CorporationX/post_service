@@ -1,8 +1,7 @@
 package faang.school.postservice.service.post;
 
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.config.kafka.producer.KafkaLikeProducer;
-import faang.school.postservice.config.kafka.producer.KafkaPostProducer;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.post.PostCacheMapper;
 import faang.school.postservice.model.Post;

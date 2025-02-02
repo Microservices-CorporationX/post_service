@@ -1,6 +1,5 @@
 package faang.school.postservice.service.post;
 
-import faang.school.postservice.config.kafka.producer.KafkaLikeProducer;
 import faang.school.postservice.dto.post.PostFilterDto;
 import faang.school.postservice.config.api.SpellingConfig;
 import faang.school.postservice.dto.post.PostRequestDto;
@@ -11,7 +10,6 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
-import faang.school.postservice.model.cache.LikeCache;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.util.ModerationDictionary;
@@ -61,6 +59,7 @@ public class PostService {
     private final PostValidator postValidator;
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
+    private final PostServiceCache postServiceCache;
 
     public PostResponseDto create(PostRequestDto requestDto) {
         postValidator.validateCreate(requestDto);
@@ -157,6 +156,8 @@ public class PostService {
 
         postRepository.save(post);
         log.debug("Post added to database");
+
+        postServiceCache.savePost(post);
 
         return postMapper.toDto(post);
     }

@@ -1,20 +1,21 @@
 package faang.school.postservice.model.cache;
 
 import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.support.collections.RedisZSet;
 
-import java.util.List;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 @RedisHash(value = "feed")
 public class FeedCache {
-
     @Id
-    private Long userId;
-    private List<Long> postsId;
+    private Long id;
+    private RedisZSet<Long> postsId;
 }

@@ -10,7 +10,7 @@ import java.io.Serializable;
 
 @RequiredArgsConstructor
 @RedisHash(value = "user")
-public class UserCache implements Serializable {
+public class UserCache {
 
     @Id
     private final Long id;

@@ -24,6 +24,7 @@ spring:
 
   data:
     kafka:
+      group-id: feed
       bootstrap-server: localhost:9092
       topics:
         post_topic: posts
@@ -40,6 +41,9 @@ spring:
         ad-bought-channel: ad-bought-topic
         comment-channel: comment-topic
         ban-channel: user-ban
+
+feed:
+  max-post-size: 500
 
 server:
   port: 8081
