@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SavePostDto {
+public class CreatePostDto {
     @NotNull(message = "Автор или проект должны быть указаны")
     private Long authorId;
 

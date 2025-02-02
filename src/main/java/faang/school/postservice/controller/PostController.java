@@ -1,11 +1,9 @@
 package faang.school.postservice.controller;
 
-import faang.school.postservice.dto.post.PostDto;
-import faang.school.postservice.dto.post.SavePostDto;
-import faang.school.postservice.mapper.PostMapper;
-import faang.school.postservice.model.Post;
+import faang.school.postservice.dto.post.PostResponseDto;
+import faang.school.postservice.dto.post.CreatePostDto;
+import faang.school.postservice.dto.post.UpdatePostDto;
 import faang.school.postservice.service.PostService;
-import faang.school.postservice.validator.PostValidator;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -22,59 +20,53 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/users")
+@RequestMapping("/posts")
 public class PostController {
 
-    private final PostValidator postValidator;
     private final PostService postService;
-    private final PostMapper postMapper;
 
     @PostMapping
-    public PostDto create(@Valid @NotNull @RequestBody SavePostDto savePostDto) {
-        Post post = postMapper.toEntity(savePostDto);
-        postValidator.validatePostAuthorExist(post);
-        return postService.create(savePostDto);
+    public PostResponseDto create(@Valid @NotNull @RequestBody CreatePostDto createPostDto) {
+        return postService.create(createPostDto);
     }
 
-    @PutMapping("/{id}")
-    public PostDto update(@PathVariable long id, @NotNull @RequestBody SavePostDto postSaveDto) {
-        Post post = postMapper.toEntity(postSaveDto);
-        postValidator.validatePostAuthorExist(post);
-        return postService.update(id, postSaveDto);
+    @PutMapping("/{postId}")
+    public PostResponseDto update(@PathVariable long postId, @Valid @NotNull @RequestBody UpdatePostDto updatePostDto) {
+        return postService.update(postId, updatePostDto);
     }
 
-    @DeleteMapping("/{id}")
-    public PostDto delete(@PathVariable long id) {
-        return postService.delete(id);
+    @DeleteMapping("/{postId}")
+    public PostResponseDto delete(@PathVariable long postId) {
+        return postService.delete(postId);
     }
 
-    @PostMapping("/{id}/publish")
-    public PostDto publishPost(@PathVariable long id) {
-        return postService.publish(id);
+    @PostMapping("/{postId}/publish")
+    public PostResponseDto publishPost(@PathVariable long postId) {
+        return postService.publish(postId);
     }
 
-    @GetMapping("/{id}")
-    public PostDto getPost(@PathVariable long id) {
-        return postService.getPost(id);
+    @GetMapping("/{postId}")
+    public PostResponseDto getPost(@PathVariable long postId) {
+        return postService.getPost(postId);
     }
 
-    @GetMapping("/users/{authorId}/drafts")
-    public List<PostDto> getDraftPostsByAuthorId(@PathVariable long authorId) {
+    @GetMapping("/users/{authorId}/posts/drafts")
+    public List<PostResponseDto> getDraftPostsByAuthorId(@PathVariable long authorId) {
         return postService.getDraftPostsByAuthorId(authorId);
     }
 
-    @GetMapping("/users/{authorId}/published")
-    public List<PostDto> getPublishedPostsByAuthorId(@PathVariable long authorId) {
+    @GetMapping("/users/{authorId}/posts/published")
+    public List<PostResponseDto> getPublishedPostsByAuthorId(@PathVariable long authorId) {
         return postService.getPublishedPostsByAuthorId(authorId);
     }
 
-    @GetMapping("/projects/{projectId}/drafts")
-    public List<PostDto> getDraftPostsByProjectId(@PathVariable long projectId) {
+    @GetMapping("/projects/{projectId}/posts/drafts")
+    public List<PostResponseDto> getDraftPostsByProjectId(@PathVariable long projectId) {
         return postService.getDraftPostsByProjectId(projectId);
     }
 
-    @GetMapping( "/projects/{projectId}/published")
-    public List<PostDto> getPublishedPostsByProjectId(@PathVariable long projectId) {
+    @GetMapping("/projects/{projectId}/posts/published")
+    public List<PostResponseDto> getPublishedPostsByProjectId(@PathVariable long projectId) {
         return postService.getPublishedPostsByProjectId(projectId);
     }
 }

@@ -3,9 +3,10 @@ package faang.school.postservice.validator;
 import faang.school.postservice.Exception.DataValidationException;
 import faang.school.postservice.client.ProjectServiceClient;
 import faang.school.postservice.client.UserServiceClient;
-import faang.school.postservice.dto.post.SavePostDto;
+import faang.school.postservice.dto.post.CreatePostDto;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -16,7 +17,6 @@ public class PostValidator {
     private final UserServiceClient userServiceClient;
     private final ProjectServiceClient projectServiceClient;
     private final PostMapper postMapper;
-
 
     public void validateNotPublished(Post post) {
         if (post.getPublishedAt() != null) {
@@ -30,8 +30,8 @@ public class PostValidator {
         }
     }
 
-    public void validateDraftPost(SavePostDto savePostDto) {
-        Post post = postMapper.toEntity(savePostDto);
+    public void validateDraftPost(CreatePostDto createPostDto) {
+        Post post = postMapper.toEntity(createPostDto);
         validatePostAuthorExist(post);
     }
 
@@ -50,10 +50,20 @@ public class PostValidator {
     }
 
     private boolean isUserNotExist(Long authorId) {
-        return userServiceClient.getUser(authorId) == null;
+        try {
+            userServiceClient.getUser(authorId);
+            return true;
+        } catch (FeignException.FeignClientException ex) {
+            return false;
+        }
     }
 
     private boolean isProjectNotExist(Long projectId) {
-        return projectServiceClient.getProject(projectId) == null;
+        try {
+            projectServiceClient.getProject(projectId);
+            return true;
+        } catch (FeignException.FeignClientException ex) {
+            return false;
+        }
     }
 }
