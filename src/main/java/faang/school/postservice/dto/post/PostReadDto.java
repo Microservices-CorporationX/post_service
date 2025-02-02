@@ -40,6 +40,11 @@ public class PostReadDto {
             accessMode = Schema.AccessMode.READ_ONLY
     )
     private Long projectId;
+    @Schema(
+            description = "Количество лайков под постом",
+            example = "21",
+            accessMode = Schema.AccessMode.READ_ONLY
+    )
     private Integer likesCount;
     @Schema(
             description = "Время создания",
