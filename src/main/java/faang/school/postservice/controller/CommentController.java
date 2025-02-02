@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@RequestMapping("/posts/{postId}/comments")
+@RequestMapping("/comments")
 @RestController
 @RequiredArgsConstructor
 public class CommentController {
@@ -26,15 +26,13 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    public CommentReadDto addComment(@PathVariable @Valid @Positive long postId,
-                                     @Valid @RequestBody CommentCreateDto commentCreateDto) {
-        return commentService.addComment(postId, commentCreateDto);
+    public CommentReadDto addComment(@Valid @RequestBody CommentCreateDto commentCreateDto) {
+        return commentService.addComment(commentCreateDto);
     }
 
-    @PutMapping("/{commentId}")
-    public CommentReadDto editComment(@PathVariable @Valid @Positive long commentId,
-                                      @Valid @RequestBody CommentUpdateDto commentUpdateDto) {
-        return commentService.editComment(commentId, commentUpdateDto);
+    @PutMapping
+    public CommentReadDto editComment(@Valid @RequestBody CommentUpdateDto commentUpdateDto) {
+        return commentService.editComment(commentUpdateDto);
     }
 
     @GetMapping
@@ -43,8 +41,7 @@ public class CommentController {
     }
 
     @DeleteMapping("/{commentId}")
-    public void deleteCommentFromPost(@PathVariable @Valid @Positive long postId,
-                                      @PathVariable @Valid @Positive long commentId) {
-        commentService.deleteComment(postId, commentId);
+    public void deleteCommentFromPost(@PathVariable @Valid @Positive long commentId) {
+        commentService.deleteComment(commentId);
     }
 }

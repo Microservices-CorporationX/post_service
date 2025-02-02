@@ -20,17 +20,16 @@ import static java.lang.String.format;
 @Service
 @RequiredArgsConstructor
 public class CommentService {
-
     private final UserService userService;
     private final CommentRepository commentRepository;
     private final CommentMapper commentMapper;
     private final PostService postService;
 
     @Transactional
-    public CommentReadDto addComment(long postId, CommentCreateDto commentCreateDto) {
+    public CommentReadDto addComment(CommentCreateDto commentCreateDto) {
         validateUserExists(commentCreateDto.getAuthorId());
 
-        Post post = postService.findById(postId);
+        Post post = postService.findById(commentCreateDto.getPostId());
         Comment comment = commentMapper.toEntity(commentCreateDto);
         comment.setPost(post);
 
@@ -38,8 +37,8 @@ public class CommentService {
     }
 
     @Transactional
-    public CommentReadDto editComment(long commentId, CommentUpdateDto commentUpdateDto) {
-        Comment comment = getCommentById(commentId);
+    public CommentReadDto editComment(CommentUpdateDto commentUpdateDto) {
+        Comment comment = getCommentById(commentUpdateDto.getCommentId());
 
         commentMapper.update(comment, commentUpdateDto);
         return commentMapper.toReadDto(commentRepository.save(comment));
@@ -50,10 +49,9 @@ public class CommentService {
     }
 
     @Transactional
-    public void deleteComment(long postId, long commentId) {
-        Comment comment = getCommentById(commentId);
-        if (!isCommentBelongsToPost(postId, comment)) {
-            throw new BusinessException("Нельзя удалить комментарий, так как он не принадлежит к данному посту");
+    public void deleteComment(long commentId) {
+        if (!commentRepository.existsById(commentId)) {
+            throw new EntityNotFoundException(String.format("Комментарий с id=%d не найден", commentId));
         }
         commentRepository.deleteById(commentId);
     }
@@ -62,10 +60,6 @@ public class CommentService {
         return commentRepository.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException(
                         format("Комментарий с id=%d не найден", commentId)));
-    }
-
-    private boolean isCommentBelongsToPost(long postId, Comment comment) {
-        return comment.getPost().getId().equals(postId);
     }
 
     private void validateUserExists(long authorId) {

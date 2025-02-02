@@ -50,6 +50,7 @@ class CommentServiceTest {
     private final Post post = Post.builder().id(POST_ID).authorId(USER_ID).build();
     private final CommentCreateDto commentCreateDto = CommentCreateDto.builder()
             .authorId(USER_ID)
+            .postId(POST_ID)
             .content("content")
             .build();
 
@@ -68,7 +69,7 @@ class CommentServiceTest {
 
         when(commentRepository.save(comment)).thenReturn(comment);
 
-        CommentReadDto result = commentService.addComment(anyLong(), commentCreateDto);
+        CommentReadDto result = commentService.addComment(commentCreateDto);
         assertEquals(expected, result);
     }
 
@@ -76,13 +77,14 @@ class CommentServiceTest {
     void testAddCommentThrowExceptionIfUserNotExists() {
         when(userService.isUserExists(anyLong())).thenReturn(false);
 
-        assertThrows(BusinessException.class, () -> commentService.addComment(anyLong(), commentCreateDto));
+        assertThrows(BusinessException.class, () -> commentService.addComment(commentCreateDto));
     }
 
     @Test
     void testEditComment() {
         CommentUpdateDto commentUpdateDto = CommentUpdateDto.builder()
                 .content("updated content")
+                .commentId(COMMENT_ID)
                 .build();
 
         Comment comment = commentMapper.toEntity(commentCreateDto);
@@ -92,7 +94,7 @@ class CommentServiceTest {
         when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
         when(commentRepository.save(updatedComment)).thenReturn(updatedComment);
 
-        CommentReadDto result = commentService.editComment(anyLong(), commentUpdateDto);
+        CommentReadDto result = commentService.editComment(commentUpdateDto);
         assertEquals(expectedCommentDto, result);
     }
 
@@ -100,11 +102,12 @@ class CommentServiceTest {
     void testEditCommentThrowExceptionIfCommentNotExists() {
         CommentUpdateDto commentUpdateDto = CommentUpdateDto.builder()
                 .content("updated content")
+                .commentId(COMMENT_ID)
                 .build();
 
         when(commentRepository.findById(anyLong())).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> commentService.editComment(anyLong(), commentUpdateDto));
+        assertThrows(EntityNotFoundException.class, () -> commentService.editComment(commentUpdateDto));
     }
 
     @Test
@@ -118,35 +121,18 @@ class CommentServiceTest {
     }
 
     @Test
-    void testDeleteCommentThrowExceptionIfCommentNotExists() {
-        when(commentRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> commentService.deleteComment(POST_ID, COMMENT_ID));
-        verify(commentRepository, times(0)).deleteById(COMMENT_ID);
-    }
-
-    @Test
-    void testDeleteCommentIfCommentBelongsToPost() {
-        Comment comment = commentMapper.toEntity(commentCreateDto);
-        comment.setPost(post);
-
-        when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
-
-        commentService.deleteComment(POST_ID, COMMENT_ID);
+    void testDeleteCommentIfCommentExists() {
+        when(commentRepository.existsById(COMMENT_ID)).thenReturn(true);
+        commentService.deleteComment(COMMENT_ID);
 
         verify(commentRepository).deleteById(COMMENT_ID);
     }
 
     @Test
-    void testDeleteCommentIfCommentNotBelongsToPost() {
-        Long notMatchPostId = 100L;
-        Comment comment = commentMapper.toEntity(commentCreateDto);
-        post.setId(notMatchPostId);
-        comment.setPost(post);
+    void testDeleteCommentIfCommentNotExists() {
+        when(commentRepository.existsById(COMMENT_ID)).thenReturn(false);
 
-        when(commentRepository.findById(anyLong())).thenReturn(Optional.of(comment));
-
-        assertThrows(BusinessException.class, () -> commentService.deleteComment(POST_ID, COMMENT_ID));
+        assertThrows(EntityNotFoundException.class, () -> commentService.deleteComment(COMMENT_ID));
         verify(commentRepository, times(0)).deleteById(COMMENT_ID);
     }
 }
