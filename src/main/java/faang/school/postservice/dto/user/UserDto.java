@@ -1,4 +1,4 @@
 package faang.school.postservice.dto.user;
 
-public record UserDto(String username, String email) {
+public record UserDto(Long id, String username, String email) {
 }

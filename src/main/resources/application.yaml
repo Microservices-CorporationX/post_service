@@ -1,5 +1,4 @@
 spring:
-
   datasource:
     driverClassName: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5432/postgres
@@ -60,10 +59,10 @@ spring:
         comment-channel:
           name: comments
         post-channel:
-          name: posts_topic
+          name: posts
 
 server:
-  port: 8081
+  port: 8089
 
 logging:
   level:

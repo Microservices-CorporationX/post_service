@@ -4,6 +4,7 @@ import faang.school.postservice.client.UserServiceClient;
 import faang.school.postservice.config.context.UserContext;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostViewEvent;
+import faang.school.postservice.producer.KafkaPostProducer;
 import faang.school.postservice.mapper.PostMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.PostViewEventPublisher;
@@ -14,34 +15,17 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
+import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @Log4j2
 @ExtendWith(MockitoExtension.class)
@@ -58,6 +42,9 @@ public class PostServiceTest {
 
     @Mock
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    @Mock
+    private KafkaPostProducer kafkaPostProducer;
 
     @InjectMocks
     private PostService postService;
@@ -119,6 +106,7 @@ public class PostServiceTest {
         post.setId(postId);
         post.setPublished(false);
         post.setDeleted(false);
+        post.setAuthorId(1L);
 
         when(postRepository.findById(postId)).thenReturn(Optional.of(post));
         when(postMapper.toDto(post)).thenReturn(postDtoForUser);
