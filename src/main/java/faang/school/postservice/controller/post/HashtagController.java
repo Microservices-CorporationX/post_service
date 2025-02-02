@@ -5,9 +5,11 @@ import faang.school.postservice.dto.post.HashtagResponseDto;
 import faang.school.postservice.service.post.HashtagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -18,20 +20,17 @@ public class HashtagController {
     private final HashtagService hashtagService;
 
     @GetMapping
-    public ResponseEntity<List<HashtagResponseDto>> getAllHashtags() {
-        List<HashtagResponseDto> allHashtags = hashtagService.getAllHashtags();
-        return new ResponseEntity<>(allHashtags, HttpStatus.OK);
+    public List<HashtagResponseDto> getAllHashtags() {
+        return hashtagService.getAllHashtags();
     }
 
     @GetMapping("/top")
-    public ResponseEntity<List<HashtagResponseDto>> getTopHashtags() {
-        List<HashtagResponseDto> topHashtags = hashtagService.getTopHashtags();
-        return new ResponseEntity<>(topHashtags, HttpStatus.OK);
+    public List<HashtagResponseDto> getTopHashtags() {
+        return hashtagService.getTopHashtags();
     }
 
     @PostMapping
-    public ResponseEntity<Void> addHashtagToPost(@RequestBody @Valid HashtagRequestDto hashtagRequestDto) {
+    public void addHashtagToPost(@RequestBody @Valid HashtagRequestDto hashtagRequestDto) {
         hashtagService.addHashtagToPost(hashtagRequestDto);
-        return ResponseEntity.ok().build();
     }
 }

@@ -6,8 +6,9 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @Data
-@ConfigurationProperties(prefix = "redis.cache")
-public class RedisProperties {
+@ConfigurationProperties(prefix = "hashtags")
+public class HashtagProperties {
 
-    private int ttlMinutes;
+    private int limit;
+
 }

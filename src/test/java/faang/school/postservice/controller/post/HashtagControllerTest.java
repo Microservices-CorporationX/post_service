@@ -33,7 +33,8 @@ class HashtagControllerTest {
 
     @Test
     public void testGetAllHashtags() throws Exception {
-        List<HashtagResponseDto> hashtags = List.of(HashtagResponseDto.builder().name("hashtag").build());
+        HashtagResponseDto hashtag = new HashtagResponseDto("hashtag", List.of());
+        List<HashtagResponseDto> hashtags = List.of(hashtag);
         when(service.getAllHashtags()).thenReturn(hashtags);
 
         mockMvc.perform(get("/api/v1/hashtag"))
@@ -42,7 +43,8 @@ class HashtagControllerTest {
 
     @Test
     public void testGetTopHashtags() throws Exception {
-        List<HashtagResponseDto> hashtags = List.of(HashtagResponseDto.builder().name("hashtag").build());
+        HashtagResponseDto hashtag = new HashtagResponseDto("hashtag", List.of());
+        List<HashtagResponseDto> hashtags = List.of(hashtag);
         when(service.getTopHashtags()).thenReturn(hashtags);
 
         mockMvc.perform(get("/api/v1/hashtag/top"))
@@ -51,7 +53,7 @@ class HashtagControllerTest {
 
     @Test
     public void testAddHashtagToPost() throws Exception {
-        HashtagRequestDto hashtag = HashtagRequestDto.builder().postId(1L).hashtag("hashtag").build();
+        HashtagRequestDto hashtag = new HashtagRequestDto(1L, "hashtag");
         doNothing().when(service).addHashtagToPost(hashtag);
 
         mockMvc.perform(post("/api/v1/hashtag"))

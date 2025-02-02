@@ -9,10 +9,7 @@ import java.util.List;
 public class HashtagPrepareData {
 
     public static HashtagRequestDto buildNewHashtagRequestDto() {
-        return HashtagRequestDto.builder()
-                .postId(1L)
-                .hashtag("new")
-                .build();
+        return new HashtagRequestDto(1L, "hashtag");
     }
 
     public static Post getPost() {
@@ -25,7 +22,6 @@ public class HashtagPrepareData {
     public static Hashtag buildNewHashtag() {
         return Hashtag
                 .builder()
-                .id(1L)
                 .name("new")
                 .build();
     }
@@ -33,7 +29,6 @@ public class HashtagPrepareData {
     public static Hashtag buildHashtag() {
         return Hashtag
                 .builder()
-                .id(1L)
                 .name("hashtag")
                 .build();
     }

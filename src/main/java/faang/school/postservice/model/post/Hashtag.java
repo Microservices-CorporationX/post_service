@@ -15,16 +15,13 @@ import java.util.List;
 public class Hashtag {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
     private String name;
 
     @ToString.Exclude
     @ManyToMany
     @JoinTable(
             name = "post_hashtag",
-            joinColumns = @JoinColumn(name = "hashtag_id"),
+            joinColumns = @JoinColumn(name = "hashtag_name"),
             inverseJoinColumns = @JoinColumn(name = "post_id")
     )
     private List<Post> posts;

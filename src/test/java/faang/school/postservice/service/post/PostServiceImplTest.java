@@ -56,7 +56,6 @@ class PostServiceImplTest {
     private Hashtag getHashtag() {
         return Hashtag
                 .builder()
-                .id(1L)
                 .name("hashtag")
                 .build();
     }

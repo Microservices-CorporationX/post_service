@@ -46,4 +46,8 @@ domain:
   path: /api/v1
 
 redis:
-  ttl-minutes: 1
+  cache:
+    ttl-minutes: 1
+
+hashtags:
+  limit: 5
