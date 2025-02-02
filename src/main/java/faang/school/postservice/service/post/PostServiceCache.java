@@ -31,20 +31,19 @@ public class PostServiceCache {
         PostCache postCache = mapper.toCache(post);
         redisPostRepository.save(postCache);
         log.debug("Post added to Redis cache");
+
         List<Long> followersId = postRepository.findFollowersByAuthorId(post.getAuthorId());
         postCache.setFollowersId(followersId);
         UserDto author = userServiceClient.getUser(post.getAuthorId());
+
         redisUserRepository.save(new UserCache(author.getId(), author.getUsername()));
         log.debug("Author with id {} of the post added to Redis cache", author.getId());
+
         kafkaPostProducer.send(postCache);
         log.debug("Post with id {} added to Kafka topic", postCache.getId());
     }
 
     public void saveViewedPost(Post post) {
-
-    }
-
-    public void saveLike(Post post) {
 
     }
 }
