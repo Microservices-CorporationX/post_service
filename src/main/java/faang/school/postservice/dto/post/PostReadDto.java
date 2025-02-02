@@ -40,6 +40,7 @@ public class PostReadDto {
             accessMode = Schema.AccessMode.READ_ONLY
     )
     private Long projectId;
+    private Integer likesCount;
     @Schema(
             description = "Время создания",
             example = "2021-10-10T10:00:00",
