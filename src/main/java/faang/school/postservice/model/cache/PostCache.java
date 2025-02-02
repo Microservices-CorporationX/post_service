@@ -25,6 +25,7 @@ public class PostCache {
     private String content;
     private Long authorId;
     private List<Long> followersId;
+    private int countOfLikes;
 
     @TimeToLive
     @Value("${spring.data.redis.cache.ttl}")

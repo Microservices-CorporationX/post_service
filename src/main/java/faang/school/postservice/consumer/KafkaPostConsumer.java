@@ -5,6 +5,7 @@ import faang.school.postservice.model.cache.FeedCache;
 import faang.school.postservice.model.cache.PostCache;
 import faang.school.postservice.repository.redis.RedisFeedRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -15,50 +16,47 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class KafkaPostConsumer {
     private final RedisFeedRepository redisFeedRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${feed.max-post-size}")
     private int maxPostSizeInFeed;
 
     @KafkaListener(topics = "${spring.data.kafka.topics.post_topic}", groupId = "${spring.data.kafka.group-id}")
     public void listen(PostCache postCache, Acknowledgment acknowledgment) {
-        postCache.getFollowersId().forEach(follower -> {
-            Optional<FeedCache> feed = redisFeedRepository.findById(follower);
+        log.debug("Post event received. Author id {}", postCache.getAuthorId());
+        postCache.getFollowersId().forEach(followerId -> {
+            TreeSet<Long> postIds = new TreeSet<>(Comparator.reverseOrder());
+            Optional<FeedCache> feed = redisFeedRepository.findById(followerId);
             if (feed.isPresent()) {
-                RedisZSet<Long> ids = feed.get().getPostsId();
-                if (ids.size() >= maxPostSizeInFeed) {
-                    ids.reverseRange(ids.size() - 1, ids.size() - 1);
-                }
-                addNewPostIdInFeed(feed, postCache);
+                addNewPostIdInFeed(feed.get(), postIds, postCache, followerId);
             } else {
                 FeedCache newFeed = new FeedCache();
-
-                newFeed.setId(follower);
-                newFeed.getPostsId().add(postCache.getId());
-                redisFeedRepository.save(newFeed);
+                newFeed.setId(followerId);
+                newFeed.setPostsId(postIds);
+                addNewPostIdInFeed(newFeed, postIds, postCache, followerId);
             }
         });
         acknowledgment.acknowledge();
     }
 
-    private void addNewPostIdInFeed(Optional<FeedCache> feed, PostCache postCache) {
-        RedisZSet<Long> ids = feed.get().getPostsId();
-        if (ids.size() >= maxPostSizeInFeed) {
-            ids.reverseRange(ids.size() - 1, ids.size() - 1);
-            Double minScore = ids.rangeWithScores(0, 0).stream()
-                    .findFirst()
-                    .map(ZSetOperations.TypedTuple::getScore)
-                    .orElse(0.0);
-            ids.addIfAbsent(postCache.getId(), minScore - 1);
+    private void addNewPostIdInFeed(FeedCache feed, TreeSet<Long> postIds, PostCache postCache, Long userId) {
+        postIds.add(postCache.getId());
+        log.debug("Post {} successfully added in feed {} on user {}", postCache.getId(), feed.getId(), userId);
+        if (postIds.size() >= maxPostSizeInFeed) {
+            postIds.remove(postIds.last());
         }
+        redisFeedRepository.save(feed);
     }
 }

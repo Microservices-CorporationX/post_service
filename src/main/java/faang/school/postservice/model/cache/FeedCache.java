@@ -6,8 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.support.collections.RedisZSet;
 
+import java.util.TreeSet;
 
 @Getter
 @Setter
@@ -17,5 +17,5 @@ import org.springframework.data.redis.support.collections.RedisZSet;
 public class FeedCache {
     @Id
     private Long id;
-    private RedisZSet<Long> postsId;
+    private TreeSet<Long> postsId;
 }
