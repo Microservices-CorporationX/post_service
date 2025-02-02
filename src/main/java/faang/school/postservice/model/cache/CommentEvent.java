@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -13,4 +15,5 @@ public class CommentEvent {
     private Long postId;
     private Long authorId;
     private String content;
+    private LocalDateTime createdAt;
 }

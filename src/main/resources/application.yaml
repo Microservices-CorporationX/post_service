@@ -45,6 +45,7 @@ spring:
 
 feed:
   max-post-size: 500
+  max-comment-size: 3
 
 server:
   port: 8081

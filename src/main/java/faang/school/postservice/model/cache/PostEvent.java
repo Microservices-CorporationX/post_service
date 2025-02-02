@@ -12,6 +12,8 @@ import org.springframework.data.redis.core.RedisHash;
 import org.springframework.data.redis.core.TimeToLive;
 
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 @RedisHash(value = "post")
 @AllArgsConstructor
@@ -21,7 +23,7 @@ import java.util.List;
 public class PostEvent {
     @Id
     private Long id;
-    private String content;
+    private TreeSet<CommentEvent> comments;
     private Long authorId;
     private List<Long> followersId;
     private int countOfLikes;
