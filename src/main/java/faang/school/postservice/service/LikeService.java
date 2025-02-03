@@ -12,7 +12,6 @@ import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,17 +29,13 @@ public class LikeService {
     private final UserServiceClient userServiceClient;
 
     @Transactional
-    public ResponseEntity<?> toggleLikePost(LikePostRequest request) {
+    public void toggleLikePost(LikePostRequest request) {
         Post post;
         UserDto userDto;
 
-        try {
-            post = postRepository.findById(request.postId())
-                    .orElseThrow(() -> new EntityNotFoundException("Пост с id " + request.postId() + " не был найден"));
-            userDto = getUserDto(request.userId());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        post = postRepository.findById(request.postId())
+                .orElseThrow(() -> new EntityNotFoundException("Пост с id " + request.postId() + " не был найден"));
+        userDto = getUserDto(request.userId());
 
         List<Like> likes = new ArrayList<>(post.getLikes() == null ? Collections.emptyList() : post.getLikes());
         boolean likeAlreadyExists = likes.stream().anyMatch(like -> like.getUserId() == userDto.id());
@@ -58,23 +53,17 @@ public class LikeService {
             likes.add(newLike);
             post.setLikes(likes);
         }
-
-        return ResponseEntity.ok().build();
     }
 
     @Transactional
-    public ResponseEntity<?> toggleLikeComment(LikeCommentRequest request) {
+    public void toggleLikeComment(LikeCommentRequest request) {
         Comment comment;
         UserDto userDto;
 
-        try {
-            comment = commentRepository.findById(request.commentId())
-                    .orElseThrow(() -> new EntityNotFoundException(
-                            "Комментарий с id " + request.commentId() + " не был найден"));
-            userDto = getUserDto(request.userId());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        comment = commentRepository.findById(request.commentId())
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Комментарий с id " + request.commentId() + " не был найден"));
+        userDto = getUserDto(request.userId());
 
         List<Like> likes = new ArrayList<>(comment.getLikes() == null ? Collections.emptyList() : comment.getLikes());
         boolean likeAlreadyExists = likes.stream().anyMatch(like -> like.getUserId() == userDto.id());
@@ -92,8 +81,6 @@ public class LikeService {
             likes.add(newLike);
             comment.setLikes(likes);
         }
-
-        return ResponseEntity.ok().build();
     }
 
     private UserDto getUserDto(Long userId) {

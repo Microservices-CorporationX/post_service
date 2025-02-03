@@ -17,11 +17,13 @@ public class LikeController {
 
     @PostMapping("/posts/like")
     public ResponseEntity<?> toggleLikePost(@Valid @NotNull @RequestBody LikePostRequest request) {
-        return service.toggleLikePost(request);
+        service.toggleLikePost(request);
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/comments/like")
     public ResponseEntity<?> toggleLikeComment(@Valid @NotNull @RequestBody LikeCommentRequest request) {
-        return service.toggleLikeComment(request);
+        service.toggleLikeComment(request);
+        return ResponseEntity.ok().build();
     }
 }
