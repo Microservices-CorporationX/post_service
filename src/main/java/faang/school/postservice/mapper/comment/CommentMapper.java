@@ -7,7 +7,6 @@ import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
-import lombok.AllArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -23,9 +22,7 @@ public abstract class CommentMapper {
     private PostMapper postMapper;
 
     @Autowired
-    public void setLikeMapper(LikeMapper likeMapper) {
-        this.likeMapper = likeMapper;
-    }
+    public void setLikeMapper(LikeMapper likeMapper) { this.likeMapper = likeMapper; }
 
     @Autowired
     public void setPostMapper(PostMapper postMapper) { this.postMapper = postMapper; }
@@ -33,7 +30,6 @@ public abstract class CommentMapper {
     @Mapping(target = "post", ignore = true)
     @Mapping(target = "likes", ignore = true)
     public abstract Comment toCommentEntity(CommentRequestDto commentRequestDto);
-
 
     @Mapping(source = "post", target = "postDto", qualifiedByName = "mapPost")
     @Mapping(source = "likes", target = "likeDtos", qualifiedByName = "mapLikes")

@@ -7,9 +7,7 @@ import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
-import faang.school.postservice.mapper.comment.LikeMapper;
 import faang.school.postservice.mapper.comment.LikeMapperImpl;
-import faang.school.postservice.mapper.comment.PostMapper;
 import faang.school.postservice.mapper.comment.PostMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
@@ -63,10 +61,10 @@ public class CommentServiceTest {
     private CommentMapperImpl commentMapper;
 
     @Spy
-    private LikeMapper likeMapper;
+    private LikeMapperImpl likeMapper;
 
     @Spy
-    private PostMapper postMapper;
+    private PostMapperImpl postMapper;
 
     @InjectMocks
     private CommentServiceImpl commentService;
@@ -95,6 +93,9 @@ public class CommentServiceTest {
         postId = 1L;
         commentId = 1L;
 
+        commentMapper.setLikeMapper(likeMapper);
+        commentMapper.setPostMapper(postMapper);
+
         post = createPost(postId, authorId);
         userDto = createUserDto(authorId, "Author", "email");
         commentRequestDto = createCommentRequestDto("Текстовый комментарий", authorId, postId);
@@ -108,7 +109,6 @@ public class CommentServiceTest {
         like1 = createLike(1L, authorId, post, comment);
         like2 = createLike(2L, 2L, post, comment);
         like3 = createLike(3L, 3L, post, comment);
-        //likes = Arrays.asList(like1, like2, like3);
         likes = List.of(like1, like2, like3);
         likeIds = Arrays.asList(like1.getId(), like2.getId(), like3.getId());
     }

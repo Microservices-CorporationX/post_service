@@ -11,16 +11,11 @@ import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.PostRepository;
-import feign.FeignException;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Function;
 
 @Service
 @Slf4j
@@ -33,14 +28,11 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentResponseDto createComment(CommentRequestDto commentDto) {
-        UserDto userDto = getUser(commentDto);
+        validateUser(commentDto);
         Post post = getPostById(commentDto.postId());
         Comment comment = commentMapper.toCommentEntity(commentDto);
         comment.setPost(post);
-        Comment SavedComment = commentRepository.save(comment);
-        CommentResponseDto commentResponseDto = commentMapper.toCommentResponseDto(SavedComment);
-        //return commentMapper.toCommentResponseDto(commentRepository.save(comment));
-        return commentResponseDto;
+        return commentMapper.toCommentResponseDto(commentRepository.save(comment));
     }
 
     @Override
@@ -51,10 +43,7 @@ public class CommentServiceImpl implements CommentService {
                     authorId));
         }
         foundComment.setContent(commentUpdateDto.content());
-        Comment SavedComment = commentRepository.save(foundComment);
-        CommentResponseDto commentResponseDto = commentMapper.toCommentResponseDto(SavedComment);
-        //return commentMapper.toCommentResponseDto(commentRepository.save(foundComment));
-        return commentResponseDto;
+        return commentMapper.toCommentResponseDto(commentRepository.save(foundComment));
     }
 
     @Override
@@ -86,16 +75,10 @@ public class CommentServiceImpl implements CommentService {
                 );
     }
 
-    private UserDto getUser(CommentRequestDto commentDto) {
+    private void validateUser(CommentRequestDto commentDto) {
         UserDto user = userServiceClient.getUser(commentDto.authorId());
-        /* Long userId = commentDto.authorId();
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<UserDto> response = restTemplate.exchange("http://localhost:8080/users/" + userId,
-                HttpMethod.GET, null, UserDto.class);
-        UserDto user = response.getBody(); */
         if (user == null) {
             throw new IllegalArgumentException(String.format("User with id %s not found", commentDto.authorId()));
         }
-        return user;
     }
 }

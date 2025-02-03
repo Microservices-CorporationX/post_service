@@ -6,6 +6,7 @@ import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.service.comment.CommentService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,24 +27,24 @@ public class CommentController {
     private final CommentService commentService;
 
     @PostMapping
-    public CommentResponseDto createComment(@Valid @RequestBody CommentRequestDto commentRequestDto) {
+    public CommentResponseDto createComment(@RequestBody @Valid CommentRequestDto commentRequestDto) {
         return commentService.createComment(commentRequestDto);
     }
 
     @DeleteMapping("/{commentId}")
-    public void deleteComment(@PathVariable long commentId) {
+    public void deleteComment(@PathVariable @NotNull Long commentId) {
         commentService.deleteComment(commentId);
     }
 
     @PutMapping("/{commentId}")
-    public void updateComment(@PathVariable long commentId,
-                              @RequestParam long authorId,
-                              @Valid @RequestBody CommentUpdateDto commentUpdateDto) {
+    public void updateComment(@PathVariable @NotNull Long commentId,
+                              @RequestParam @NotNull Long authorId,
+                              @RequestBody @Valid CommentUpdateDto commentUpdateDto) {
         commentService.updateComment(commentId, authorId, commentUpdateDto);
     }
 
     @GetMapping
-    public List<CommentResponseDto> getCommentsByFilters(@Valid @RequestBody CommentFiltersDto commentFiltersDto) {
+    public List<CommentResponseDto> getCommentsByFilters(@RequestBody @Valid CommentFiltersDto commentFiltersDto) {
         return commentService.getComments(commentFiltersDto);
     }
 }
