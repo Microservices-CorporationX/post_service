@@ -98,6 +98,7 @@ public class PostService {
         return postMapper.toDto(postRepository.save(post));
     }
 
+    @CachePut(value = "posts", key = "#postDto.id")
     public PostDto deletePost(long id) {
         Post post = findEntityById(id);
         if (post.isDeleted()) {
