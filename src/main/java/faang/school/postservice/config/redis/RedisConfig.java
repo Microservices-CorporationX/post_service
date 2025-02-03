@@ -2,13 +2,17 @@ package faang.school.postservice.config.redis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import faang.school.postservice.dto.post.PostDto;
+import faang.school.postservice.model.redis.PostCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.convert.KeyspaceConfiguration;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -16,9 +20,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import java.util.List;
 import java.util.Map;
 
-
 @Configuration
 @RequiredArgsConstructor
+@EnableRedisRepositories(keyspaceConfiguration = RedisConfig.MyKeyspaceConfiguration.class)
 public class RedisConfig {
 
     private final ObjectMapper objectMapper;
@@ -28,6 +32,9 @@ public class RedisConfig {
 
     @Value("${spring.data.redis.port}")
     private int port;
+
+    @Value("${spring.data.redis.cache.posts.ttl-seconds}")
+    private long postTtlSeconds;
 
     @Bean
     public JedisConnectionFactory jedisConnectionFactory() {
@@ -56,5 +63,27 @@ public class RedisConfig {
         redisTemplate.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
         return redisTemplate;
+    }
+
+    @Bean
+    @Primary
+    public RedisTemplate<String, Object> redisPostCacheTemplate() {
+        final RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+        redisTemplate.setConnectionFactory(jedisConnectionFactory());
+
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
+
+        return redisTemplate;
+    }
+
+    public class MyKeyspaceConfiguration extends KeyspaceConfiguration {
+        @Override
+        protected Iterable<KeyspaceSettings> initialConfiguration() {
+            KeyspaceSettings postSettings = new KeyspaceSettings(PostCache.class, "Post");
+            postSettings.setTimeToLive(postTtlSeconds);
+            return List.of(postSettings);
+        }
     }
 }

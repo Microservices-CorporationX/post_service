@@ -74,4 +74,9 @@ public class Post {
 
     @Column(name = "verified", nullable = false)
     private boolean verified;
+
+    public void setPublished() {
+        setPublished(true);
+        setPublishedAt(LocalDateTime.now());
+    }
 }

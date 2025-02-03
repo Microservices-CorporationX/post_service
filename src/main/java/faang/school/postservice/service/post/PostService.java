@@ -2,31 +2,33 @@ package faang.school.postservice.service.post;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.config.thread_pool.ThreadPoolConfig;
+import faang.school.postservice.client.UserServiceClient;
+import faang.school.postservice.config.thread_pool.PostPublishExecutorConfig;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.exception.EntityNotFoundException;
 import faang.school.postservice.exception.PostException;
+import faang.school.postservice.kafka.event.PostPublishedEvent;
+import faang.school.postservice.kafka.producer.PostPublishedEventProducer;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.RedisMessagePublisher;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.hashtag.HashtagService;
+import faang.school.postservice.service.redis.PostCacheService;
 import faang.school.postservice.validator.post.PostValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.ListUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 @Slf4j
 @Service
@@ -40,14 +42,21 @@ public class PostService {
     private final PostValidator postValidator;
     private final RedisMessagePublisher redisMessagePublisher;
     private final ObjectMapper objectMapper;
-    private final ThreadPoolConfig threadPoolConfig;
+    private final PostPublishExecutorConfig postPublishExecutorConfig;
     private final HashtagService hashtagService;
+    private final PostCacheService postCacheService;
+    private final AsyncPostService asyncPostService;
+    private final PostPublishedEventProducer postPublishedEventProducer;
+    private final UserServiceClient userServiceClient;
 
     @Value("${post.unverified-posts-ban-count}")
     private Integer unverifiedPostsBanCount;
 
     @Value("${post.publish-posts.batch-size}")
-    private int batchSize;
+    private int postPublishBatchSize;
+
+    @Value("${post.author-followers.batch-size}")
+    private int authorFollowersBatchSize;
 
     public PostDto createPost(PostRequestDto postRequestDtoDto) {
         postValidator.checkCreator(postRequestDtoDto);
@@ -67,8 +76,11 @@ public class PostService {
         if (post.isPublished()) {
             throw new PostException("Forbidden republish post");
         }
-        Post publishedPost = setPublished(post);
-        return postMapper.toDto(postRepository.save(publishedPost));
+        post.setPublished();
+        postCacheService.save(postMapper.toCachePost(post));
+        postPublishedEventProducer.send(new PostPublishedEvent(post.getAuthorId(), List.of(postMapper.toEventPostDto(post))));
+        log.info("Post with ID={} was published", postId);
+        return postMapper.toDto(postRepository.save(post));
     }
 
     @Transactional
@@ -79,13 +91,16 @@ public class PostService {
         postMapper.updatePostFromDto(postDto, post);
 
         hashtagService.checkHashtags(post);
+        Post updatedPost = postRepository.save(post);
+        postCacheService.update(postMapper.toCachePost(post));
         log.info("Post with id {} - updated", post.getId());
-        return postMapper.toDto(postRepository.save(post));
+        return postMapper.toDto(updatedPost);
     }
 
     public void disablePostById(Long postId) {
         Post deletePost = getPost(postId);
         deletePost.setDeleted(true);
+        postCacheService.delete(postId);
 
         log.info("Post with id {} - deleted", deletePost.getId());
         postRepository.save(deletePost);
@@ -180,42 +195,19 @@ public class PostService {
         }
     }
 
+    @Transactional(readOnly = true)
     @Async("threadPoolExecutorForPublishingPosts")
     public void publishScheduledPosts() {
-        Executor executor = threadPoolConfig.threadPoolExecutorForPublishingPosts();
         List<Post> postsToPublish = postRepository.findReadyToPublish();
-        List<List<Post>> subLists = divideListToSubLists(postsToPublish);
-
-        log.info("Start publishing {} scheduled posts", postsToPublish.size());
-        List<CompletableFuture<Void>> futures = subLists.stream()
-                .map(sublistOfPosts -> CompletableFuture.runAsync(() -> {
-                    sublistOfPosts.forEach(this::setPublished);
-                    postRepository.saveAll(sublistOfPosts);
-
-                    log.info("Published {} posts, by thread: {}", sublistOfPosts.size(),
-                            Thread.currentThread().getName());
-                }, executor))
-                .toList();
-
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        log.info("Publishing {} scheduled posts...", postsToPublish.size());
+        List<CompletableFuture<Void>> publishingPostsFeatures = getPublishingPostsFeatures(postsToPublish);
+        CompletableFuture.allOf(publishingPostsFeatures.toArray(new CompletableFuture[0])).join();
         log.info("Finished publishing {} scheduled posts", postsToPublish.size());
     }
 
-    private Post setPublished(Post post) {
-        post.setPublished(true);
-        post.setPublishedAt(LocalDateTime.now());
-
-        log.info("Post with id {} - published", post.getId());
-        return post;
-    }
-
-    private <T> List<List<T>> divideListToSubLists(List<T> list) {
-        List<List<T>> subLists = new ArrayList<>();
-        int totalSize = list.size();
-
-        for (int i = 0; i < totalSize; i += batchSize) {
-            subLists.add(list.subList(i, Math.min(i + batchSize, totalSize)));
-        }
-        return subLists;
+    private List<CompletableFuture<Void>> getPublishingPostsFeatures(List<Post> posts) {
+        return ListUtils.partition(posts, postPublishBatchSize).stream()
+                .map(asyncPostService::publishPosts)
+                .toList();
     }
 }

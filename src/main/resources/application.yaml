@@ -28,6 +28,9 @@ spring:
     redis:
       port: 6379
       host: localhost
+      cache:
+        posts:
+          ttl-seconds: 86400
       channel:
         calculations_channel: calculations_channel
         album: album_channel
@@ -35,6 +38,19 @@ spring:
         comment: comment_channel
         calculations: calculations_channel
         files-uploaded: files_uploaded_channel
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      retries: 10
+      acks: all
+    topics:
+      post-published: post.published
+      post-feed-distribution: post.feed-distribution
+      post-like: post.like
+      comment-like: comment.like
+      comment-created: comment.created
+      comment-removed: comment.removed
 
 server:
   port: 8081
@@ -66,9 +82,11 @@ payment-service:
 post:
   unverified-posts-ban-count: 5
   publish-posts:
-    batch-size: 1000
+    batch-size: 2500
     scheduling:
       cron: "0 * * * * *"
+  author-followers:
+    batch-size: 2500
 
 amazonS3:
   endpoint: http://127.0.0.1:9000
@@ -117,4 +135,8 @@ task-executor:
   file-upload:
     core-pool-size: 10
     max-pool-size: 20
-    queue-capacity: 50
+    queue-capacity: 500
+  post-publish:
+    core-pool-size: 10
+    max-pool-size: 20
+    queue-capacity: 500

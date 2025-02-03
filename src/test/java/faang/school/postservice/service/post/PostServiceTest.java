@@ -2,7 +2,7 @@ package faang.school.postservice.service.post;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import faang.school.postservice.config.thread_pool.ThreadPoolConfig;
+import faang.school.postservice.config.thread_pool.PostPublishExecutorConfig;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.exception.EntityNotFoundException;
@@ -11,6 +11,7 @@ import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.publisher.RedisMessagePublisher;
+import faang.school.postservice.repository.PostCacheRepository;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.hashtag.HashtagService;
 import faang.school.postservice.validator.post.PostValidator;
@@ -64,6 +65,9 @@ public class PostServiceTest {
     @Mock
     private HashtagService hashtagService;
 
+    @Mock
+    private PostCacheRepository postCacheRepository;
+
     @InjectMocks
     private PostService postService;
 
@@ -71,7 +75,7 @@ public class PostServiceTest {
     private ArgumentCaptor<Post> captor;
 
     @Mock
-    private ThreadPoolConfig threadPoolConfig;
+    private PostPublishExecutorConfig postPublishExecutorConfig;
 
     private static final int UNVERIFIED_POSTS_BAN_COUNT = 5;
 
@@ -503,12 +507,12 @@ public class PostServiceTest {
         ArgumentCaptor<List<Post>> captor = ArgumentCaptor.forClass(List.class);
 
 
-        when(threadPoolConfig.threadPoolExecutorForPublishingPosts()).thenReturn(executor);
+        when(postPublishExecutorConfig.threadPoolExecutorForPublishingPosts()).thenReturn(executor);
         when(postRepository.findReadyToPublish()).thenReturn(mockPosts);
 
         postService.publishScheduledPosts();
 
-        verify(threadPoolConfig, times(1)).threadPoolExecutorForPublishingPosts();
+        verify(postPublishExecutorConfig, times(1)).threadPoolExecutorForPublishingPosts();
         verify(postRepository, times(1)).findReadyToPublish();
         verify(postRepository, times(2)).saveAll(captor.capture());
 

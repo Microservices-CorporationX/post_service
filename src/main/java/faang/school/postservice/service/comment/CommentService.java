@@ -3,6 +3,8 @@ package faang.school.postservice.service.comment;
 import faang.school.postservice.dto.comment.CommentDto;
 import faang.school.postservice.event.comment.CommentEventDto;
 import faang.school.postservice.exception.EntityNotFoundException;
+import faang.school.postservice.kafka.event.CommentCreatedEvent;
+import faang.school.postservice.kafka.producer.CommentCreatedEventProducer;
 import faang.school.postservice.mapper.CommentMapper;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
@@ -32,6 +34,7 @@ public class CommentService {
     private final CommentValidator commentValidator;
     private final PostService postService;
     private final CommentMessagePublisher commentMessagePublisher;
+    private final CommentCreatedEventProducer commentCreatedEventProducer;
 
     @Transactional
     public CommentDto createComment(CommentDto commentDto) {
@@ -48,6 +51,7 @@ public class CommentService {
                 .commentContent(result.getContent())
                 .build();
         commentMessagePublisher.publish(commentEventDto);
+        commentCreatedEventProducer.send(new CommentCreatedEvent(commentMapper.toCacheCommentDto(commentToSave)));
 
         return commentMapper.toDto(result);
     }

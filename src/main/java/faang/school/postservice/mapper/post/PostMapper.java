@@ -1,9 +1,11 @@
 package faang.school.postservice.mapper.post;
 
+import faang.school.postservice.kafka.event.EventPostDto;
 import faang.school.postservice.dto.post.PostDto;
 import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
+import faang.school.postservice.model.redis.PostCache;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -22,6 +24,11 @@ public interface PostMapper {
     Post toEntity(PostRequestDto postRequestDto);
 
     List<PostDto> toDto(List<Post> posts);
+
+    @Mapping(source = "likes", target = "likes", ignore = true)
+    PostCache toCachePost(Post post);
+
+    EventPostDto toEventPostDto(Post post);
 
     void updatePostFromDto(PostDto postDto, @MappingTarget Post post);
 
