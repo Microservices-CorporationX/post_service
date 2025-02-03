@@ -6,10 +6,12 @@ import faang.school.postservice.dto.post.PostRequestDto;
 import faang.school.postservice.dto.post.PostResponseDto;
 import faang.school.postservice.dto.post.PostUpdateDto;
 import faang.school.postservice.dto.resource.ResourceResponseDto;
+import faang.school.postservice.event_sender.PostViewSender;
 import faang.school.postservice.mapper.post.PostMapper;
 import faang.school.postservice.mapper.resource.ResourceMapper;
 import faang.school.postservice.model.Post;
 import faang.school.postservice.model.Resource;
+import faang.school.postservice.model.cache.PostViewEvent;
 import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.service.post.filter.PostFilters;
 import faang.school.postservice.util.ModerationDictionary;
@@ -60,6 +62,7 @@ public class PostService {
     private final List<PostFilters> postFilters;
     private final ModerationDictionary moderationDictionary;
     private final PostServiceCache postServiceCache;
+    private final PostViewSender postViewSender;
 
     public PostResponseDto create(PostRequestDto requestDto) {
         postValidator.validateCreate(requestDto);
@@ -174,9 +177,15 @@ public class PostService {
     }
 
     public PostResponseDto getPostById(Long id) {
-        return postRepository.findById(id)
+        PostResponseDto postDto = postRepository.findById(id)
                 .map(postMapper::toDto)
                 .orElseThrow(EntityNotFoundException::new);
+
+        PostViewEvent postViewEvent = new PostViewEvent();
+        postViewEvent.setPostId(postDto.getId());
+        postViewSender.sendEvent(postViewEvent);
+
+        return postDto;
     }
 
     public void checkSpelling() {

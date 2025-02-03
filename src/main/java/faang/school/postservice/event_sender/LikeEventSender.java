@@ -1,4 +1,4 @@
-package faang.school.postservice.service.like;
+package faang.school.postservice.event_sender;
 
 import faang.school.postservice.mapper.like.LikeEventMapper;
 import faang.school.postservice.model.Like;

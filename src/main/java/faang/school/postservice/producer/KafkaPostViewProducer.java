@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
 
+@Component
 public class KafkaPostViewProducer extends KafkaAbstractProducer<PostViewEvent> {
 
     public KafkaPostViewProducer(KafkaTemplate<String, Object> kafkaTemplate) {
@@ -17,7 +19,7 @@ public class KafkaPostViewProducer extends KafkaAbstractProducer<PostViewEvent> 
     private String postViewTopic;
 
     @Bean
-    public NewTopic postTopic() {
+    public NewTopic postViewTopic() {
         return TopicBuilder.name(postViewTopic).build();
     }
 

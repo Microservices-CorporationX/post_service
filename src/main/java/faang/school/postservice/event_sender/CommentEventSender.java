@@ -1,4 +1,4 @@
-package faang.school.postservice.service.comment;
+package faang.school.postservice.event_sender;
 
 import faang.school.postservice.mapper.comment.CommentEventMapper;
 import faang.school.postservice.model.Comment;

@@ -42,8 +42,4 @@ public class PostServiceCache {
         kafkaPostProducer.send(postCache);
         log.debug("Post with id {} added to Kafka topic", postCache.getId());
     }
-
-    public void saveViewedPost(Post post) {
-
-    }
 }

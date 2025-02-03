@@ -14,7 +14,7 @@ import java.util.Optional;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public abstract class SimpleAbstractConsumer<T extends Event> {
+public abstract class AbstractSimpleConsumer<T extends Event> {
     protected final RedisPostRepository redisPostRepository;
 
     public void listenEvent(T event, Acknowledgment acknowledgment) {

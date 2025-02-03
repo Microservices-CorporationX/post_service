@@ -3,21 +3,18 @@ package faang.school.postservice.consumer;
 import faang.school.postservice.model.cache.CommentEvent;
 import faang.school.postservice.model.cache.PostEvent;
 import faang.school.postservice.repository.redis.RedisPostRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import java.util.Comparator;
-import java.util.Optional;
 import java.util.TreeSet;
 
 @Component
 @Slf4j
-public class KafkaCommentProducer extends SimpleAbstractConsumer<CommentEvent> {
+public class KafkaCommentProducer extends AbstractSimpleConsumer<CommentEvent> {
 
     public KafkaCommentProducer(RedisPostRepository redisPostRepository) {
         super(redisPostRepository);
