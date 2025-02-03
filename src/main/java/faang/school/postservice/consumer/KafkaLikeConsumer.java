@@ -23,9 +23,9 @@ public class KafkaLikeConsumer extends AbstractSimpleConsumer<LikeEvent> {
 
     @Override
     protected void processEvent(LikeEvent event, PostEvent post) {
-        int currentCountOfLikes = post.getLikes();
-        post.setLikes(currentCountOfLikes + 1);
+        int currentCountOfLikes = post.getLikesCount();
+        post.setLikesCount(currentCountOfLikes + 1);
 
-        log.debug("Increased number of likes on post {}. Total likes: {}", post.getId(), post.getLikes());
+        log.debug("Increased number of likes on post {}. Total likes: {}", post.getId(), post.getLikesCount());
     }
 }

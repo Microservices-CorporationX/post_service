@@ -25,8 +25,8 @@ public class PostEvent {
     private TreeSet<CommentEvent> comments;
     private Long authorId;
     private List<Long> followersId;
-    private int likes;
-    private int views;
+    private int likesCount;
+    private int viewsCount;
 
     @Version
     private Long version;

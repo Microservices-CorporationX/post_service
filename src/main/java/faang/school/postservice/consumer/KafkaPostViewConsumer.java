@@ -23,10 +23,10 @@ public class KafkaPostViewConsumer extends AbstractSimpleConsumer<PostViewEvent>
 
     @Override
     protected void processEvent(PostViewEvent event, PostEvent post) {
-        int currentCountOfViews = post.getViews();
-        post.setViews(currentCountOfViews + 1);
+        int currentCountOfViews = post.getViewsCount();
+        post.setViewsCount(currentCountOfViews + 1);
 
-        log.debug("Increased number of views on post {}. Total views: {}", post.getId(), post.getViews());
+        log.debug("Increased number of views on post {}. Total views: {}", post.getId(), post.getViewsCount());
 
     }
 }

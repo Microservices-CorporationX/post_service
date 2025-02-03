@@ -14,9 +14,9 @@ import java.util.TreeSet;
 
 @Component
 @Slf4j
-public class KafkaCommentProducer extends AbstractSimpleConsumer<CommentEvent> {
+public class KafkaCommentConsumer extends AbstractSimpleConsumer<CommentEvent> {
 
-    public KafkaCommentProducer(RedisPostRepository redisPostRepository) {
+    public KafkaCommentConsumer(RedisPostRepository redisPostRepository) {
         super(redisPostRepository);
     }
 
