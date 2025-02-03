@@ -33,11 +33,14 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentResponseDto createComment(CommentRequestDto commentDto) {
-        validateUser(commentDto);
+        UserDto userDto = getUser(commentDto);
         Post post = getPostById(commentDto.postId());
         Comment comment = commentMapper.toCommentEntity(commentDto);
         comment.setPost(post);
-        return commentMapper.toCommentResponseDto(commentRepository.save(comment));
+        Comment SavedComment = commentRepository.save(comment);
+        CommentResponseDto commentResponseDto = commentMapper.toCommentResponseDto(SavedComment);
+        //return commentMapper.toCommentResponseDto(commentRepository.save(comment));
+        return commentResponseDto;
     }
 
     @Override
@@ -48,7 +51,10 @@ public class CommentServiceImpl implements CommentService {
                     authorId));
         }
         foundComment.setContent(commentUpdateDto.content());
-        return commentMapper.toCommentResponseDto(commentRepository.save(foundComment));
+        Comment SavedComment = commentRepository.save(foundComment);
+        CommentResponseDto commentResponseDto = commentMapper.toCommentResponseDto(SavedComment);
+        //return commentMapper.toCommentResponseDto(commentRepository.save(foundComment));
+        return commentResponseDto;
     }
 
     @Override
@@ -80,7 +86,7 @@ public class CommentServiceImpl implements CommentService {
                 );
     }
 
-    private void validateUser(CommentRequestDto commentDto) {
+    private UserDto getUser(CommentRequestDto commentDto) {
         UserDto user = userServiceClient.getUser(commentDto.authorId());
         /* Long userId = commentDto.authorId();
         RestTemplate restTemplate = new RestTemplate();
@@ -90,22 +96,6 @@ public class CommentServiceImpl implements CommentService {
         if (user == null) {
             throw new IllegalArgumentException(String.format("User with id %s not found", commentDto.authorId()));
         }
-    }
-
-    private <T> void checkEntityExistence(Long id, String entityType, Function<Long, T> clientCall) {
-        if (id != null) {
-            try {
-                T entity = clientCall.apply(id);
-                if (entity == null) {
-                    throw new EntityNotFoundException(entityType + " not found with ID: " + id);
-                }
-            } catch (FeignException.NotFound e) {
-                log.warn("{} not found with ID: {}", entityType, id, e);
-                throw new EntityNotFoundException(entityType + " Service returned 404 - " + entityType + " not found with ID: " + id);
-            } catch (FeignException e) {
-                log.error("Error while communicating with {} Service: {}", entityType, e.getMessage(), e);
-                throw new IllegalArgumentException("Failed to communicate with " + entityType + " Service. Please try again later.");
-            }
-        }
+        return user;
     }
 }

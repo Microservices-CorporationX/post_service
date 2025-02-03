@@ -7,6 +7,10 @@ import faang.school.postservice.dto.comment.CommentResponseDto;
 import faang.school.postservice.dto.comment.CommentUpdateDto;
 import faang.school.postservice.dto.user.UserDto;
 import faang.school.postservice.mapper.comment.CommentMapperImpl;
+import faang.school.postservice.mapper.comment.LikeMapper;
+import faang.school.postservice.mapper.comment.LikeMapperImpl;
+import faang.school.postservice.mapper.comment.PostMapper;
+import faang.school.postservice.mapper.comment.PostMapperImpl;
 import faang.school.postservice.model.Comment;
 import faang.school.postservice.model.Like;
 import faang.school.postservice.model.Post;
@@ -58,6 +62,12 @@ public class CommentServiceTest {
     @Spy
     private CommentMapperImpl commentMapper;
 
+    @Spy
+    private LikeMapper likeMapper;
+
+    @Spy
+    private PostMapper postMapper;
+
     @InjectMocks
     private CommentServiceImpl commentService;
 
@@ -98,7 +108,8 @@ public class CommentServiceTest {
         like1 = createLike(1L, authorId, post, comment);
         like2 = createLike(2L, 2L, post, comment);
         like3 = createLike(3L, 3L, post, comment);
-        likes = Arrays.asList(like1, like2, like3);
+        //likes = Arrays.asList(like1, like2, like3);
+        likes = List.of(like1, like2, like3);
         likeIds = Arrays.asList(like1.getId(), like2.getId(), like3.getId());
     }
 
@@ -125,9 +136,11 @@ public class CommentServiceTest {
         assertNotNull(commentResponseDtoFromDb);
         assertEquals(commentId, commentResponseDtoFromDb.id());
         assertEquals(commentRequestDto.authorId(), commentResponseDtoFromDb.authorId());
-        assertEquals(commentRequestDto.postId(), commentResponseDtoFromDb.postId());
+        assertEquals(commentRequestDto.postId(), commentResponseDtoFromDb.postDto().id());
         assertEquals(commentRequestDto.content(), commentResponseDtoFromDb.content());
-        assertEquals(likeIds, commentResponseDtoFromDb.likeIds());
+        assertEquals(likeIds.get(0), commentResponseDtoFromDb.likeDtos().get(0).id());
+        assertEquals(likeIds.get(1), commentResponseDtoFromDb.likeDtos().get(1).id());
+        assertEquals(likeIds.get(2), commentResponseDtoFromDb.likeDtos().get(2).id());
     }
 
     @Test
@@ -168,9 +181,11 @@ public class CommentServiceTest {
         assertNotNull(commentResponseDtoFromDb);
         assertEquals(commentId, commentResponseDtoFromDb.id());
         assertEquals(authorId, commentResponseDtoFromDb.authorId());
-        assertEquals(postId, commentResponseDtoFromDb.postId());
+        assertEquals(postId, commentResponseDtoFromDb.postDto().id());
         assertEquals(commentUpdateDto.content(), commentResponseDtoFromDb.content());
-        assertEquals(likeIds, commentResponseDtoFromDb.likeIds());
+        assertEquals(likeIds.get(0), commentResponseDtoFromDb.likeDtos().get(0).id());
+        assertEquals(likeIds.get(1), commentResponseDtoFromDb.likeDtos().get(1).id());
+        assertEquals(likeIds.get(2), commentResponseDtoFromDb.likeDtos().get(2).id());
     }
 
     @Test
