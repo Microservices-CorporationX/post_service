@@ -21,10 +21,10 @@ public interface AlbumMapper {
     @Mapping(target = "postIds", expression = "java(mapPostIds(album.getPosts()))")
     AlbumDto toDto(Album album);
 
+    List<AlbumDto> toDtoList(List<Album> albums);
+
     @Mapping(target = "posts", ignore = true)
     Album toEntity(AlbumDto albumDto);
-
-    List<AlbumDto> toDtoList(List<Album> albums);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "posts", ignore = true)
