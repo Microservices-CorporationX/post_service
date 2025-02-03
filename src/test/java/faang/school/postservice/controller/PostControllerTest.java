@@ -82,7 +82,7 @@ class PostControllerTest {
     @DisplayName("Test get project's post drafts")
     void testGetProjectPostDrafts() {
         Long projectId = 123L;
-        postController.getProjectPostDrafts(projectId);
+        postController.getFilteredPosts("draft", projectId, null);
         Mockito.verify(postServiceMock, Mockito.times(1))
                 .getProjectPostDrafts(projectId);
     }
@@ -91,7 +91,7 @@ class PostControllerTest {
     @DisplayName("Test get user's post drafts")
     void testGetUserPostDrafts() {
         Long userId = 123L;
-        postController.getUserPostDrafts(userId);
+        postController.getFilteredPosts("draft", null, userId);
         Mockito.verify(postServiceMock, Mockito.times(1))
                 .getUserPostDrafts(userId);
     }
@@ -100,7 +100,7 @@ class PostControllerTest {
     @DisplayName("Test get project's posts")
     void testGetProjectPosts() {
         Long projectId = 123L;
-        postController.getProjectPosts(projectId);
+        postController.getFilteredPosts("post", projectId, null);
         Mockito.verify(postServiceMock, Mockito.times(1))
                 .getProjectPosts(projectId);
     }
@@ -109,7 +109,7 @@ class PostControllerTest {
     @DisplayName("Test get user's posts")
     void testGetUserPosts() {
         Long userId = 123L;
-        postController.getUserPosts(userId);
+        postController.getFilteredPosts("post", null, userId);
         Mockito.verify(postServiceMock, Mockito.times(1))
                 .getUserPosts(userId);
     }

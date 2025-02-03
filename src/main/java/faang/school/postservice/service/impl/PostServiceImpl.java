@@ -31,6 +31,7 @@ public class PostServiceImpl implements PostService {
         postServiceValidator.validatePostDto(postCreateRequestDto);
         Post post = postMapper.toPostEntity(postCreateRequestDto);
         Post draftPost = postRepository.save(post);
+        log.info("Post draft created {}", draftPost);
         return postMapper.toPostResponseDto(draftPost);
     }
 
@@ -41,6 +42,7 @@ public class PostServiceImpl implements PostService {
         postToPublish.setPublished(true);
         postToPublish.setPublishedAt(LocalDateTime.now());
         Post publishedPost = postRepository.save(postToPublish);
+        log.info("Draft post is published {}", publishedPost);
         return postMapper.toPostResponseDto(publishedPost);
     }
 
@@ -50,6 +52,7 @@ public class PostServiceImpl implements PostService {
         Post requestPost = postMapper.toPostEntity(postUpdateRequestDto);
         postServiceValidator.validatePostBeforeUpdate(postToUpdate, requestPost);
         Post updatedPost = postRepository.save(copyPostData(requestPost, postToUpdate));
+        log.info("Post is updated {}", updatedPost);
         return postMapper.toPostResponseDto(updatedPost);
     }
 
@@ -57,6 +60,7 @@ public class PostServiceImpl implements PostService {
     public void deletePost(Long postId) {
         Post postToDelete = getPostById(postId);
         postToDelete.setDeleted(true);
+        log.info("Post is deleted {}", postToDelete);
         postRepository.save(postToDelete);
     }
 

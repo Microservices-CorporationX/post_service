@@ -22,12 +22,14 @@ public class PostServiceValidator {
         Long authorId = postCreateRequestDto.authorId();
         Long projectId = postCreateRequestDto.projectId();
 
-        checkAuthorship(authorId, projectId);
         if (authorId != null) {
             checkAuthorExists(authorId);
         }
         if (projectId != null) {
             checkProjectExists(projectId);
+        }
+        if (authorId != null && projectId != null) {
+            checkAuthorship(authorId, projectId);
         }
     }
 
@@ -54,12 +56,14 @@ public class PostServiceValidator {
             throw new IllegalArgumentException("Either the author or the project of the post must be provided");
         }
     }
+
     private void checkAuthorExists(Long authorId) {
         UserDto userDto = userServiceClient.getUser(authorId);
         if (!authorId.equals(userDto.id())) {
             throw new IllegalArgumentException("Unable to find user with id = " + authorId);
         }
     }
+
     private void checkProjectExists(Long projectId) {
         ProjectDto projectDto = projectServiceClient.getProject(projectId);
         if (!projectId.equals(projectDto.id())) {

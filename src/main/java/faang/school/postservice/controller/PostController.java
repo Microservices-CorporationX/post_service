@@ -8,66 +8,61 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
-
-import static faang.school.postservice.utils.Constants.API_VERSION_1;
 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(API_VERSION_1 + "/post")
+@RequestMapping("/post")
 public class PostController {
 
     private final PostService postService;
 
     @PostMapping("/")
-    PostResponseDto createPostDraft(@RequestBody PostCreateRequestDto postCreateRequestDto) {
-        log.info("Create post draft: {}", postCreateRequestDto);
-        PostControllerValidator.validateCreateDto(postCreateRequestDto);
+    public PostResponseDto createPostDraft(@RequestBody PostCreateRequestDto postCreateRequestDto) {
         return postService.createPostDraft(postCreateRequestDto);
     }
 
     @PatchMapping("/{id}/publish")
-    PostResponseDto publishPostDraft(@PathVariable("id") Long postId) {
-        log.info("Publish post id {}", postId);
+    public PostResponseDto publishPostDraft(@PathVariable("id") Long postId) {
         return postService.publishPostDraft(postId);
     }
 
     @PutMapping("/{id}")
-    PostResponseDto updatePost(@PathVariable("id") Long postId, @RequestBody PostUpdateRequestDto postUpdateRequestDto) {
-        log.info("Update post id = {}: {}",postId, postUpdateRequestDto);
-        PostControllerValidator.validateUpdateDto(postUpdateRequestDto);
+    public PostResponseDto updatePost(@PathVariable("id") Long postId, @RequestBody PostUpdateRequestDto postUpdateRequestDto) {
         return postService.updatePost(postId, postUpdateRequestDto);
     }
 
     @DeleteMapping("/{id}")
-    void deletePost(@PathVariable("id") Long postId) {
-        log.info("Delete post id {}", postId);
+    public void deletePost(@PathVariable("id") Long postId) {
         postService.deletePost(postId);
     }
 
     @GetMapping("/{id}")
-    PostResponseDto getPost(@PathVariable("id") Long postId) {
+    public PostResponseDto getPost(@PathVariable("id") Long postId) {
         return postService.getPost(postId);
     }
 
-    @GetMapping("/draftByProject/{id}")
-    List<PostResponseDto> getProjectPostDrafts(@PathVariable("id") Long projectId) {
-        return postService.getProjectPostDrafts(projectId);
+    @GetMapping("/")
+    public List<PostResponseDto> getFilteredPosts(@RequestParam String filter,
+                                             @RequestParam(required = false) Long projectId,
+                                             @RequestParam(required = false) Long userId) {
+        List<PostResponseDto> responseDtos = new ArrayList<>();
+        if ("draft".equals(filter)) {
+            if (projectId != null) {
+                responseDtos = postService.getProjectPostDrafts(projectId);
+            } else if (userId != null) {
+                responseDtos = postService.getUserPostDrafts(userId);
+            }
+        } else if ("post".equals(filter)) {
+            if (projectId != null) {
+                responseDtos = postService.getProjectPosts(projectId);
+            } else if (userId != null) {
+                responseDtos = postService.getUserPosts(userId);
+            }
+        }
+        return responseDtos;
     }
 
-    @GetMapping("/draftByUser/{id}")
-    List<PostResponseDto> getUserPostDrafts(@PathVariable("id") Long userId) {
-        return postService.getUserPostDrafts(userId);
-    }
-
-    @GetMapping("/byProject/{id}")
-    List<PostResponseDto> getProjectPosts(@PathVariable("id") Long projectId) {
-        return postService.getProjectPosts(projectId);
-    }
-
-    @GetMapping("/byUser/{id}")
-    List<PostResponseDto> getUserPosts(@PathVariable("id") Long userId) {
-        return postService.getUserPosts(userId);
-    }
 }
