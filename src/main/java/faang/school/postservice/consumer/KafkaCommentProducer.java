@@ -17,32 +17,18 @@ import java.util.TreeSet;
 
 @Component
 @Slf4j
-@RequiredArgsConstructor
-public class KafkaCommentProducer {
-    private final RedisPostRepository redisPostRepository;
+public class KafkaCommentProducer extends SimpleAbstractConsumer<CommentEvent> {
+
+    public KafkaCommentProducer(RedisPostRepository redisPostRepository) {
+        super(redisPostRepository);
+    }
 
     @Value("${feed.max-comment-size}")
     private int maxCommentSize;
 
     @KafkaListener(topics = "${spring.data.kafka.topics.comment_topic}", groupId = "${spring.data.kafka.group-id}")
     public void listen(CommentEvent commentEvent, Acknowledgment acknowledgment) {
-        boolean updated = false;
-
-        while (!updated) {
-            Optional<PostEvent> post = redisPostRepository.findById(commentEvent.getPostId());
-            if (post.isPresent()) {
-                try {
-                    setNewComment(post.get(), commentEvent);
-                    redisPostRepository.save(post.get());
-                    updated = true;
-                } catch (OptimisticLockingFailureException e) {
-                    log.warn("Optimistic lock exception occurred. Retrying...");
-                }
-            } else {
-                updated = true;
-            }
-        }
-        acknowledgment.acknowledge();
+        listenEvent(commentEvent, acknowledgment);
     }
 
     private void setNewComment(PostEvent postEvent, CommentEvent comment) {
@@ -56,7 +42,11 @@ public class KafkaCommentProducer {
                 postEvent.getComments().remove(postEvent.getComments().last());
             }
         }
-        redisPostRepository.save(postEvent);
-        log.debug("post {} update: added new comment ", postEvent.getId());
+        log.debug("Added a comment from the author {} to the post {}", comment.getAuthorId(), postEvent.getId());
+    }
+
+    @Override
+    protected void processEvent(CommentEvent event, PostEvent post) {
+        setNewComment(post, event);
     }
 }

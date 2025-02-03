@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class LikeEvent {
-    private Long postId;
+public class LikeEvent extends Event {
     private Long authorId;
 }
