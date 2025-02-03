@@ -29,7 +29,7 @@ spring:
       topics:
         post_topic: posts
         like_topic: likes
-        view_post_topic: post_views
+        post_view_topic: post_views
         comment_topic: comments
 
     redis:
