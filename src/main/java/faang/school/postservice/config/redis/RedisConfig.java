@@ -1,6 +1,5 @@
 package faang.school.postservice.config.redis;
 
-import faang.school.postservice.dto.PostDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +9,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-import java.util.List;
 
 @Configuration
 public class RedisConfig {

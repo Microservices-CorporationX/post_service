@@ -1,6 +1,5 @@
 package faang.school.postservice.config.kafka;
 
-import faang.school.postservice.model.Post;
 import faang.school.postservice.utils.PublishedPostMessage;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -28,7 +27,6 @@ public class KafkaConsumerConfig {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         JsonDeserializer<PublishedPostMessage> deserializer = new JsonDeserializer<>(PublishedPostMessage.class);
-        deserializer.addTrustedPackages("*");
         return new DefaultKafkaConsumerFactory<>(configProps, new StringDeserializer(), deserializer);
     }
 
