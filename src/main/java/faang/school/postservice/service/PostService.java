@@ -9,6 +9,7 @@ import faang.school.postservice.repository.PostRepository;
 import faang.school.postservice.validator.PostValidator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.function.Function;
 
 @AllArgsConstructor
+@Service
 public class PostService {
     private final PostRepository postRepository;
     private final PostMapper postMapper;

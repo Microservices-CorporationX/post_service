@@ -32,7 +32,7 @@ public class PostController {
         return postService.publishPost(id);
     }
 
-    @PutMapping("/")
+    @PutMapping
     public PostResponseDto updatePost(@RequestBody UpdatePostDto postDto) {
         return postService.updatePost(postDto);
     }
@@ -62,7 +62,7 @@ public class PostController {
         return postService.getUserPosts(userId);
     }
 
-    @GetMapping("/project-drafts/{project-id}")
+    @GetMapping("/project-posts/{project-id}")
     public List<PostResponseDto> getProjectPost(@PathVariable(name = "project-id") long projectId) {
         return postService.getProjectPosts(projectId);
     }
