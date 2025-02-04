@@ -49,10 +49,10 @@ public class GlobalExceptionHandler {
         return e.getMessage();
     }
 
-    @ExceptionHandler(DataValidationException.class)
+    @ExceptionHandler(RuntimeException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public String handleRuntimeExceptions(RuntimeException e) {
-        log.error("Unknown error occurred, {}\n{}", e.getMessage(), e.getStackTrace());
+        log.error("Some exception occurred, {}\n{}", e.getMessage(), e.getStackTrace());
         return e.getMessage();
     }
 }
