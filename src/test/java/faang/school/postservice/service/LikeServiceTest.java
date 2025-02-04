@@ -10,6 +10,7 @@ import faang.school.postservice.model.Post;
 import faang.school.postservice.repository.CommentRepository;
 import faang.school.postservice.repository.LikeRepository;
 import faang.school.postservice.repository.PostRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,8 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -62,14 +61,13 @@ public class LikeServiceTest {
                 .username("Bob")
                 .build();
     }
+
     @Test
     public void toggleLikePost_SuccessLike() {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
 
-        ResponseEntity<?> response = likeService.toggleLikePost(new LikePostRequest(1L, 1L));
-
-        Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
+        likeService.toggleLikePost(new LikePostRequest(1L, 1L));
 
         ArgumentCaptor<Like> captor = ArgumentCaptor.forClass(Like.class);
         verify(likeRepository).save(captor.capture());
@@ -88,9 +86,7 @@ public class LikeServiceTest {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
 
-        ResponseEntity<?> response = likeService.toggleLikePost(new LikePostRequest(1L, 1L));
-
-        Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
+        likeService.toggleLikePost(new LikePostRequest(1L, 1L));
 
         ArgumentCaptor<Long> postIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
@@ -105,9 +101,7 @@ public class LikeServiceTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
 
-        ResponseEntity<?> response = likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
-
-        Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
+        likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
 
         ArgumentCaptor<Like> captor = ArgumentCaptor.forClass(Like.class);
         verify(likeRepository).save(captor.capture());
@@ -126,9 +120,7 @@ public class LikeServiceTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
         when(userServiceClient.getUser(1L)).thenReturn(userDto);
 
-        ResponseEntity<?> response = likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
-
-        Assertions.assertTrue(response.getStatusCode().is2xxSuccessful());
+        likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
 
         ArgumentCaptor<Long> commentIdCaptor = ArgumentCaptor.forClass(Long.class);
         ArgumentCaptor<Long> userIdCaptor = ArgumentCaptor.forClass(Long.class);
@@ -142,18 +134,18 @@ public class LikeServiceTest {
     public void toggleLikePost_WrongPostId() {
         when(postRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = likeService.toggleLikePost(new LikePostRequest(1L, 1L));
-
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertThrows(EntityNotFoundException.class, () -> {
+            likeService.toggleLikePost(new LikePostRequest(1L, 1L));
+        });
     }
 
     @Test
     public void toggleLikeComment_WrongCommentId() {
         when(commentRepository.findById(1L)).thenReturn(Optional.empty());
 
-        ResponseEntity<?> response = likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
-
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertThrows(EntityNotFoundException.class, () -> {
+            likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
+        });
     }
 
     @Test
@@ -161,9 +153,9 @@ public class LikeServiceTest {
         when(postRepository.findById(1L)).thenReturn(Optional.of(post));
         when(userServiceClient.getUser(1L)).thenReturn(null);
 
-        ResponseEntity<?> response = likeService.toggleLikePost(new LikePostRequest(1L, 1L));
-
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertThrows(EntityNotFoundException.class, () -> {
+            likeService.toggleLikePost(new LikePostRequest(1L, 1L));
+        });
     }
 
     @Test
@@ -171,8 +163,8 @@ public class LikeServiceTest {
         when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
         when(userServiceClient.getUser(1L)).thenReturn(null);
 
-        ResponseEntity<?> response = likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
-
-        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertThrows(EntityNotFoundException.class, () -> {
+            likeService.toggleLikeComment(new LikeCommentRequest(1L, 1L));
+        });
     }
 }
