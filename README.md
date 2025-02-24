@@ -79,7 +79,7 @@ RESTful приложение
     сетапится [RedisTemplate](https://docs.spring.io/spring-data/redis/docs/current/api/org/springframework/data/redis/core/RedisTemplate.html) –
     класс, для удобной работы с Redis силами Spring
 * [Публикация](src/main/java/ru/corporationx/postservice/publisher) – публикация ивентов в топики брокера
-* [Обработчик ошибок](src/main/java/ru/corporationx/postservice/handler) – глобальный обработчик ошибок
+* [Обработчик ошибок](src/main/java/ru/corporationx/postservice/exception/handler) – глобальный обработчик ошибок
 
 # Тесты
 
