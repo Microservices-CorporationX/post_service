@@ -33,6 +33,11 @@ spring:
         ad_bought_channel:
           name: ad_bought_channel
 
+
+post-correction:
+  api-url: http://your-speller-service-url
+  thread-pool-size: 10
+
   servlet:
     multipart:
       max-file-size: 5MB
@@ -77,6 +82,10 @@ moderation:
   cron: 0 0 0 * * *
   zone: Europe/Moscow
   thread-pool-size: 1
+
+banner:
+  cron: 0 0 0 * * *
+  zone: Europe/Moscow
 
 api:
   version: "/api/v1"
