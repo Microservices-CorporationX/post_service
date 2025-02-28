@@ -1,6 +1,7 @@
 package ru.corporationx.postservice.service.like;
 
 import ru.corporationx.postservice.dto.like.LikeDto;
+import ru.corporationx.postservice.kafka.producer.KafkaLikeProducer;
 import ru.corporationx.postservice.mapper.like.LikeMapperImpl;
 import ru.corporationx.postservice.model.Comment;
 import ru.corporationx.postservice.model.Like;
@@ -47,6 +48,8 @@ public class LikeServiceTest {
     private PostRepository postRepository;
     @Mock
     private CommentRepository commentRepository;
+    @Mock
+    private KafkaLikeProducer<LikeDto> kafkaLikeProducer;
     @Captor
     private ArgumentCaptor<Like> likeCaptor;
 
@@ -82,6 +85,7 @@ public class LikeServiceTest {
         Like like = likeCaptor.getValue();
 
         verify(likeRepository, times(1)).save(like);
+        verify(kafkaLikeProducer, times(1)).send(likeDto);
         assertEquals(likeDto, actualDto);
     }
 

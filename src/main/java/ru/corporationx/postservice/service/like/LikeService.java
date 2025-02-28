@@ -1,6 +1,7 @@
 package ru.corporationx.postservice.service.like;
 
 import ru.corporationx.postservice.dto.like.LikeDto;
+import ru.corporationx.postservice.kafka.producer.KafkaLikeProducer;
 import ru.corporationx.postservice.mapper.like.LikeMapper;
 import ru.corporationx.postservice.model.Comment;
 import ru.corporationx.postservice.model.Like;
@@ -27,6 +28,7 @@ public class LikeService {
     private final CommentService commentService;
     private final PostRepository postRepository;
     private final PostService postService;
+    private final KafkaLikeProducer<LikeDto> kafkaLikeProducer;
 
     public LikeDto likeComment(Long commentId, LikeDto likeDto) {
         likeValidator.validateUser(likeDto.getUserId());
@@ -56,6 +58,8 @@ public class LikeService {
         post.getLikes().add(like);
 
         likeRepository.save(like);
+
+        sendMessageToKafka(like);
 
         return likeMapper.toDto(like);
     }
@@ -90,5 +94,14 @@ public class LikeService {
         postRepository.save(post);
 
         return likeMapper.toDto(like);
+    }
+
+    private void sendMessageToKafka(Like like) {
+        kafkaLikeProducer.send(LikeDto.builder()
+                .id(like.getId())
+                .userId(like.getUserId())
+                .postId(like.getPost().getId())
+                .createdAt(like.getCreatedAt())
+                .build());
     }
 }

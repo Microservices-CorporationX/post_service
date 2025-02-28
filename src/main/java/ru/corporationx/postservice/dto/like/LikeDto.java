@@ -1,7 +1,6 @@
 package ru.corporationx.postservice.dto.like;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;

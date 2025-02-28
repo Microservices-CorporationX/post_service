@@ -33,6 +33,24 @@ spring:
         ad_bought_channel:
           name: ad_bought_channel
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      news-feed-group-id: news-feed
+      group-id: corpx
+      session-timeout-ms: 45000
+      max-partition-fetch-bytes: 300000
+      max-poll-records: 1
+      max-poll-interval-ms: 300000
+      heartbeat-interval: 3000
+      enable-auto-commit: false
+    producer:
+      enable: true
+    topic:
+      likes: corpx_likes
+    listener:
+      poll-timeout: 1000
+
 
 post-correction:
   api-url: http://your-speller-service-url
